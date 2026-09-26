@@ -1,0 +1,1333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Flashcard Bridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+Arabic:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --desk:#EEF0EA; --card:#FFFDF6; --panel:#F8F9F4; --line:#D9DDD3;
+  --rule:#CFE0EE; --margin:#E7A1A1;
+  --ink:#1D2429; --muted:#5A646B;
+  --action:#2E5BD8; --action-ink:#FFFFFF; --action-soft:#E4EBFC;
+  --l2:#0F7C74;
+  --cog:#FFE08A; --cog-ink:#4A3A00;
+  --ok:#2F8A45; --no:#C23B3B;
+  --note-bg:#FFF4D6; --note-ink:#6A4B00;
+  --shadow:0 1px 0 rgba(29,36,41,.06), 0 10px 28px -12px rgba(29,36,41,.28);
+  --display:"Bricolage Grotesque", "Atkinson Hyperlegible", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --arabic:"Noto Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --desk:#15191A; --card:#1F2527; --panel:#1A2022; --line:#313A3D;
+    --rule:#2C3A44; --margin:#7A4545;
+    --ink:#E8ECEE; --muted:#9AA5AC;
+    --action:#7FA2FF; --action-ink:#0E1630; --action-soft:#23304F;
+    --l2:#5CC8BD;
+    --cog:#5A4A12; --cog-ink:#FFE9A8;
+    --ok:#6CCB82; --no:#F08080;
+    --note-bg:#3A3015; --note-ink:#F5DA92;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 30px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --desk:#15191A; --card:#1F2527; --panel:#1A2022; --line:#313A3D;
+  --rule:#2C3A44; --margin:#7A4545;
+  --ink:#E8ECEE; --muted:#9AA5AC;
+  --action:#7FA2FF; --action-ink:#0E1630; --action-soft:#23304F;
+  --l2:#5CC8BD;
+  --cog:#5A4A12; --cog-ink:#FFE9A8;
+  --ok:#6CCB82; --no:#F08080;
+  --note-bg:#3A3015; --note-ink:#F5DA92;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 30px -12px rgba(0,0,0,.7);
+}
+
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0}
+body{background:var(--desk);color:var(--ink);font:16px/1.45 var(--body);}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--action);outline-offset:2px;border-radius:6px}
+
+.app{height:100%;display:grid;grid-template-rows:auto auto 1fr auto;max-width:980px;margin:0 auto;padding-inline:16px;}
+
+/* bilingual labels */
+.en{display:block}
+.l2{display:block;color:var(--l2);font-size:.8em;line-height:1.3;font-weight:400}
+.l2[lang="ar"]{font-family:var(--arabic)}
+.inline .en,.inline .l2{display:inline}
+.inline .l2{margin-inline-start:.4em}
+.hide-l2 .ui .l2{display:none}
+
+/* header */
+.top{display:flex;align-items:center;gap:12px;padding-block:10px 6px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand-mark{width:34px;height:34px;flex:none;color:var(--action)}
+.brand-text{min-width:0}
+.eyebrow{font-size:13px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+.deck-title{font-family:var(--display);font-weight:800;font-size:22px;line-height:1.1;margin:0;text-wrap:balance}
+.deck-title .l2{font-family:var(--body);font-size:15px}
+.deck-title .l2[lang="ar"]{font-family:var(--arabic)}
+.btn-ghost{background:transparent;border:1.5px solid var(--line);border-radius:10px;min-height:40px;padding:4px 12px;cursor:pointer;text-align:start;line-height:1.2}
+.btn-ghost:hover{border-color:var(--action)}
+
+.tabs{display:flex;gap:4px;border-bottom:1.5px solid var(--line);overflow-x:auto}
+.tab{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-1.5px;padding:6px 14px 6px;min-height:44px;cursor:pointer;color:var(--muted);font-weight:700;text-align:start;line-height:1.2;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--action)}
+.tab:hover{color:var(--ink)}
+.tab .soon-dot{font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:0 6px;margin-inline-start:6px;vertical-align:2px}
+
+/* stage */
+.stage{display:flex;flex-direction:column;gap:10px;min-height:0;padding-block:10px}
+.strip{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:14px;color:var(--muted)}
+.strip b{color:var(--ink)}
+.strip .who{display:flex;gap:6px;align-items:center}
+.counts{display:flex;gap:10px;margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);border-radius:99px;padding:1px 10px;font-weight:700;color:var(--ink);background:var(--card)}
+.pill.ok{border-color:var(--ok)} .pill.ok .dot{background:var(--ok)}
+.pill.no{border-color:var(--no)} .pill.no .dot{background:var(--no)}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.note{background:var(--note-bg);color:var(--note-ink);border-radius:8px;padding:4px 10px;font-size:13px}
+.note .l2{color:inherit;opacity:.9}
+
+.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--action);border-radius:99px;transition:width .25s ease}
+
+/* card */
+.card-wrap{position:relative;flex:1;min-height:300px;perspective:1600px}
+.card{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.3,1);cursor:pointer}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:auto;display:flex;flex-direction:column}
+.face.back{transform:rotateY(180deg);
+  background-image:linear-gradient(var(--margin),var(--margin)),repeating-linear-gradient(to bottom,transparent 0 33px,var(--rule) 33px 34px);
+  background-size:100% 2px,100% 100%;background-position:0 56px,0 56px;background-repeat:no-repeat,repeat;background-color:var(--card)}
+.face-label{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 0;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.face-label .l2{text-transform:none;letter-spacing:0;display:inline;margin-inline-start:.4em}
+.face-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:12px clamp(16px,4vw,40px) 18px}
+
+.term-row{display:flex;align-items:center;gap:clamp(12px,3vw,24px)}
+.icon{width:clamp(64px,11vw,96px);height:clamp(64px,11vw,96px);flex:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px}
+.icon svg{width:100%;height:100%;display:block}
+.icon img,.icon-t img{width:100%;height:100%;display:block;object-fit:cover;border-radius:10px}
+.icon:has(> svg[data-fb]),.icon:has(> img){padding:0;overflow:hidden}
+.term-row .icon:has(> svg[data-fb]),.term-row .icon:has(> img){width:clamp(96px,14vw,150px);height:clamp(96px,14vw,150px)}
+.icon > svg[data-fb]{border-radius:15px}
+.icon-t svg[data-fb]{border-radius:10px}
+.tile .icon-t{width:72px;height:72px}
+.term{font-family:var(--display);font-weight:800;font-size:clamp(28px,4.6vw,40px);line-height:1.05;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.term-l2{font-family:var(--body);font-weight:700;font-size:clamp(20px,3.2vw,28px);color:var(--l2);line-height:1.2;margin-top:6px}
+.term-l2[lang="ar"]{font-family:var(--arabic);font-weight:600}
+.cog{display:inline-block;background:var(--cog);color:var(--cog-ink);font:700 12px/1.6 var(--body);border-radius:6px;padding:0 7px;vertical-align:middle;margin-inline-start:6px;letter-spacing:.02em}
+.term-block{flex:1;min-width:0}
+
+.def{font-size:clamp(18px,2.3vw,22px);line-height:1.5;max-width:60ch}
+.def-l2{color:var(--l2);font-size:clamp(15px,1.9vw,18px);line-height:1.5;margin-top:4px;max-width:60ch}
+.def-l2[lang="ar"]{font-family:var(--arabic)}
+.def-block{display:flex;gap:10px;align-items:flex-start}
+.def-block>div{flex:1;min-width:0}
+.orig{border-top:1.5px dashed var(--line);padding-top:10px}
+.orig .def{font-size:16px;color:var(--ink)}
+.orig .def-l2{font-size:14px}
+.orig-tag{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+
+.small-row{display:flex;flex-wrap:wrap;gap:8px}
+.chip-btn{background:var(--panel);border:1.5px solid var(--line);border-radius:99px;min-height:38px;padding:4px 14px;cursor:pointer;font-size:14px;font-weight:700;color:var(--action);line-height:1.2;text-align:start}
+.chip-btn .l2{color:var(--l2)}
+.chip-btn:hover{border-color:var(--action)}
+
+.speak{flex:none;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);cursor:pointer;display:grid;place-items:center;color:var(--action)}
+.speak:hover{border-color:var(--action)}
+.speak svg{width:18px;height:18px}
+.speak.on{background:var(--action);color:var(--action-ink);border-color:var(--action)}
+
+.hint{text-align:center;font-size:13px;color:var(--muted)}
+
+/* actions */
+.actions{display:grid;grid-template-columns:auto 1fr 1.2fr 1fr;gap:10px;padding-block:10px 14px;border-top:1.5px solid var(--line);align-items:stretch}
+.btn{border-radius:12px;min-height:52px;padding:6px 14px;font-weight:700;cursor:pointer;border:2px solid var(--line);background:var(--card);line-height:1.2;text-align:center}
+.btn .l2{font-weight:400}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--action);color:var(--action-ink);border-color:var(--action)}
+.btn.primary .l2{color:var(--action-ink);opacity:.85}
+.btn.learn{border-color:var(--no)}
+.btn.got{border-color:var(--ok)}
+.btn.learn:not(:disabled):hover{background:color-mix(in srgb,var(--no) 10%,var(--card))}
+.btn.got:not(:disabled):hover{background:color-mix(in srgb,var(--ok) 10%,var(--card))}
+.btn .mark{font-size:1.1em}
+.kbd{display:inline-block;font:700 11px/1.4 var(--body);border:1px solid currentColor;border-radius:4px;padding:0 4px;opacity:.6;margin-inline-start:6px;vertical-align:1px}
+.btn.back{padding-inline:16px}
+
+/* round summary + coming soon */
+.panel{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:clamp(18px,4vw,36px);display:flex;flex-direction:column;justify-content:center;gap:16px;overflow:auto}
+.panel h2{font-family:var(--display);font-weight:800;font-size:clamp(26px,4vw,34px);margin:0;line-height:1.1}
+.panel h2 .l2{font-family:var(--body);font-size:18px}
+.panel h2 .l2[lang="ar"]{font-family:var(--arabic)}
+.tally{display:flex;gap:12px;flex-wrap:wrap}
+.tally .box{border:2px solid var(--line);border-radius:12px;padding:10px 16px;min-width:150px}
+.tally .box.ok{border-color:var(--ok)} .tally .box.no{border-color:var(--no)}
+.tally .num{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.missed{display:flex;flex-wrap:wrap;gap:6px}
+.missed span{border:1.5px solid var(--line);border-radius:8px;padding:2px 10px;font-size:14px}
+.panel .row{display:flex;gap:10px;flex-wrap:wrap}
+.panel .row .btn{flex:1;min-width:220px}
+
+/* settings drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,14,16,.45);display:flex;justify-content:flex-end;z-index:10}
+.drawer{background:var(--desk);width:min(460px,100%);height:100%;overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px;box-shadow:-12px 0 30px rgba(0,0,0,.2)}
+.drawer h2{font-family:var(--display);font-weight:800;font-size:26px;margin:0}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.field>.lab{font-weight:700;line-height:1.2}
+.field input{font:inherit;font-size:17px;min-height:44px;border:1.5px solid var(--line);border-radius:10px;padding:6px 12px;background:var(--card);color:var(--ink)}
+.field input:focus-visible{outline:3px solid var(--action);outline-offset:1px}
+.opts{display:grid;gap:8px}
+.opts.langs{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+.opt{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:8px 12px;min-height:48px;cursor:pointer;text-align:start;line-height:1.25}
+.opt[aria-checked="true"]{border-color:var(--action);background:var(--action-soft)}
+.opt b{display:block;font-size:17px}
+.opt b[lang="ar"]{font-family:var(--arabic)}
+.opt small{display:block;color:var(--muted);font-size:14px}
+.opt small .l2{font-size:13px}
+.two{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+
+/* ===== modes: shared ===== */
+.stage{overflow:auto}
+.grow{flex:1;min-width:0}
+.muted{color:var(--muted);font-size:13px}
+.q-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:14px;color:var(--muted)}
+.q-head b{color:var(--ink);font-variant-numeric:tabular-nums}
+.seg-wrap{display:inline-flex;align-items:center;gap:8px;margin-inline-start:auto;flex-wrap:wrap}
+.seg-lab{font-weight:700;color:var(--muted);font-size:13px}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.seg button{border:none;border-inline-start:1.5px solid var(--line);background:transparent;min-height:40px;padding:3px 12px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink);line-height:1.15;text-align:start}
+.seg button:first-child{border-inline-start:none}
+.seg button .l2{font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--action);color:var(--action-ink)}
+.seg button[aria-pressed="true"] .l2{color:var(--action-ink);opacity:.85}
+.prompt{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px clamp(16px,3vw,26px);display:flex;gap:14px;align-items:flex-start}
+.prompt .icon{width:72px;height:72px;padding:8px}
+.prompt .def{font-size:clamp(18px,2.2vw,21px)}
+.prompt-ask{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.prompt-ask .l2{text-transform:none;letter-spacing:0}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.choices.wide{grid-template-columns:1fr}
+.choice{display:flex;gap:10px;align-items:flex-start;text-align:start;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px 12px;min-height:56px;cursor:pointer;line-height:1.3}
+.choice:hover:not([aria-disabled="true"]){border-color:var(--action)}
+.choice[aria-checked="true"]{border-color:var(--action);background:var(--action-soft)}
+.choice[aria-disabled="true"]{cursor:default}
+.choice .key{flex:none;width:26px;height:26px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--muted);background:var(--panel)}
+.choice[aria-checked="true"] .key{border-color:var(--action);color:var(--action)}
+.choice .ctext{flex:1;min-width:0}
+.choice .ct{font-family:var(--display);font-weight:800;font-size:19px;display:block;line-height:1.15}
+.choice .cd{font-size:16px;display:block}
+.l2c{display:block;color:var(--l2);font-size:.86em;margin-top:2px;font-family:var(--body);font-weight:400}
+.l2c[lang="ar"]{font-family:var(--arabic)}
+.choice.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--card))}
+.choice.wrong{border-color:var(--no);background:color-mix(in srgb,var(--no) 10%,var(--card))}
+.choice .verdict{font-size:13px;font-weight:700;display:block;margin-top:4px}
+.choice.right .verdict{color:var(--ok)} .choice.wrong .verdict{color:var(--no)}
+.feedback{border-radius:12px;padding:10px 14px;border:2px solid var(--line);background:var(--card);margin:0}
+.feedback:focus{outline:none}
+.feedback:focus-visible{outline:3px solid var(--action)}
+.feedback.ok{border-color:var(--ok)} .feedback.no{border-color:var(--no)}
+.feedback strong{font-size:17px}
+.fb-small{font-size:14px;color:var(--muted);margin-top:4px}
+.actions[data-layout="one"]{grid-template-columns:1fr}
+.actions[data-layout="nav"]{grid-template-columns:minmax(120px,auto) 1fr}
+/* ===== match ===== */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(76px,1fr);gap:10px;flex:1;min-height:0}
+.tile{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;text-align:center;line-height:1.25;font-size:15px;overflow:auto;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+.tile:hover:not([aria-disabled="true"]){border-color:var(--action)}
+.tile.term{font-family:var(--display);font-weight:800;font-size:19px}
+.tile.l2t{color:var(--l2)}
+.tile [lang="ar"]{font-family:var(--arabic);font-weight:600}
+.tile .l2c{font-size:14px}
+.tiles.long .tile.defn{font-size:14px}
+.tile .icon-t{display:block;width:60px;height:60px;color:var(--ink)}
+.tile .icon-t svg{width:100%;height:100%}
+.tile[aria-pressed="true"]{border-color:var(--action);background:var(--action-soft);box-shadow:0 0 0 3px color-mix(in srgb,var(--action) 25%,transparent)}
+.tile.done{border-style:dashed;border-color:var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--card));color:var(--muted);cursor:default;box-shadow:none}
+.tile.done .l2c{color:var(--muted)}
+.pairtag{color:var(--ok);font:700 13px/1.3 var(--body)}
+.tile.bad{border-color:var(--no);animation:shake .35s}
+.badtag{color:var(--no);font:700 14px/1 var(--body)}
+.badmsg{color:var(--no);font-weight:700}
+.badmsg .l2{color:var(--no)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* ===== test ===== */
+.tf-pair{display:grid;grid-template-columns:minmax(160px,1fr) 2fr;gap:16px;margin-top:8px}
+.tf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice.tf{justify-content:center;text-align:center;min-height:64px;align-items:center}
+.choice.tf .ct{font-size:22px}
+.short{display:flex;flex-direction:column;gap:8px}
+.short textarea{width:100%;min-height:96px;font:inherit;font-size:17px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card);color:var(--ink);resize:vertical}
+.frames-lab{font-size:14px;font-weight:700;color:var(--muted)}
+.chip-btn .en{display:block}
+.results{justify-content:flex-start}
+.tab-num{font-variant-numeric:tabular-nums}
+.reslist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.res{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;line-height:1.4}
+.res .rk{flex:none;min-width:48px;font-weight:700;font-size:14px}
+.res.ok{border-color:color-mix(in srgb,var(--ok) 55%,var(--line))} .res.ok .rk{color:var(--ok)}
+.res.no{border-color:color-mix(in srgb,var(--no) 55%,var(--line))} .res.no .rk{color:var(--no)}
+.turnin{border-top:1.5px dashed var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.turnin h3{font-family:var(--display);font-weight:800;font-size:22px;margin:0}
+.turnin h3 .l2{font-family:var(--body);font-size:15px}
+#record{margin:0;background:var(--panel);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;font:13px/1.55 "IBM Plex Mono",ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto;color:var(--ink)}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:640px){
+  .app{height:auto;min-height:100%}
+  .actions{position:sticky;bottom:0;background:var(--desk);padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+  .actions{grid-template-columns:1fr 1fr;}
+  .actions .btn.primary{grid-column:1 / -1;grid-row:1}
+  .counts{margin-inline-start:0}
+  .deck-title{font-size:19px}
+  .card-wrap{min-height:380px}
+  .two{grid-template-columns:1fr}
+  .choices{grid-template-columns:1fr}
+  .tiles{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(80px,auto)}
+  .tf-pair{grid-template-columns:1fr}
+  .seg-wrap{margin-inline-start:0}
+}
+@media (max-height:700px) and (min-width:641px){
+  .top{padding-block:6px 4px}
+  .face-body{gap:10px}
+  .actions{padding-block:8px 10px}
+  .btn{min-height:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  .card{transition:none}
+  .tile.bad{animation:none}
+  .bar i{transition:none}
+}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="8" width="20" height="16" rx="3"/><rect x="11" y="4" width="20" height="16" rx="3" fill="var(--card)"/><path d="M15 26c3 4 9 4 12 0" stroke-linecap="round"/></svg>
+      <div class="brand-text">
+        <div class="eyebrow">Flashcard Bridge</div>
+        <h1 class="deck-title" id="deckTitle"></h1>
+      </div>
+    </div>
+    <button class="btn-ghost ui" id="openSettings" aria-haspopup="dialog"></button>
+  </header>
+
+  <nav class="tabs ui" role="tablist" id="tabs" aria-label="Study modes"></nav>
+
+  <main class="stage" id="stage" aria-live="polite"></main>
+
+  <footer class="actions ui" id="actions"></footer>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <section class="drawer ui" role="dialog" aria-modal="true" aria-labelledby="setTitle" id="drawer"></section>
+</div>
+
+<div class="sr" aria-live="polite" id="announce"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ============ DECK (normally generated by the Teacher Studio) ============ */
+/*DECK_START*/const DECK = {
+  id:"rock-cycle-v1",
+  title:"Rock Cycle Vocab",
+  titleT:{es:"Vocabulario del ciclo de las rocas",fr:"Vocabulaire du cycle des roches",ht:"Vokabilè sik wòch yo",ar:"مفردات دورة الصخور"},
+  languages:["es","fr","ht","ar"],
+  defaultLang:"es",
+  openSetup:false,
+  reviewed:{es:false,fr:false,ht:false,ar:false},
+  test:{count:10,types:["mc","tf","short"]},
+  cards:[
+    {id:"c1",term:"rock cycle",icon:"cycle",
+     def:"The series of processes that change rocks from one type to another over time.",
+     plain:"Rocks slowly change from one kind to another. This never stops.",
+     t:{es:{term:"ciclo de las rocas",cog:true,def:"La serie de procesos que cambian las rocas de un tipo a otro con el tiempo.",plain:"Las rocas cambian despacio de un tipo a otro. Esto nunca termina."},
+        fr:{term:"cycle des roches",cog:true,def:"La série de processus qui transforment les roches d'un type à un autre au fil du temps.",plain:"Les roches changent lentement d'un type à un autre. Cela ne s'arrête jamais."},
+        ht:{term:"sik wòch yo",cog:true,def:"Seri pwosesis ki chanje wòch yo soti nan yon kalite pou ale nan yon lòt avèk tan.",plain:"Wòch yo chanje dousman soti nan yon kalite pou ale nan yon lòt. Sa pa janm sispann."},
+        ar:{term:"دورة الصخور",cog:false,def:"سلسلة العمليات التي تحوّل الصخور من نوع إلى آخر مع مرور الوقت.",plain:"تتغير الصخور ببطء من نوع إلى آخر. وهذا لا يتوقف أبدًا."}}},
+    {id:"c2",term:"magma",icon:"magma",
+     def:"Melted rock found below Earth's surface.",
+     plain:"Hot, melted rock under the ground.",
+     t:{es:{term:"magma",cog:true,def:"Roca fundida que se encuentra debajo de la superficie de la Tierra.",plain:"Roca caliente y derretida bajo el suelo."},
+        fr:{term:"magma",cog:true,def:"Roche fondue qui se trouve sous la surface de la Terre.",plain:"De la roche chaude et fondue sous le sol."},
+        ht:{term:"magma",cog:true,def:"Wòch ki fonn ki anba sifas Latè.",plain:"Wòch cho ki fonn anba tè a."},
+        ar:{term:"الصُّهارة",cog:false,def:"صخور منصهرة توجد تحت سطح الأرض.",plain:"صخور ساخنة ومنصهرة تحت الأرض."}}},
+    {id:"c3",term:"lava",icon:"lava",
+     def:"Melted rock that reaches Earth's surface, usually through a volcano.",
+     plain:"Magma that comes out on top of the ground.",
+     t:{es:{term:"lava",cog:true,def:"Roca fundida que llega a la superficie de la Tierra, casi siempre por un volcán.",plain:"Magma que sale arriba del suelo."},
+        fr:{term:"lave",cog:true,def:"Roche fondue qui arrive à la surface de la Terre, souvent par un volcan.",plain:"Du magma qui sort au-dessus du sol."},
+        ht:{term:"lav",cog:true,def:"Wòch ki fonn ki rive sou sifas Latè, souvan nan yon vòlkan.",plain:"Magma ki soti sou tè a."},
+        ar:{term:"الحِمَم",cog:false,def:"صخور منصهرة تصل إلى سطح الأرض، غالبًا عبر بركان.",plain:"صهارة تخرج فوق سطح الأرض."}}},
+    {id:"c4",term:"igneous rock",icon:"igneous",
+     def:"Rock that forms when magma or lava cools and hardens.",
+     plain:"Melted rock cools down. It becomes hard rock.",
+     t:{es:{term:"roca ígnea",cog:true,def:"Roca que se forma cuando el magma o la lava se enfría y se endurece.",plain:"La roca derretida se enfría. Se vuelve roca dura."},
+        fr:{term:"roche ignée",cog:true,def:"Roche qui se forme quand le magma ou la lave refroidit et durcit.",plain:"La roche fondue refroidit. Elle devient une roche dure."},
+        ht:{term:"wòch inye",cog:true,def:"Wòch ki fòme lè magma oswa lav refwadi epi vin di.",plain:"Wòch ki fonn nan refwadi. Li vin tounen wòch di."},
+        ar:{term:"الصخور النارية",cog:false,def:"صخور تتكوّن عندما تبرد الصهارة أو الحمم وتتصلّب.",plain:"تبرد الصخور المنصهرة. فتصبح صخورًا صلبة."}}},
+    {id:"c5",term:"weathering",icon:"weathering",
+     def:"The breaking down of rock into smaller pieces by water, ice, wind, plants, or chemicals.",
+     plain:"Rock breaks into small pieces. Water, ice, wind, and plants can do this.",
+     t:{es:{term:"meteorización",cog:false,def:"La ruptura de la roca en pedazos más pequeños por el agua, el hielo, el viento, las plantas o sustancias químicas.",plain:"La roca se rompe en pedazos pequeños. El agua, el hielo, el viento y las plantas pueden hacer esto."},
+        fr:{term:"altération",cog:false,def:"La fragmentation de la roche en plus petits morceaux par l'eau, la glace, le vent, les plantes ou des produits chimiques.",plain:"La roche se casse en petits morceaux. L'eau, la glace, le vent et les plantes peuvent faire cela."},
+        ht:{term:"dezagregasyon",cog:false,def:"Wòch ki kraze an ti moso pi piti akoz dlo, glas, van, plant oswa pwodui chimik.",plain:"Wòch kraze an ti moso. Dlo, glas, van ak plant ka fè sa."},
+        ar:{term:"التجوية",cog:false,def:"تفتّت الصخور إلى قطع أصغر بفعل الماء أو الجليد أو الرياح أو النباتات أو المواد الكيميائية.",plain:"تنكسر الصخور إلى قطع صغيرة. يمكن للماء والجليد والرياح والنباتات فعل ذلك."}}},
+    {id:"c6",term:"erosion",icon:"erosion",
+     def:"The movement of sediment from one place to another by water, wind, ice, or gravity.",
+     plain:"Small pieces of rock move to a new place. Water, wind, ice, or gravity move them.",
+     t:{es:{term:"erosión",cog:true,def:"El movimiento de sedimentos de un lugar a otro por el agua, el viento, el hielo o la gravedad.",plain:"Pedacitos de roca se mueven a un lugar nuevo. El agua, el viento, el hielo o la gravedad los mueven."},
+        fr:{term:"érosion",cog:true,def:"Le déplacement des sédiments d'un endroit à un autre par l'eau, le vent, la glace ou la gravité.",plain:"De petits morceaux de roche vont vers un nouvel endroit. L'eau, le vent, la glace ou la gravité les déplacent."},
+        ht:{term:"ewozyon",cog:true,def:"Deplasman sediman soti yon kote pou ale yon lòt kote akoz dlo, van, glas oswa gravite.",plain:"Ti moso wòch yo deplase al yon lòt kote. Dlo, van, glas oswa gravite deplase yo."},
+        ar:{term:"التعرية",cog:false,def:"انتقال الرواسب من مكان إلى آخر بفعل الماء أو الرياح أو الجليد أو الجاذبية.",plain:"تنتقل قطع صغيرة من الصخور إلى مكان جديد. ينقلها الماء أو الرياح أو الجليد أو الجاذبية."}}},
+    {id:"c7",term:"deposition",icon:"deposition",
+     def:"The dropping of sediment in a new place when water, wind, or ice slows down.",
+     plain:"Moving water or wind slows down. It drops the rock pieces.",
+     t:{es:{term:"depositación",cog:true,def:"Cuando el agua, el viento o el hielo se mueven más despacio y dejan los sedimentos en un lugar nuevo.",plain:"El agua o el viento se mueve más despacio. Deja caer los pedacitos de roca."},
+        fr:{term:"dépôt",cog:true,def:"Les sédiments sont laissés à un nouvel endroit quand l'eau, le vent ou la glace ralentit.",plain:"L'eau ou le vent ralentit. Il laisse tomber les morceaux de roche."},
+        ht:{term:"depo",cog:true,def:"Lè dlo, van oswa glas ralanti epi yo lage sediman nan yon nouvo kote.",plain:"Dlo oswa van ralanti. Li lage ti moso wòch yo."},
+        ar:{term:"الترسيب",cog:false,def:"سقوط الرواسب في مكان جديد عندما يتباطأ الماء أو الرياح أو الجليد.",plain:"يتباطأ الماء أو الرياح. فتسقط قطع الصخور."}}},
+    {id:"c8",term:"sediment",icon:"sediment",
+     def:"Small, solid pieces of rock, shells, or once-living things.",
+     plain:"Tiny pieces of rock, sand, mud, and shells.",
+     t:{es:{term:"sedimento",cog:true,def:"Pedazos pequeños y sólidos de roca, conchas o restos de seres vivos.",plain:"Pedacitos de roca, arena, lodo y conchas."},
+        fr:{term:"sédiment",cog:true,def:"Petits morceaux solides de roche, de coquillages ou de restes d'êtres vivants.",plain:"De tout petits morceaux de roche, de sable, de boue et de coquillages."},
+        ht:{term:"sediman",cog:true,def:"Ti moso solid wòch, kokiy, oswa rès bagay ki te vivan.",plain:"Ti moso wòch, sab, labou ak kokiy."},
+        ar:{term:"الرواسب",cog:false,def:"قطع صغيرة صلبة من الصخور أو الأصداف أو بقايا الكائنات الحية.",plain:"قطع صغيرة جدًا من الصخور والرمل والطين والأصداف."}}},
+    {id:"c9",term:"sedimentary rock",icon:"sedimentary",
+     def:"Rock that forms when layers of sediment are pressed and cemented together.",
+     plain:"Layers of sediment get pressed together. They become rock.",
+     t:{es:{term:"roca sedimentaria",cog:true,def:"Roca que se forma cuando capas de sedimento se comprimen y se cementan.",plain:"Capas de sedimento se aprietan. Se vuelven roca."},
+        fr:{term:"roche sédimentaire",cog:true,def:"Roche qui se forme quand des couches de sédiments sont pressées et cimentées ensemble.",plain:"Des couches de sédiments sont pressées ensemble. Elles deviennent de la roche."},
+        ht:{term:"wòch sedimantè",cog:true,def:"Wòch ki fòme lè kouch sediman yo peze epi kole ansanm.",plain:"Kouch sediman yo peze ansanm. Yo vin tounen wòch."},
+        ar:{term:"الصخور الرسوبية",cog:false,def:"صخور تتكوّن عندما تنضغط طبقات الرواسب وتلتحم معًا.",plain:"تنضغط طبقات الرواسب معًا. فتصبح صخورًا."}}},
+    {id:"c10",term:"metamorphic rock",icon:"metamorphic",
+     def:"Rock that has been changed by heat and pressure deep inside Earth, without melting.",
+     plain:"Heat and pressure change a rock. The rock does not melt.",
+     t:{es:{term:"roca metamórfica",cog:true,def:"Roca que cambió por el calor y la presión en lo profundo de la Tierra, sin derretirse.",plain:"El calor y la presión cambian una roca. La roca no se derrite."},
+        fr:{term:"roche métamorphique",cog:true,def:"Roche transformée par la chaleur et la pression au fond de la Terre, sans fondre.",plain:"La chaleur et la pression changent une roche. La roche ne fond pas."},
+        ht:{term:"wòch metamòfik",cog:true,def:"Wòch ki chanje akoz chalè ak presyon byen fon anndan Latè, san li pa fonn.",plain:"Chalè ak presyon chanje yon wòch. Wòch la pa fonn."},
+        ar:{term:"الصخور المتحوّلة",cog:false,def:"صخور تغيّرت بفعل الحرارة والضغط في أعماق الأرض دون أن تنصهر.",plain:"الحرارة والضغط يغيّران الصخرة. لا تنصهر الصخرة."}}}
+  ]
+};/*DECK_END*/
+
+/* ============ UI DICTIONARY (written once, shared by every deck) ============ */
+const T = {
+  modeCards:{en:"Flashcards",es:"Tarjetas",fr:"Cartes mémoire",ht:"Kat memwa",ar:"بطاقات تعليمية"},
+  modeLearn:{en:"Learn",es:"Aprender",fr:"Apprendre",ht:"Aprann",ar:"تعلّم"},
+  modeMatch:{en:"Match",es:"Emparejar",fr:"Associer",ht:"Fè koresponn",ar:"طابِق"},
+  modeTest:{en:"Test",es:"Prueba",fr:"Test",ht:"Tès",ar:"اختبار"},
+  /* Learn */
+  answerWith:{en:"Answer with",es:"Responder con",fr:"Répondre avec",ht:"Reponn ak",ar:"أجب بـ"},
+  learnPromptTerm:{en:"Which term matches this definition?",es:"¿Qué término corresponde a esta definición?",fr:"Quel terme correspond à cette définition ?",ht:"Ki mo ki mache ak definisyon sa a?",ar:"أي مصطلح يطابق هذا التعريف؟"},
+  learnPromptDef:{en:"Which definition matches this term?",es:"¿Qué definición corresponde a este término?",fr:"Quelle définition correspond à ce terme ?",ht:"Ki definisyon ki mache ak mo sa a?",ar:"أي تعريف يطابق هذا المصطلح؟"},
+  check:{en:"Check",es:"Revisar",fr:"Vérifier",ht:"Verifye",ar:"تحقّق"},
+  next:{en:"Next",es:"Siguiente",fr:"Suivant",ht:"Pwochen",ar:"التالي"},
+  pickFirst:{en:"Choose an answer, then press Check.",es:"Elige una respuesta y luego presiona Revisar.",fr:"Choisis une réponse, puis appuie sur Vérifier.",ht:"Chwazi yon repons, epi peze Verifye.",ar:"اختر إجابة، ثم اضغط تحقّق."},
+  correct:{en:"Correct!",es:"¡Correcto!",fr:"Correct !",ht:"Bon repons!",ar:"صحيح!"},
+  masteredNow:{en:"You mastered this card.",es:"Dominaste esta tarjeta.",fr:"Tu maîtrises cette carte.",ht:"Ou metrize kat sa a.",ar:"لقد أتقنت هذه البطاقة."},
+  wrongPicked:{en:"Not quite. You chose the answer for “{x}”.",es:"Casi. Elegiste la respuesta de “{x}”.",fr:"Pas tout à fait. Tu as choisi la réponse de « {x} ».",ht:"Pa tout bon. Ou chwazi repons pou “{x}”.",ar:"ليس تمامًا. اخترت إجابة “{x}”."},
+  rightAnswer:{en:"The right answer is:",es:"La respuesta correcta es:",fr:"La bonne réponse est :",ht:"Bon repons lan se:",ar:"الإجابة الصحيحة هي:"},
+  comeBack:{en:"This card will come back later in this round.",es:"Esta tarjeta volverá más tarde en esta ronda.",fr:"Cette carte reviendra plus tard dans ce tour.",ht:"Kat sa a ap tounen pita nan tou sa a.",ar:"ستعود هذه البطاقة لاحقًا في هذه الجولة."},
+  masteredN:{en:"Mastered {n} of {t}",es:"Dominadas {n} de {t}",fr:"Maîtrisées {n} sur {t}",ht:"Metrize {n} sou {t}",ar:"أتقنت {n} من {t}"},
+  masteredWord:{en:"Mastered",es:"Dominadas",fr:"Maîtrisées",ht:"Metrize",ar:"متقنة"},
+  masteryRule:{en:"Get a card right 2 times in a row to master it.",es:"Acierta una tarjeta 2 veces seguidas para dominarla.",fr:"Réussis une carte 2 fois de suite pour la maîtriser.",ht:"Jwenn yon kat bon 2 fwa youn apre lòt pou w metrize l.",ar:"أجب عن البطاقة إجابة صحيحة مرتين متتاليتين لتتقنها."},
+  questionOf:{en:"Question {n} of {t}",es:"Pregunta {n} de {t}",fr:"Question {n} sur {t}",ht:"Kesyon {n} sou {t}",ar:"السؤال {n} من {t}"},
+  learnRoundDone:{en:"Round {n} complete",es:"Ronda {n} terminada",fr:"Tour {n} terminé",ht:"Tou {n} fini",ar:"انتهت الجولة {n}"},
+  nextRound:{en:"Next round",es:"Siguiente ronda",fr:"Tour suivant",ht:"Pwochen tou",ar:"الجولة التالية"},
+  allMastered:{en:"You mastered every card!",es:"¡Dominaste todas las tarjetas!",fr:"Tu maîtrises toutes les cartes !",ht:"Ou metrize tout kat yo!",ar:"لقد أتقنت كل البطاقات!"},
+  rightThisRound:{en:"Right this round",es:"Correctas en esta ronda",fr:"Réussies ce tour",ht:"Bon nan tou sa a",ar:"صحيحة في هذه الجولة"},
+  /* Match */
+  matchType:{en:"Match",es:"Emparejar",fr:"Associer",ht:"Fè koresponn",ar:"طابِق"},
+  mtTermDef:{en:"Term ↔ definition",es:"Término ↔ definición",fr:"Terme ↔ définition",ht:"Mo ↔ definisyon",ar:"المصطلح ↔ التعريف"},
+  mtTermL2:{en:"English ↔ my language",es:"Inglés ↔ mi idioma",fr:"Anglais ↔ ma langue",ht:"Angle ↔ lang mwen",ar:"الإنجليزية ↔ لغتي"},
+  mtIcon:{en:"Picture ↔ term",es:"Imagen ↔ término",fr:"Image ↔ terme",ht:"Imaj ↔ mo",ar:"الصورة ↔ المصطلح"},
+  matchHow:{en:"Tap a card, then tap its partner.",es:"Toca una tarjeta y luego toca su pareja.",fr:"Touche une carte, puis touche sa paire.",ht:"Tape yon kat, epi tape pè li.",ar:"اضغط على بطاقة، ثم اضغط على البطاقة المطابقة لها."},
+  notPair:{en:"Not a pair. Try again.",es:"No son pareja. Inténtalo otra vez.",fr:"Ce n'est pas une paire. Essaie encore.",ht:"Se pa yon pè. Eseye ankò.",ar:"ليستا زوجًا. حاول مرة أخرى."},
+  paired:{en:"Paired",es:"Pareja",fr:"Paire",ht:"Pè",ar:"زوج"},
+  matchDone:{en:"All matched!",es:"¡Todo emparejado!",fr:"Tout est associé !",ht:"Tout fè koresponn!",ar:"تمت مطابقة الكل!"},
+  time:{en:"Time",es:"Tiempo",fr:"Temps",ht:"Tan",ar:"الوقت"},
+  misses:{en:"Misses",es:"Errores",fr:"Erreurs",ht:"Erè",ar:"الأخطاء"},
+  best:{en:"Best time",es:"Mejor tiempo",fr:"Meilleur temps",ht:"Pi bon tan",ar:"أفضل وقت"},
+  newBest:{en:"New best time!",es:"¡Nuevo mejor tiempo!",fr:"Nouveau record !",ht:"Nouvo pi bon tan!",ar:"أفضل وقت جديد!"},
+  playAgain:{en:"Play again",es:"Jugar otra vez",fr:"Rejouer",ht:"Jwe ankò",ar:"العب مرة أخرى"},
+  picture:{en:"Picture",es:"Imagen",fr:"Image",ht:"Imaj",ar:"صورة"},
+  /* Test */
+  testIntro:{en:"Practice test",es:"Prueba de práctica",fr:"Test d'entraînement",ht:"Tès pratik",ar:"اختبار تدريبي"},
+  testAbout:{en:"{n} questions. You see your score at the end.",es:"{n} preguntas. Ves tu puntaje al final.",fr:"{n} questions. Tu vois ton score à la fin.",ht:"{n} kesyon. W ap wè nòt ou nan fen an.",ar:"{n} أسئلة. سترى نتيجتك في النهاية."},
+  needName:{en:"Enter your name and class hour to start.",es:"Escribe tu nombre y tu hora de clase para empezar.",fr:"Écris ton nom et ton heure de cours pour commencer.",ht:"Ekri non ou ak lè klas ou pou kòmanse.",ar:"اكتب اسمك وحصة صفك للبدء."},
+  start:{en:"Start test",es:"Empezar la prueba",fr:"Commencer le test",ht:"Kòmanse tès la",ar:"ابدأ الاختبار"},
+  mcName:{en:"Multiple choice",es:"Opción múltiple",fr:"Choix multiple",ht:"Chwa miltip",ar:"اختيار من متعدد"},
+  tfName:{en:"True or false",es:"Verdadero o falso",fr:"Vrai ou faux",ht:"Vrè oswa fo",ar:"صح أو خطأ"},
+  shortName:{en:"Short answer",es:"Respuesta corta",fr:"Réponse courte",ht:"Repons kout",ar:"إجابة قصيرة"},
+  tfPrompt:{en:"Is this the right definition for this term?",es:"¿Es esta la definición correcta de este término?",fr:"Est-ce la bonne définition de ce terme ?",ht:"Èske se bon definisyon pou mo sa a?",ar:"هل هذا هو التعريف الصحيح لهذا المصطلح؟"},
+  tTrue:{en:"True",es:"Verdadero",fr:"Vrai",ht:"Vrè",ar:"صح"},
+  tFalse:{en:"False",es:"Falso",fr:"Faux",ht:"Fo",ar:"خطأ"},
+  shortPrompt:{en:"Explain “{x}” in your own words. Write in English.",es:"Explica “{x}” con tus propias palabras. Escribe en inglés.",fr:"Explique « {x} » avec tes propres mots. Écris en anglais.",ht:"Eksplike “{x}” ak pwòp mo pa w. Ekri an angle.",ar:"اشرح “{x}” بكلماتك الخاصة. اكتب بالإنجليزية."},
+  frames:{en:"Sentence starters (tap to add):",es:"Inicios de oración (toca para agregar):",fr:"Débuts de phrase (touche pour ajouter) :",ht:"Kòmansman fraz (tape pou ajoute):",ar:"بدايات الجمل (اضغط للإضافة):"},
+  f1:{en:"{x} is ",es:"{x} es ...",fr:"{x} est ...",ht:"{x} se ...",ar:"{x} هو ..."},
+  f2:{en:"It happens when ",es:"Ocurre cuando ...",fr:"Cela arrive quand ...",ht:"Sa rive lè ...",ar:"يحدث ذلك عندما ..."},
+  f3:{en:"For example, ",es:"Por ejemplo, ...",fr:"Par exemple, ...",ht:"Pa egzanp, ...",ar:"على سبيل المثال، ..."},
+  f4:{en:"It is different from ",es:"Es diferente de ...",fr:"C'est différent de ...",ht:"Li diferan de ...",ar:"إنه مختلف عن ..."},
+  finish:{en:"Finish test",es:"Terminar la prueba",fr:"Terminer le test",ht:"Fini tès la",ar:"أنهِ الاختبار"},
+  finishAnyway:{en:"Finish anyway",es:"Terminar de todos modos",fr:"Terminer quand même",ht:"Fini kanmenm",ar:"أنهِ على أي حال"},
+  skipped:{en:"You skipped {n} questions. Go back, or press Finish anyway.",es:"Saltaste {n} preguntas. Regresa, o presiona Terminar de todos modos.",fr:"Tu as sauté {n} questions. Reviens en arrière, ou appuie sur Terminer quand même.",ht:"Ou sote {n} kesyon. Retounen, oswa peze Fini kanmenm.",ar:"تخطيت {n} أسئلة. ارجع، أو اضغط أنهِ على أي حال."},
+  score:{en:"Score",es:"Puntaje",fr:"Score",ht:"Nòt",ar:"النتيجة"},
+  scoreNote:{en:"Your teacher reads the short answer. It is not in the score.",es:"Tu maestro lee la respuesta corta. No cuenta en el puntaje.",fr:"Ton enseignant lit la réponse courte. Elle ne compte pas dans le score.",ht:"Pwofesè w ap li repons kout la. Li pa konte nan nòt la.",ar:"يقرأ معلمك الإجابة القصيرة. لا تُحسب في النتيجة."},
+  yourAnswer:{en:"Your answer",es:"Tu respuesta",fr:"Ta réponse",ht:"Repons ou",ar:"إجابتك"},
+  correctAns:{en:"Correct answer",es:"Respuesta correcta",fr:"Bonne réponse",ht:"Bon repons",ar:"الإجابة الصحيحة"},
+  skippedOne:{en:"Skipped",es:"Sin responder",fr:"Sautée",ht:"Sote",ar:"متروك"},
+  studyMissed:{en:"Study the cards I missed",es:"Estudiar las tarjetas que fallé",fr:"Réviser les cartes que j'ai ratées",ht:"Etidye kat mwen rate yo",ar:"ادرس البطاقات التي أخطأت فيها"},
+  retake:{en:"Take a new test",es:"Hacer una prueba nueva",fr:"Faire un nouveau test",ht:"Fè yon nouvo tès",ar:"قم باختبار جديد"},
+  turnIn:{en:"Turn in",es:"Entregar",fr:"Rendre",ht:"Remèt",ar:"التسليم"},
+  turnInHow:{en:"Copy your record and paste it into Google Classroom.",es:"Copia tu registro y pégalo en Google Classroom.",fr:"Copie ton relevé et colle-le dans Google Classroom.",ht:"Kopye dosye w la epi kole l nan Google Classroom.",ar:"انسخ سجلك والصقه في Google Classroom."},
+  copy:{en:"Copy record",es:"Copiar registro",fr:"Copier le relevé",ht:"Kopye dosye a",ar:"انسخ السجل"},
+  copied:{en:"Copied! Now paste it into Google Classroom.",es:"¡Copiado! Ahora pégalo en Google Classroom.",fr:"Copié ! Colle-le maintenant dans Google Classroom.",ht:"Kopye! Kounye a kole l nan Google Classroom.",ar:"تم النسخ! الآن الصقه في Google Classroom."},
+  copyFail:{en:"Copy did not work. The record is selected. Press Ctrl+C to copy it.",es:"No se pudo copiar. El registro está seleccionado. Presiona Ctrl+C para copiarlo.",fr:"La copie n'a pas marché. Le relevé est sélectionné. Appuie sur Ctrl+C pour le copier.",ht:"Kopi a pa mache. Dosye a chwazi. Peze Ctrl+C pou kopye l.",ar:"لم ينجح النسخ. السجل محدد. اضغط Ctrl+C لنسخه."},
+  pdf:{en:"Download PDF",es:"Descargar PDF",fr:"Télécharger le PDF",ht:"Telechaje PDF",ar:"نزّل ملف PDF"},
+  pdfSaved:{en:"PDF ready. Upload it to Google Classroom.",es:"PDF listo. Súbelo a Google Classroom.",fr:"PDF prêt. Dépose-le dans Google Classroom.",ht:"PDF la pare. Mete l nan Google Classroom.",ar:"ملف PDF جاهز. ارفعه إلى Google Classroom."},
+  pdfFail:{en:"Download is blocked here. Use Copy record instead.",es:"La descarga está bloqueada aquí. Usa Copiar registro.",fr:"Le téléchargement est bloqué ici. Utilise Copier le relevé.",ht:"Telechajman bloke isit la. Sèvi ak Kopye dosye a pito.",ar:"التنزيل محظور هنا. استخدم انسخ السجل بدلاً من ذلك."},
+  settings:{en:"Settings",es:"Ajustes",fr:"Réglages",ht:"Paramèt",ar:"الإعدادات"},
+  studyingAs:{en:"Studying as",es:"Estudias como",fr:"Tu étudies en tant que",ht:"W ap etidye kòm",ar:"تدرس باسم"},
+  noName:{en:"no name yet",es:"sin nombre",fr:"pas encore de nom",ht:"poko gen non",ar:"لا يوجد اسم بعد"},
+  hourShort:{en:"Hour",es:"Hora",fr:"Heure",ht:"Lè",ar:"الحصة"},
+  yourName:{en:"Your name",es:"Tu nombre",fr:"Ton nom",ht:"Non ou",ar:"اسمك"},
+  hour:{en:"Class hour",es:"Hora de clase",fr:"Heure de cours",ht:"Lè klas",ar:"حصة الصف"},
+  myLang:{en:"My language",es:"Mi idioma",fr:"Ma langue",ht:"Lang mwen",ar:"لغتي"},
+  support:{en:"Support level",es:"Nivel de apoyo",fr:"Niveau d'aide",ht:"Nivo èd",ar:"مستوى الدعم"},
+  full:{en:"Full support",es:"Apoyo completo",fr:"Aide complète",ht:"Èd konplè",ar:"دعم كامل"},
+  fullD:{en:"My language is always on the card.",es:"Mi idioma siempre está en la tarjeta.",fr:"Ma langue est toujours sur la carte.",ht:"Lang mwen toujou sou kat la.",ar:"لغتي تظهر دائمًا على البطاقة."},
+  some:{en:"Some support",es:"Algo de apoyo",fr:"Un peu d'aide",ht:"Kèk èd",ar:"دعم جزئي"},
+  someD:{en:"I tap to see my language.",es:"Toco para ver mi idioma.",fr:"Je touche pour voir ma langue.",ht:"Mwen tape pou m wè lang mwen.",ar:"أضغط لأرى لغتي."},
+  none:{en:"No support",es:"Sin apoyo",fr:"Sans aide",ht:"San èd",ar:"بدون دعم"},
+  noneD:{en:"English only on the cards.",es:"Solo inglés en las tarjetas.",fr:"Seulement l'anglais sur les cartes.",ht:"Se sèlman angle sou kat yo.",ar:"الإنجليزية فقط على البطاقات."},
+  options:{en:"Card options",es:"Opciones de tarjetas",fr:"Options des cartes",ht:"Opsyon kat yo",ar:"خيارات البطاقات"},
+  done:{en:"Done",es:"Listo",fr:"Terminé",ht:"Fini",ar:"تم"},
+  flip:{en:"Flip",es:"Voltear",fr:"Retourner",ht:"Vire",ar:"اقلب"},
+  back:{en:"Back",es:"Atrás",fr:"Retour",ht:"Retounen",ar:"السابق"},
+  gotIt:{en:"Got it",es:"Lo sé",fr:"Je sais",ht:"Mwen konnen l",ar:"فهمتها"},
+  learning:{en:"Still learning",es:"Todavía aprendo",fr:"J'apprends encore",ht:"M ap aprann toujou",ar:"ما زلت أتعلم"},
+  shuffle:{en:"Shuffle",es:"Mezclar",fr:"Mélanger",ht:"Melanje",ar:"اخلط"},
+  shuffleOn:{en:"Shuffle: on",es:"Mezclar: sí",fr:"Mélanger : oui",ht:"Melanje: wi",ar:"الخلط: مفعّل"},
+  defFirst:{en:"Definition first",es:"Definición primero",fr:"Définition d'abord",ht:"Definisyon an premye",ar:"التعريف أولاً"},
+  termFirst:{en:"Term first",es:"Término primero",fr:"Terme d'abord",ht:"Mo a an premye",ar:"المصطلح أولاً"},
+  showMine:{en:"Show my language",es:"Mostrar mi idioma",fr:"Voir ma langue",ht:"Montre lang mwen",ar:"أظهر لغتي"},
+  hideMine:{en:"Hide my language",es:"Ocultar mi idioma",fr:"Cacher ma langue",ht:"Kache lang mwen",ar:"أخفِ لغتي"},
+  showOrig:{en:"Show Quizlet definition",es:"Mostrar la definición de Quizlet",fr:"Voir la définition Quizlet",ht:"Montre definisyon Quizlet la",ar:"أظهر تعريف Quizlet"},
+  hideOrig:{en:"Hide Quizlet definition",es:"Ocultar la definición de Quizlet",fr:"Cacher la définition Quizlet",ht:"Kache definisyon Quizlet la",ar:"أخفِ تعريف Quizlet"},
+  quizletDef:{en:"Quizlet definition",es:"Definición de Quizlet",fr:"Définition Quizlet",ht:"Definisyon Quizlet",ar:"تعريف Quizlet"},
+  tapFlip:{en:"Tap the card or press Space to flip.",es:"Toca la tarjeta o presiona Espacio para voltearla.",fr:"Touche la carte ou appuie sur Espace pour la retourner.",ht:"Tape kat la oswa peze Espas pou vire l.",ar:"اضغط على البطاقة أو على مفتاح المسافة لقلبها."},
+  flipFirst:{en:"Flip the card first. Then choose Got it or Still learning.",es:"Primero voltea la tarjeta. Luego elige Lo sé o Todavía aprendo.",fr:"Retourne d'abord la carte. Ensuite, choisis Je sais ou J'apprends encore.",ht:"Vire kat la anvan. Apre sa, chwazi Mwen konnen l oswa M ap aprann toujou.",ar:"اقلب البطاقة أولاً. ثم اختر فهمتها أو ما زلت أتعلم."},
+  cardOf:{en:"Card {n} of {t}",es:"Tarjeta {n} de {t}",fr:"Carte {n} sur {t}",ht:"Kat {n} sou {t}",ar:"البطاقة {n} من {t}"},
+  term:{en:"Term",es:"Término",fr:"Terme",ht:"Mo",ar:"المصطلح"},
+  definition:{en:"Definition",es:"Definición",fr:"Définition",ht:"Definisyon",ar:"التعريف"},
+  roundDone:{en:"Round complete",es:"Ronda terminada",fr:"Tour terminé",ht:"Tou a fini",ar:"انتهت الجولة"},
+  keepGoing:{en:"Study these cards again to move them to Got it.",es:"Estudia estas tarjetas otra vez para pasarlas a Lo sé.",fr:"Révise ces cartes encore pour les passer à Je sais.",ht:"Etidye kat sa yo ankò pou mete yo nan Mwen konnen l.",ar:"ادرس هذه البطاقات مرة أخرى لنقلها إلى فهمتها."},
+  studyLearning:{en:"Study my Still learning cards",es:"Estudiar mis tarjetas de Todavía aprendo",fr:"Réviser mes cartes J'apprends encore",ht:"Etidye kat M ap aprann toujou yo",ar:"ادرس بطاقات ما زلت أتعلم"},
+  restart:{en:"Start over with all cards",es:"Empezar de nuevo con todas",fr:"Recommencer avec toutes les cartes",ht:"Rekòmanse ak tout kat yo",ar:"ابدأ من جديد بكل البطاقات"},
+  allGot:{en:"You know every card in this set!",es:"¡Sabes todas las tarjetas de este set!",fr:"Tu connais toutes les cartes de cette série !",ht:"Ou konnen tout kat nan seri sa a!",ar:"أنت تعرف كل بطاقات هذه المجموعة!"},
+  cognate:{en:"Cognate",es:"Cognado",fr:"Mot apparenté",ht:"Mo ki sanble",ar:"كلمة مشابهة"},
+  cognateTip:{en:"This word looks or sounds like the English word.",es:"Esta palabra se parece a la palabra en inglés.",fr:"Ce mot ressemble au mot anglais.",ht:"Mo sa a sanble ak mo angle a.",ar:"هذه الكلمة تشبه الكلمة الإنجليزية."},
+  unchecked:{en:"Machine translated. A teacher has not checked it yet.",es:"Traducción automática. Un maestro todavía no la revisó.",fr:"Traduction automatique. Un enseignant ne l'a pas encore vérifiée.",ht:"Tradiksyon otomatik. Yon pwofesè poko verifye l.",ar:"ترجمة آلية. لم يراجعها معلم بعد."},
+  noVoice:{en:"This device has no voice for this language. Reading English only.",es:"Este dispositivo no tiene voz para este idioma. Solo se lee en inglés.",fr:"Cet appareil n'a pas de voix pour cette langue. Lecture en anglais seulement.",ht:"Aparèy sa a pa gen vwa pou lang sa a. Se angle sèlman l ap li.",ar:"لا يوجد صوت لهذه اللغة على هذا الجهاز. ستتم القراءة بالإنجليزية فقط."},
+  readAloud:{en:"Read aloud",es:"Leer en voz alta",fr:"Lire à voix haute",ht:"Li awotvwa",ar:"اقرأ بصوت عالٍ"}
+};
+const LANGS_ALL = [
+  {code:"en",name:"English only",note:"English"},
+  {code:"es",name:"Español",note:"Spanish"},
+  {code:"fr",name:"Français",note:"French"},
+  {code:"ht",name:"Kreyòl",note:"Haitian Creole"},
+  {code:"ar",name:"العربية",note:"Arabic"}
+];
+const LANGS = LANGS_ALL.filter(l=>l.code==="en"||(DECK.languages||["es","fr","ht","ar"]).includes(l.code));
+const EMPTY_T={term:"",def:"",plain:"",cog:false};
+
+/* ============ ICONS (Earth Science set, grows by unit) ============ */
+/*ICONS_START*/
+const S = 'fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
+const HOT = 'var(--margin)';
+const ICONS = {
+  cycle:`<svg viewBox="0 0 48 48" ${S}><path d="M24 7a17 17 0 0 1 15.5 10"/><path d="M40 10v7h-7"/><path d="M40.5 29A17 17 0 0 1 26 41"/><path d="M31 44l-5-3 3-5"/><path d="M13 37A17 17 0 0 1 9 17"/><path d="M5 20l4-3 3 4"/><circle cx="24" cy="24" r="4"/></svg>`,
+  magma:`<svg viewBox="0 0 48 48" ${S}><path d="M4 14h40"/><path d="M8 14l3-5 4 5 5-6 4 6 6-5 3 5 5-4 2 4"/><path d="M8 40c1-9 7-14 16-14s15 5 16 14z" fill="${HOT}"/><path d="M18 34c2-2 4-2 6 0s4 2 6 0"/></svg>`,
+  lava:`<svg viewBox="0 0 48 48" ${S}><path d="M4 42l12-20h16l12 20z"/><path d="M16 22c2 3 4 4 6 3s2 5 4 6 3-3 6-9" fill="${HOT}"/><path d="M20 16c0-3 2-4 4-8 2 4 4 5 4 8"/><path d="M14 10l-3-3M34 10l3-3"/></svg>`,
+  igneous:`<svg viewBox="0 0 48 48" ${S}><path d="M6 32l6-16 14-6 14 8 3 14-10 8H14z"/><circle cx="18" cy="24" r="1.6" fill="currentColor"/><circle cx="27" cy="20" r="1.6" fill="currentColor"/><circle cx="31" cy="30" r="1.6" fill="currentColor"/><circle cx="21" cy="33" r="1.6" fill="currentColor"/><path d="M34 22l2 2M14 30l2-1"/></svg>`,
+  weathering:`<svg viewBox="0 0 48 48" ${S}><path d="M8 40l4-12 10-4 12 2 6 10-2 4z"/><path d="M22 24l2 6-3 4 2 6"/><path d="M12 6v5M20 3v5M28 6v5M36 3v5"/><path d="M38 30l3 2M41 28l1 4"/></svg>`,
+  erosion:`<svg viewBox="0 0 48 48" ${S}><path d="M4 18c6-4 10 4 16 0s10 4 16 0 6-2 8-2"/><path d="M4 28c6-4 10 4 16 0s10 4 16 0 6-2 8-2"/><path d="M36 36h8l-3-3M44 36l-3 3"/><circle cx="10" cy="38" r="2"/><circle cx="18" cy="40" r="1.5"/><circle cx="26" cy="38" r="2.2"/></svg>`,
+  deposition:`<svg viewBox="0 0 48 48" ${S}><circle cx="14" cy="8" r="2"/><circle cx="24" cy="12" r="2.2"/><circle cx="34" cy="8" r="1.8"/><path d="M14 14v6M24 18v6M34 14v6" stroke-dasharray="2 3"/><path d="M4 32c10-3 30-3 40 0"/><path d="M4 38c10-2 30-2 40 0"/><path d="M4 44h40"/></svg>`,
+  sediment:`<svg viewBox="0 0 48 48" ${S}><circle cx="12" cy="30" r="3"/><circle cx="22" cy="34" r="2"/><circle cx="30" cy="28" r="3.5"/><circle cx="38" cy="34" r="2.2"/><circle cx="17" cy="38" r="1.4"/><circle cx="26" cy="40" r="1.4"/><path d="M34 16c0 4-3 6-6 6s-6-2-6-6 3-6 6-6c1 0 2 .3 3 .8"/><path d="M28 12v10M24 14l4 1M32 14l-4 1"/></svg>`,
+  sedimentary:`<svg viewBox="0 0 48 48" ${S}><rect x="5" y="8" width="38" height="32" rx="3"/><path d="M5 16c8 2 14-2 20 0s12 2 18 0"/><path d="M5 24c8 2 14-2 20 0s12 2 18 0"/><path d="M5 32c8 2 14-2 20 0s12 2 18 0"/><circle cx="14" cy="20" r="1" fill="currentColor"/><circle cx="32" cy="28" r="1" fill="currentColor"/></svg>`,
+  metamorphic:`<svg viewBox="0 0 48 48" ${S}><rect x="11" y="12" width="26" height="24" rx="3"/><path d="M11 19c5-3 8 3 13 0s8 3 13 0"/><path d="M11 26c5-3 8 3 13 0s8 3 13 0"/><path d="M11 33c5-3 8 3 13 0s8 3 13 0"/><path d="M24 2v7M20 6l4 4 4-4"/><path d="M24 46v-7M20 42l4-4 4 4"/><path d="M2 24h6M44 24h-6" stroke="${HOT}"/></svg>`,
+  book:`<svg viewBox="0 0 48 48" ${S}><path d="M8 8h13a3 3 0 0 1 3 3v29a3 3 0 0 0-3-3H8zM40 8H27a3 3 0 0 0-3 3v29a3 3 0 0 1 3-3h13z"/></svg>`,
+  "water-drop":`<svg viewBox="0 0 48 48" ${S}><path d="M24 6c7 10 12 16 12 23a12 12 0 0 1-24 0c0-7 5-13 12-23z"/><path d="M18 30a6 6 0 0 0 6 6"/></svg>`,
+  cloud:`<svg viewBox="0 0 48 48" ${S}><path d="M14 36h22a8 8 0 0 0 0-16 11 11 0 0 0-21-2A9 9 0 0 0 14 36z"/></svg>`,
+  rain:`<svg viewBox="0 0 48 48" ${S}><path d="M14 28h22a7 7 0 0 0 0-14 10 10 0 0 0-19-2A8 8 0 0 0 14 28z"/><path d="M16 34l-2 6M24 34l-2 6M32 34l-2 6"/></svg>`,
+  snow:`<svg viewBox="0 0 48 48" ${S}><path d="M24 6v36M8.4 15l31.2 18M8.4 33l31.2-18"/><path d="M19 9l5 4 5-4M19 39l5-4 5 4"/></svg>`,
+  ice:`<svg viewBox="0 0 48 48" ${S}><path d="M8 16l16-8 16 8v16l-16 8-16-8z"/><path d="M8 16l16 8 16-8M24 24v16"/></svg>`,
+  sun:`<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="24" r="8"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M9.9 9.9l4.2 4.2M33.9 33.9l4.2 4.2M9.9 38.1l4.2-4.2M33.9 14.1l4.2-4.2"/></svg>`,
+  moon:`<svg viewBox="0 0 48 48" ${S}><path d="M30 6a18 18 0 1 0 12 26A15 15 0 0 1 30 6z"/></svg>`,
+  star:`<svg viewBox="0 0 48 48" ${S}><path d="M24 5l5.6 12 13 1.5-9.7 8.8 2.7 12.9L24 33.7 12.4 40.2l2.7-12.9-9.7-8.8 13-1.5z"/></svg>`,
+  planet:`<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="24" r="10"/><ellipse cx="24" cy="24" rx="20" ry="7" transform="rotate(-20 24 24)"/></svg>`,
+  globe:`<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="24" r="18"/><path d="M6 24h36M24 6c6 6 6 30 0 36M24 6c-6 6-6 30 0 36"/></svg>`,
+  thermometer:`<svg viewBox="0 0 48 48" ${S}><path d="M20 28V10a4 4 0 0 1 8 0v18a8 8 0 1 1-8 0z"/><circle cx="24" cy="34" r="3" fill="${HOT}"/><path d="M24 31V16"/></svg>`,
+  wind:`<svg viewBox="0 0 48 48" ${S}><path d="M4 18h26a5 5 0 1 0-5-5"/><path d="M4 26h34a5 5 0 1 1-5 5"/><path d="M4 34h16"/></svg>`,
+  lightning:`<svg viewBox="0 0 48 48" ${S}><path d="M27 4L11 27h11l-3 17 18-25H26z"/></svg>`,
+  wave:`<svg viewBox="0 0 48 48" ${S}><path d="M4 20c5-6 10-6 14 0s9 6 14 0 8-6 12-2"/><path d="M4 32c5-6 10-6 14 0s9 6 14 0 8-6 12-2"/></svg>`,
+  mountain:`<svg viewBox="0 0 48 48" ${S}><path d="M3 40l14-24 8 12 6-8 14 20z"/><path d="M13 23l4 3 4-3"/></svg>`,
+  plates:`<svg viewBox="0 0 48 48" ${S}><path d="M4 30h18l-4 10H4zM26 30h18v10H22z"/><path d="M4 20h12M12 16l4 4-4 4M44 20H32M36 16l-4 4 4 4"/></svg>`,
+  earthquake:`<svg viewBox="0 0 48 48" ${S}><path d="M4 24h8l4-10 6 20 5-14 4 8h13"/><path d="M4 40h40"/></svg>`,
+  fossil:`<svg viewBox="0 0 48 48" ${S}><path d="M24 24a3 3 0 1 1 3 3 6 6 0 1 1-6-6 9 9 0 1 1 9 9 12 12 0 1 1-12-12 15 15 0 0 1 15 15"/></svg>`,
+  crystal:`<svg viewBox="0 0 48 48" ${S}><path d="M24 4l10 10-4 28H18l-4-28z"/><path d="M14 14h20M24 4v38"/></svg>`,
+  fire:`<svg viewBox="0 0 48 48" ${S}><path d="M24 4c2 8 12 12 12 24a12 12 0 0 1-24 0c0-6 3-9 6-12 0 4 2 6 4 6 0-6-2-10 2-18z" fill="${HOT}"/></svg>`,
+  gravity:`<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="11" r="6"/><path d="M24 20v22M17 35l7 7 7-7"/></svg>`,
+  magnifier:`<svg viewBox="0 0 48 48" ${S}><circle cx="20" cy="20" r="12"/><path d="M29 29l13 13"/></svg>`,
+  scale:`<svg viewBox="0 0 48 48" ${S}><path d="M24 8v32M14 40h20M8 14h32"/><path d="M8 14l-5 12h10zM40 14l-5 12h10z"/></svg>`,
+  cylinder:`<svg viewBox="0 0 48 48" ${S}><path d="M16 6h16M18 6v34a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V6"/><path d="M18 30h12M22 14h4M22 20h4M22 26h4"/></svg>`,
+  flask:`<svg viewBox="0 0 48 48" ${S}><path d="M18 6h12M20 6v12L8 40a3 3 0 0 0 3 4h26a3 3 0 0 0 3-4L28 18V6"/><path d="M13 32h22"/></svg>`,
+  atom:`<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="24" r="3" fill="currentColor"/><ellipse cx="24" cy="24" rx="19" ry="7"/><ellipse cx="24" cy="24" rx="19" ry="7" transform="rotate(60 24 24)"/><ellipse cx="24" cy="24" rx="19" ry="7" transform="rotate(-60 24 24)"/></svg>`,
+  molecule:`<svg viewBox="0 0 48 48" ${S}><circle cx="13" cy="32" r="6"/><circle cx="35" cy="32" r="6"/><circle cx="24" cy="13" r="6"/><path d="M16 27l5-9M32 27l-5-9M19 32h10"/></svg>`,
+  leaf:`<svg viewBox="0 0 48 48" ${S}><path d="M8 40C8 18 22 8 40 8c0 20-12 32-32 32z"/><path d="M8 40L30 18"/></svg>`,
+  tree:`<svg viewBox="0 0 48 48" ${S}><path d="M24 44V30"/><path d="M24 4L10 24h6L8 34h32l-8-10h6z"/></svg>`,
+  fish:`<svg viewBox="0 0 48 48" ${S}><path d="M6 24c8-10 22-10 30 0-8 10-22 10-30 0z"/><path d="M36 24l8-7v14z"/><circle cx="14" cy="22" r="1.5" fill="currentColor"/></svg>`,
+  clock:`<svg viewBox="0 0 48 48" ${S}><circle cx="24" cy="24" r="18"/><path d="M24 12v12l8 5"/></svg>`,
+  map:`<svg viewBox="0 0 48 48" ${S}><path d="M4 10l12-4 16 6 12-4v30l-12 4-16-6-12 4z"/><path d="M16 6v30M32 12v30"/></svg>`
+};
+/*ICONS_END*/
+function iconHtml(c){return c.svg?c.svg:c.img?`<img src="${esc(c.img)}" alt="">`:(ICONS[c.icon]||ICONS.book)}
+/* Claude-drawn pictures animate with SMIL; freeze them for students who ask for reduced motion */
+(function(){try{if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;
+  const freeze=()=>document.querySelectorAll("svg[data-fb]").forEach(s=>{try{s.pauseAnimations();s.setCurrentTime(0)}catch(e){}});
+  new MutationObserver(freeze).observe(document.documentElement,{childList:true,subtree:true});}catch(e){}})();
+const SPEAKER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>`;
+
+/* ============ STATE ============ */
+const store = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const saved = store.get("fb:settings",{});
+const state = {
+  name: saved.name || "",
+  hour: saved.hour || "",
+  lang: (saved.lang && LANGS.some(l=>l.code===saved.lang)) ? saved.lang : (DECK.defaultLang || "en"),
+  support: saved.support || "full",
+  mode: "cards",
+  defFirst: false,
+  shuffle: false,
+  order: [], i: 0,
+  marks: {},                           // id -> "got" | "learn"
+  flipped: false,
+  showMine: false,                     // "Some support": revealed for the current card
+  showOrig: false,
+  summary: false
+};
+function saveSettings(){store.set("fb:settings",{name:state.name,hour:state.hour,lang:state.lang,support:state.support})}
+function progKey(){return "fb:"+DECK.id+":"+(state.name.trim().toLowerCase()||"anon")}
+function saveProgress(){store.set(progKey(),{marks:state.marks,mastered:learn.mastered,streak:learn.streak,rounds:learn.roundNo})}
+function loadProgress(){const p=store.get(progKey(),null)||{};state.marks=p.marks||{};learn.mastered=p.mastered||{};learn.streak=p.streak||{};learn.roundNo=p.rounds||0;learn.cur=null;learn.done=false}
+
+/* ============ HELPERS ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const L2 = () => state.lang !== "en" ? state.lang : null;
+const uiL2 = () => L2() && state.support !== "none";
+function attrs(code){return `lang="${code}"${code==="ar"?' dir="rtl"':''}`}
+function tx(key,vars){let e=T[key].en,l=L2()?T[key][state.lang]:null;if(vars){for(const k in vars){e=e.replace("{"+k+"}",vars[k]);if(l)l=l.replace("{"+k+"}",vars[k])}}return {e,l}}
+/* English line + companion translation line */
+function bi(key,vars){const {e,l}=tx(key,vars);return `<span class="en">${esc(e)}</span>`+(l&&uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(l)}</span>`:"")}
+function biInline(key,vars){return `<span class="inline">${bi(key,vars)}</span>`}
+function plainTx(key,vars){const {e,l}=tx(key,vars);return l&&uiL2()?e+" / "+l:e}
+function contentL2Visible(){ if(!L2()||state.support==="none") return false; return state.support==="full" || state.showMine; }
+
+/* ============ READ-ALOUD ============ */
+let voices=[];
+function loadVoices(){try{voices=speechSynthesis.getVoices()}catch(e){voices=[]}}
+if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function pickVoice(code){
+  if(!voices.length) loadVoices();
+  const want = code==="en" ? ["en-us","en"] : [code];
+  for(const w of want){const v=voices.find(v=>v.lang&&v.lang.toLowerCase().replace("_","-").startsWith(w));if(v)return v}
+  return null;
+}
+let speakingBtn=null;
+function speak(parts,btn){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  if(speakingBtn){speakingBtn.classList.remove("on")}
+  if(speakingBtn===btn){speakingBtn=null;return}
+  speakingBtn=btn; btn&&btn.classList.add("on");
+  let missing=false;
+  const queue=parts.filter(p=>p.text).map(p=>{
+    const v=pickVoice(p.lang);
+    if(!v && p.lang!=="en"){missing=true;return null}
+    const u=new SpeechSynthesisUtterance(p.text);
+    u.lang = p.lang==="en"?"en-US":p.lang; if(v)u.voice=v; u.rate=.92;
+    return u;
+  }).filter(Boolean);
+  if(missing) announce(plainTx("noVoice"), true);
+  if(!queue.length){btn&&btn.classList.remove("on");speakingBtn=null;return}
+  queue[queue.length-1].onend=()=>{btn&&btn.classList.remove("on");if(speakingBtn===btn)speakingBtn=null};
+  queue.forEach(u=>speechSynthesis.speak(u));
+}
+function speakBtn(id){return `<button class="speak" data-speak="${id}" aria-label="${esc(plainTx("readAloud"))}" title="${esc(plainTx("readAloud"))}">${SPEAKER}</button>`}
+function announce(msg,visible){
+  $("#announce").textContent=msg;
+  if(visible){const n=$("#voiceNote");if(n){n.hidden=false;n.textContent=msg}}
+}
+
+/* ============ ROUND LOGIC ============ */
+function newRound(ids){
+  state.order = ids.slice();
+  if(state.shuffle){for(let i=state.order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[state.order[i],state.order[j]]=[state.order[j],state.order[i]]}}
+  state.i=0; state.flipped=false; state.showMine=false; state.showOrig=false; state.summary=false;
+}
+function allIds(){return DECK.cards.map(c=>c.id)}
+function learningIds(){return allIds().filter(id=>state.marks[id]!=="got")}
+function card(){return DECK.cards.find(c=>c.id===state.order[state.i])}
+function counts(){let g=0,l=0;for(const id of allIds()){if(state.marks[id]==="got")g++;else if(state.marks[id]==="learn")l++}return {g,l}}
+
+/* ============ RENDER ============ */
+function renderChrome(){
+  document.body.classList.toggle("hide-l2",!uiL2());
+  const tt = L2()&&DECK.titleT[state.lang]&&uiL2() ? `<span class="l2" ${attrs(state.lang)}>${esc(DECK.titleT[state.lang])}</span>` : "";
+  $("#deckTitle").innerHTML = `<span class="en">${esc(DECK.title)}</span>${tt}`;
+  $("#openSettings").innerHTML = `<span class="en">⚙ ${esc(T.settings.en)}</span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T.settings[state.lang])}</span>`:""}`;
+  const modes=[["cards","modeCards"],["learn","modeLearn"],["match","modeMatch"],["test","modeTest"]];
+  $("#tabs").innerHTML = modes.map(([m,k])=>`<button class="tab" role="tab" id="tab-${m}" aria-selected="${state.mode===m}" data-mode="${m}"><span class="en">${esc(T[k].en)}</span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T[k][state.lang])}</span>`:""}</button>`).join("");
+}
+
+function renderStage(){
+  const st=$("#stage"), act=$("#actions");
+  sayReg=[]; act.hidden=false; act.dataset.layout="";
+  if(state.mode==="learn") return renderLearn(st,act);
+  if(state.mode==="match") return renderMatch(st,act);
+  if(state.mode==="test") return renderTest(st,act);
+  const {g,l}=counts(), total=DECK.cards.length;
+  const who = state.name ? `<b>${esc(state.name)}</b>${state.hour?` · ${esc(T.hourShort.en)} ${esc(state.hour)}`:""}` : `<i>${esc(T.noName.en)}</i>`;
+  const unchecked = L2() && state.support!=="none" && !DECK.reviewed[state.lang];
+  const strip = stripHtml(`<span class="pill ok"><span class="dot"></span>${g} ${esc(T.gotIt.en)}</span><span class="pill no"><span class="dot"></span>${l} ${esc(T.learning.en)}</span>`);
+
+  if(state.summary){
+    const left=learningIds();
+    const missed=left.map(id=>DECK.cards.find(c=>c.id===id)).map(c=>`<span>${esc(c.term)}${contentL2Visible()?` · <span ${attrs(state.lang)} style="color:var(--l2)">${esc((c.t[state.lang]||EMPTY_T).term)}</span>`:""}</span>`).join("");
+    st.innerHTML = strip + `<div class="panel" id="summary" tabindex="-1">
+      <h2>${bi(left.length?"roundDone":"allGot")}</h2>
+      <div class="tally"><div class="box ok"><div class="num">${g}</div>${biInline("gotIt")}</div><div class="box no"><div class="num">${left.length}</div>${biInline("learning")}</div></div>
+      ${left.length?`<p class="def" style="font-size:17px">${bi("keepGoing")}</p><div class="missed">${missed}</div>`:""}
+      <div class="row">
+        ${left.length?`<button class="btn primary" data-act="studyLearning">${bi("studyLearning")}</button>`:""}
+        <button class="btn" data-act="restart">${bi("restart")}</button>
+      </div></div>`;
+    act.innerHTML=""; act.hidden=true;
+    $("#summary").focus();
+    return;
+  }
+
+  const c=card(), n=state.i+1, tn=state.order.length;
+  const tl = L2() ? (c.t[state.lang]||EMPTY_T) : null;
+  const show = contentL2Visible();
+  const lab = (k)=>`<span>${esc(T[k].en)}${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T[k][state.lang])}</span>`:""}</span>`;
+  const cog = show && tl.cog ? `<span class="cog" title="${esc(plainTx("cognateTip"))}">≈ ${esc(T.cognate.en)}${state.lang!=="ar"?" · "+esc(T.cognate[state.lang]):""}</span>` : "";
+  const termFace = `<div class="face-label">${lab("term")}<span style="text-transform:none;letter-spacing:0">${esc(plainTx("cardOf",{n,t:tn}).split(" / ")[0])}</span></div>
+    <div class="face-body">
+      <div class="term-row">
+        <div class="icon" aria-hidden="true">${iconHtml(c)}</div>
+        <div class="term-block">
+          <p class="term">${esc(c.term)}</p>
+          ${show?`<div class="term-l2" ${attrs(state.lang)}>${esc(tl.term)} ${cog}</div>`:""}
+        </div>
+        ${speakBtn("term")}
+      </div>
+      ${state.support==="some"&&L2()?`<div class="small-row"><button class="chip-btn" data-act="toggleMine">${bi(state.showMine?"hideMine":"showMine")}</button></div>`:""}
+    </div>`;
+  const useFull = state.support==="full" && L2();
+  const mainDef = useFull ? c.plain : c.def;
+  const mainDefL2 = tl ? (useFull ? tl.plain : tl.def) : "";
+  const defFace = `<div class="face-label">${lab("definition")}<span style="text-transform:none;letter-spacing:0">${esc(c.term)}</span></div>
+    <div class="face-body">
+      <div class="def-block"><div>
+        <p class="def" style="margin:0">${esc(mainDef)}</p>
+        ${show?`<p class="def-l2" ${attrs(state.lang)} style="margin-bottom:0">${esc(mainDefL2)}</p>`:""}
+      </div>${speakBtn("def")}</div>
+      ${useFull?(state.showOrig?`<div class="orig"><div class="orig-tag">${esc(T.quizletDef.en)}</div><div class="def-block"><div><p class="def" style="margin:0">${esc(c.def)}</p>${show?`<p class="def-l2" ${attrs(state.lang)} style="margin-bottom:0">${esc(tl.def)}</p>`:""}</div>${speakBtn("orig")}</div></div>`:""):""}
+      <div class="small-row">
+        ${useFull?`<button class="chip-btn" data-act="toggleOrig">${bi(state.showOrig?"hideOrig":"showOrig")}</button>`:""}
+        ${state.support==="some"&&L2()?`<button class="chip-btn" data-act="toggleMine">${bi(state.showMine?"hideMine":"showMine")}</button>`:""}
+      </div>
+    </div>`;
+  const front = state.defFirst ? defFace : termFace;
+  const backF = state.defFirst ? termFace : defFace;
+
+  st.innerHTML = strip + `<div class="bar" aria-hidden="true"><i style="width:${(state.i/tn)*100}%"></i></div>
+    <div class="card-wrap">
+      <div class="card${state.flipped?" flipped":""}" id="card" role="group" aria-label="${esc(plainTx("cardOf",{n,t:tn}).split(" / ")[0])}">
+        <div class="face front" aria-hidden="${state.flipped}">${front}</div>
+        <div class="face back" aria-hidden="${!state.flipped}">${backF}</div>
+      </div>
+    </div>
+    <p class="hint">${biInline(state.flipped?"flipFirst":"tapFlip")}</p>`;
+
+  act.innerHTML = `
+    <button class="btn back" data-act="back" ${state.i===0?"disabled":""} ><span class="en">‹ ${esc(T.back.en)}</span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T.back[state.lang])}</span>`:""}</button>
+    <button class="btn learn" data-act="learn" ${state.flipped?"":"disabled"}><span class="en"><span class="mark">✗</span> ${esc(T.learning.en)}<span class="kbd">1</span></span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T.learning[state.lang])}</span>`:""}</button>
+    <button class="btn primary" data-act="flip" id="flipBtn"><span class="en">↻ ${esc(T.flip.en)}<span class="kbd">Space</span></span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T.flip[state.lang])}</span>`:""}</button>
+    <button class="btn got" data-act="got" ${state.flipped?"":"disabled"}><span class="en"><span class="mark">✓</span> ${esc(T.gotIt.en)}<span class="kbd">2</span></span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T.gotIt[state.lang])}</span>`:""}</button>`;
+}
+
+function flip(){
+  state.flipped=!state.flipped;
+  const el=$("#card");
+  if(!el) return;
+  el.classList.toggle("flipped",state.flipped);
+  el.querySelector(".front").setAttribute("aria-hidden",state.flipped);
+  el.querySelector(".back").setAttribute("aria-hidden",!state.flipped);
+  document.querySelectorAll('[data-act="learn"],[data-act="got"]').forEach(b=>b.disabled=!state.flipped);
+  $(".hint").innerHTML=biInline(state.flipped?"flipFirst":"tapFlip");
+  if(state.flipped) announce(state.defFirst?card().term:(state.support==="full"&&L2()?card().plain:card().def));
+}
+function mark(kind){
+  if(!state.flipped) return;
+  state.marks[card().id]=kind; saveProgress();
+  if(state.i<state.order.length-1){state.i++;state.flipped=false;state.showMine=false;state.showOrig=false;renderStage();$("#flipBtn")&&$("#flipBtn").focus()}
+  else{state.summary=true;renderStage()}
+}
+
+/* ============ SHARED HELPERS FOR MODES ============ */
+let sayReg=[];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function byId(id){return DECK.cards.find(c=>c.id===id)}
+function useFull(){return state.support==="full"&&!!L2()}
+function dEn(c){return useFull()?c.plain:c.def}
+function dL2(c){const t=L2()&&c.t[state.lang];return t?(useFull()?t.plain:t.def):""}
+function tL2(c){const t=L2()&&c.t[state.lang];return t?t.term:""}
+function l2c(text){return contentL2Visible()&&text?`<span class="l2c" ${attrs(state.lang)}>${esc(text)}</span>`:""}
+function defL2(text){return contentL2Visible()&&text?`<p class="def-l2" ${attrs(state.lang)} style="margin:4px 0 0">${esc(text)}</p>`:""}
+function uiWord(key){return uiL2()?`<span class="l2c" ${attrs(state.lang)}>${esc(T[key][state.lang])}</span>`:""}
+function sayBtn(en,l2text){
+  const parts=[{text:en,lang:"en"}];
+  if(l2text&&contentL2Visible()) parts.push({text:l2text,lang:state.lang});
+  sayReg.push(parts);
+  return `<button class="speak" data-say="${sayReg.length-1}" aria-label="${esc(plainTx("readAloud"))}" title="${esc(plainTx("readAloud"))}">${SPEAKER}</button>`;
+}
+function mineBtn(){return state.support==="some"&&L2()?`<button class="chip-btn" data-act="mine">${bi(state.showMine?"hideMine":"showMine")}</button>`:""}
+function btnLabel(key,prefix,kbd,vars){const {e,l}=tx(key,vars);return `<span class="en">${prefix||""}${esc(e)}${kbd?`<span class="kbd">${kbd}</span>`:""}</span>${l&&uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(l)}</span>`:""}`}
+function fmtTime(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function en(key,vars){return tx(key,vars).e}
+function stripHtml(right){
+  const who = state.name ? `<b>${esc(state.name)}</b>${state.hour?` · ${esc(T.hourShort.en)} ${esc(state.hour)}`:""}` : `<i>${esc(T.noName.en)}</i>`;
+  const unchecked = L2() && state.support!=="none" && !DECK.reviewed[state.lang];
+  return `<div class="strip">
+      <span class="who">${esc(T.studyingAs.en)}: ${who}</span>
+      ${unchecked?`<span class="note">${bi("unchecked")}</span>`:""}
+      <span class="counts">${right||""}</span>
+    </div>
+    <div class="note" id="voiceNote" hidden></div>`;
+}
+function choiceHtml(o,i,opts){
+  // opts: {act, picked, checked, answerId, askTerm}
+  let cls="choice", verdict="";
+  if(opts.checked){
+    if(o.id===opts.answerId){cls+=" right";verdict=`<span class="verdict">✓ ${esc(T.correctAns.en)}</span>`}
+    else if(o.id===opts.picked){cls+=" wrong";verdict=`<span class="verdict">✗ ${esc(T.yourAnswer.en)}</span>`}
+  }
+  const body = opts.askTerm ? `<span class="ct">${esc(o.term)}</span>${l2c(tL2(o))}` : `<span class="cd">${esc(dEn(o))}</span>${l2c(dL2(o))}`;
+  return `<button class="${cls}" role="radio" aria-checked="${opts.picked===o.id}" data-act="${opts.act}" data-id="${o.id}" ${opts.checked?'aria-disabled="true"':""}><span class="key" aria-hidden="true">${i+1}</span><span class="ctext">${body}${verdict}</span></button>`;
+}
+
+/* ============ LEARN ============ */
+const learn={streak:{},mastered:{},round:[],qi:0,cur:null,roundNo:0,roundRight:0,roundLen:0,answerWith:"term",done:false};
+function learnNewRound(){
+  const pool=allIds().filter(id=>!learn.mastered[id]);
+  if(!pool.length){learn.done=true;learn.cur=null;return}
+  learn.round=shuffle(pool).slice(0,7); learn.roundLen=learn.round.length;
+  learn.qi=0; learn.roundNo++; learn.roundRight=0; learn.done=false; learnMakeQ();
+}
+function learnMakeQ(){
+  const id=learn.round[learn.qi]; const n=Math.min(useFull()?3:4,DECK.cards.length);
+  learn.cur={id,choices:shuffle([id,...shuffle(allIds().filter(x=>x!==id)).slice(0,n-1)]),picked:null,checked:false,right:false,justMastered:false};
+  state.showMine=false;
+}
+function learnCheck(){
+  const q=learn.cur; if(!q||q.picked==null||q.checked) return;
+  q.checked=true; q.right=q.picked===q.id;
+  if(q.right){
+    learn.streak[q.id]=(learn.streak[q.id]||0)+1; learn.roundRight++;
+    if(learn.streak[q.id]>=2&&!learn.mastered[q.id]){learn.mastered[q.id]=true;q.justMastered=true}
+  }else{
+    learn.streak[q.id]=0;
+    if(learn.round.length<learn.roundLen+5) learn.round.push(q.id);   // missed cards come back later this round
+  }
+  saveProgress(); renderStage();
+  const fb=$("#learnFb"); fb&&fb.focus();
+}
+function learnNext(){
+  learn.qi++;
+  if(learn.qi>=learn.round.length){learn.done=true;saveProgress();renderStage();$("#summary")&&$("#summary").focus();return}
+  learnMakeQ(); renderStage(); const f=document.querySelector(".choice"); f&&f.focus();
+}
+function renderLearn(st,act){
+  if(!learn.cur&&!learn.done) learnNewRound();
+  const total=DECK.cards.length, m=Object.keys(learn.mastered).length;
+  const pill=`<span class="pill ok"><span class="dot"></span>${esc(en("masteredN",{n:m,t:total}))}</span>`;
+  const bar=`<div class="bar" aria-hidden="true"><i style="width:${m/total*100}%"></i></div>`;
+  if(learn.done){
+    const all=m===total;
+    st.innerHTML=stripHtml(pill)+bar+`<div class="panel" id="summary" tabindex="-1">
+      <h2>${all?bi("allMastered"):bi("learnRoundDone",{n:learn.roundNo})}</h2>
+      <div class="tally"><div class="box ok"><div class="num">${m}/${total}</div>${biInline("masteredWord")}</div>${all?"":`<div class="box"><div class="num">${learn.roundRight}/${learn.round.length}</div>${biInline("rightThisRound")}</div>`}</div>
+      <p class="def" style="font-size:17px;margin:0">${bi("masteryRule")}</p>
+      <div class="row">${all?`<button class="btn primary" data-act="learnReset">${bi("restart")}</button>`:`<button class="btn primary" data-act="learnRound">${bi("nextRound")}</button>`}</div></div>`;
+    act.hidden=true; return;
+  }
+  const q=learn.cur, c=byId(q.id), askTerm=learn.answerWith==="term";
+  const head=`<div class="q-head">
+      <b>${esc(en("questionOf",{n:learn.qi+1,t:learn.round.length}))}</b>
+      ${mineBtn()}
+      <span class="seg-wrap"><span class="seg-lab">${biInline("answerWith")}</span>
+      <span class="seg" role="group" aria-label="Answer with">
+        <button aria-pressed="${askTerm}" data-act="aw" data-v="term">${btnLabel("term")}</button>
+        <button aria-pressed="${!askTerm}" data-act="aw" data-v="def">${btnLabel("definition")}</button>
+      </span></span>
+    </div>`;
+  const prompt = askTerm
+    ? `<div class="prompt"><div class="grow"><div class="prompt-ask">${biInline("learnPromptTerm")}</div><p class="def" style="margin:.2em 0 0">${esc(dEn(c))}</p>${defL2(dL2(c))}</div>${sayBtn(dEn(c),dL2(c))}</div>`
+    : `<div class="prompt"><div class="icon" aria-hidden="true">${iconHtml(c)}</div><div class="grow"><div class="prompt-ask">${biInline("learnPromptDef")}</div><p class="term" style="font-size:clamp(24px,3.4vw,32px);margin:.1em 0 0">${esc(c.term)}</p>${contentL2Visible()?`<div class="term-l2" ${attrs(state.lang)} style="font-size:20px;margin-top:2px">${esc(tL2(c))}</div>`:""}</div>${sayBtn(c.term,tL2(c))}</div>`;
+  const choices=`<div class="choices${askTerm?"":" wide"}" role="radiogroup" aria-label="Answer choices">${q.choices.map((id,i)=>choiceHtml(byId(id),i,{act:"pick",picked:q.picked,checked:q.checked,answerId:q.id,askTerm})).join("")}</div>`;
+  let fb="";
+  if(q.checked){
+    if(q.right){
+      fb=`<div class="feedback ok" id="learnFb" tabindex="-1"><strong>✓ ${biInline("correct")}</strong>${q.justMastered?`<div>${biInline("masteredNow")}</div>`:""}</div>`;
+    }else{
+      const p=byId(q.picked);
+      fb=`<div class="feedback no" id="learnFb" tabindex="-1"><strong>✗ ${bi("wrongPicked",{x:p.term})}</strong>
+        <div style="margin-top:4px">${biInline("rightAnswer")} <b>${esc(askTerm?c.term:dEn(c))}</b></div>
+        <div class="fb-small">${biInline("comeBack")}</div></div>`;
+    }
+  }else fb=`<p class="hint">${biInline("pickFirst")}</p>`;
+  st.innerHTML=stripHtml(pill)+bar+head+prompt+choices+`<div aria-live="polite">${fb}</div>`;
+  act.dataset.layout="one";
+  act.innerHTML = q.checked
+    ? `<button class="btn primary" data-act="learnNext" id="learnGo">${btnLabel("next","","Enter")} </button>`
+    : `<button class="btn primary" data-act="learnCheck" id="learnGo" ${q.picked?"":"disabled"}>${btnLabel("check","","Enter")}</button>`;
+}
+
+/* ============ MATCH ============ */
+const match={type:null,tiles:[],sel:null,matched:{},misses:0,start:0,end:0,timer:null,done:false,bad:[],newBest:false};
+function matchTypesList(){const t=[["td","mtTermDef"]];if(L2())t.push(["tl","mtTermL2"]);t.push(["it","mtIcon"]);return t}
+function matchNew(){
+  if(!match.type||(match.type==="tl"&&!L2())) match.type=useFull()?"tl":"td";
+  clearInterval(match.timer); match.timer=null;
+  const ids=shuffle(allIds()).slice(0,Math.min(6,DECK.cards.length));
+  match.tiles=shuffle(ids.flatMap(id=>[{id,side:"a"},{id,side:"b"}]));
+  Object.assign(match,{sel:null,matched:{},misses:0,start:0,end:0,done:false,bad:[],newBest:false});
+  state.showMine=false;
+}
+function bestKey(type){return "fb:"+DECK.id+":best:"+(type||match.type)}
+function tileBody(tl){
+  const c=byId(tl.id);
+  if(match.type==="td") return tl.side==="a"?{cls:"term",html:`${esc(c.term)}${l2c(tL2(c))}`}:{cls:"defn",html:`${esc(dEn(c))}${l2c(dL2(c))}`};
+  if(match.type==="tl") return tl.side==="a"?{cls:"term",html:esc(c.term)}:{cls:"term l2t",html:`<span ${attrs(state.lang)}>${esc(tL2(c))}</span>`};
+  return tl.side==="a"?{cls:"pic",html:`<span class="icon-t" aria-hidden="true">${iconHtml(c)}</span>`,label:en("picture")}:{cls:"term",html:`${esc(c.term)}${l2c(tL2(c))}`};
+}
+function focusTile(i){const el=$("#tile-"+i);el&&el.focus()}
+function matchTap(i){
+  if(match.done) return;
+  const tl=match.tiles[i]; if(match.matched[tl.id]) return;
+  if(!match.start){
+    match.start=Date.now();
+    match.timer=setInterval(()=>{const el=$("#mtime");if(el&&!match.done)el.textContent=fmtTime(Date.now()-match.start)},250);
+  }
+  match.bad=[];
+  if(match.sel===null||match.sel===i||match.tiles[match.sel].side===tl.side){
+    match.sel=(match.sel===i)?null:i; renderStage(); focusTile(i); return;
+  }
+  const other=match.tiles[match.sel];
+  if(other.id===tl.id){
+    match.matched[tl.id]=true; match.sel=null;
+    announce(en("paired")+": "+byId(tl.id).term);
+    if(Object.keys(match.matched).length*2===match.tiles.length){
+      match.done=true; match.end=Date.now(); clearInterval(match.timer);
+      const t=match.end-match.start, best=store.get(bestKey(),null);
+      match.newBest = best!==null && t<best;
+      if(best===null||t<best) store.set(bestKey(),t);
+      renderStage(); $("#summary")&&$("#summary").focus(); return;
+    }
+    renderStage();
+    const open=match.tiles.findIndex(x=>!match.matched[x.id]); focusTile(open); return;
+  }
+  match.misses++; match.bad=[match.sel,i]; match.sel=null;
+  announce(en("notPair")); renderStage(); focusTile(i);
+  setTimeout(()=>{match.bad=[];document.querySelectorAll(".tile.bad").forEach(el=>el.classList.remove("bad"));const h=$("#matchMsg");if(h)h.innerHTML=biInline("matchHow")},900);
+}
+function renderMatch(st,act){
+  if(!match.tiles.length||(match.type==="tl"&&!L2())) matchNew();
+  act.hidden=true;
+  const best=store.get(bestKey(),null);
+  const now=match.start?((match.done?match.end:Date.now())-match.start):0;
+  const stats=`<span class="pill">⏱ <b id="mtime">${fmtTime(now)}</b></span><span class="pill no"><span class="dot"></span>${esc(T.misses.en)}: ${match.misses}</span><span class="pill">${esc(T.best.en)}: ${best!==null?fmtTime(best):"–"}</span>`;
+  const types=matchTypesList().map(([v,k])=>`<button aria-pressed="${match.type===v}" data-act="mtype" data-v="${v}">${btnLabel(k)}</button>`).join("");
+  const head=`<div class="q-head"><span class="seg-wrap"><span class="seg-lab">${biInline("matchType")}</span><span class="seg" role="group" aria-label="What to match">${types}</span></span>${match.type!=="tl"?mineBtn():""}</div>`;
+  if(match.done){
+    st.innerHTML=stripHtml(stats)+head+`<div class="panel" id="summary" tabindex="-1">
+      <h2>${bi("matchDone")}</h2>
+      <div class="tally"><div class="box ok"><div class="num">${fmtTime(match.end-match.start)}</div>${biInline("time")}</div><div class="box no"><div class="num">${match.misses}</div>${biInline("misses")}</div><div class="box"><div class="num">${fmtTime(store.get(bestKey(),match.end-match.start))}</div>${biInline("best")}</div></div>
+      ${match.newBest?`<div class="feedback ok"><strong>★ ${biInline("newBest")}</strong></div>`:""}
+      <div class="row"><button class="btn primary" data-act="mplay">${bi("playAgain")}</button></div></div>`;
+    return;
+  }
+  const tiles=match.tiles.map((tl,i)=>{
+    const b=tileBody(tl), m=match.matched[tl.id];
+    const cls=["tile",b.cls,m?"done":"",match.bad.includes(i)?"bad":""].join(" ");
+    return `<button class="${cls}" id="tile-${i}" data-act="tile" data-i="${i}" aria-pressed="${match.sel===i}" ${m?'aria-disabled="true"':""} ${b.label?`aria-label="${esc(b.label)}"`:""}>${b.html}${m?`<span class="pairtag">✓ ${esc(T.paired.en)}</span>`:""}${match.bad.includes(i)?`<span class="badtag">✗</span>`:""}</button>`;
+  }).join("");
+  const msg = match.bad.length ? `<span class="badmsg">✗ ${biInline("notPair")}</span>` : biInline("matchHow");
+  st.innerHTML=stripHtml(stats)+head+`<p class="hint" id="matchMsg">${msg}</p><div class="tiles${match.type==="td"?" long":""}">${tiles}</div>`;
+}
+
+/* ============ TEST ============ */
+const test={phase:"intro",qs:[],qi:0,ans:[],warn:false,res:null,msg:""};
+const FRAMES=["f1","f2","f3","f4"];
+function testCfg(){const cfg=DECK.test||{count:10,types:["mc","tf","short"]};return {...cfg,count:Math.min(cfg.count,DECK.cards.length)}}
+function testBuild(){
+  const cfg=testCfg(), count=cfg.count;
+  const ids=shuffle(allIds()).slice(0,count);
+  const nShort=cfg.types.includes("short")?1:0;
+  const rest=count-nShort;
+  const nTf=cfg.types.includes("tf")?Math.round(rest*0.3):0;
+  const nMc=rest-nTf;
+  const nch=Math.min(useFull()?3:4,DECK.cards.length);
+  const qs=[];
+  ids.forEach((id,i)=>{
+    if(i<nMc) qs.push({type:"mc",id,choices:shuffle([id,...shuffle(allIds().filter(x=>x!==id)).slice(0,nch-1)])});
+    else if(i<nMc+nTf){const truth=Math.random()<.5;qs.push({type:"tf",id,shown:truth?id:shuffle(allIds().filter(x=>x!==id))[0],truth})}
+    else qs.push({type:"short",id});
+  });
+  test.qs=[...shuffle(qs.filter(q=>q.type!=="short")),...qs.filter(q=>q.type==="short")];
+  test.ans=test.qs.map(()=>null); test.qi=0; test.warn=false; test.res=null; test.phase="q"; state.showMine=false;
+}
+function testAnswered(i){const a=test.ans[i];return !(a===null||a===undefined||(typeof a==="string"&&!a.trim()))}
+function testFinish(){
+  const skipped=test.qs.filter((q,i)=>!testAnswered(i)).length;
+  if(skipped&&!test.warn){test.warn=true;renderStage();const b=$('[data-act="testFinish"]');b&&b.focus();return}
+  let right=0,auto=0;
+  const rows=test.qs.map((q,i)=>{
+    const a=test.ans[i];
+    if(q.type==="short") return {q,a,ok:null};
+    auto++; const ok = q.type==="mc" ? a===q.id : a===q.truth; if(ok) right++;
+    return {q,a,ok};
+  });
+  test.res={right,auto,rows,date:new Date()}; test.phase="done";
+  renderStage(); $("#summary")&&$("#summary").focus();
+}
+function bestMatch(){
+  let best=null,type=null;
+  for(const [v,k] of [["td","mtTermDef"],["tl","mtTermL2"],["it","mtIcon"]]){const b=store.get(bestKey(v),null);if(b!==null&&(best===null||b<best)){best=b;type=k}}
+  return best===null?"not played":fmtTime(best)+" ("+T[type].en+")";
+}
+function recordText(){
+  const r=test.res, d=r.date, lang=LANGS.find(l=>l.code===state.lang);
+  const sup={full:"Full support",some:"Some support",none:"No support"}[state.support];
+  const {g,l}=counts(), total=DECK.cards.length, m=Object.keys(learn.mastered).length;
+  const lines=[
+    `Flashcard Bridge - ${DECK.title}`,
+    `Name: ${state.name}   Hour: ${state.hour}   Date: ${d.toLocaleDateString("en-US")}`,
+    `Language support: ${state.lang==="en"?"English only":lang.note+" ("+sup+")"}`,
+    `Score: ${r.right}/${r.auto} (multiple choice + true/false)`,
+    ""
+  ];
+  r.rows.forEach((row,i)=>{
+    const c=byId(row.q.id), n=i+1;
+    if(row.q.type==="mc") lines.push(`${n}. [MC] ${c.term} - ${row.ok?"OK":"X (chose: "+(row.a?byId(row.a).term:"skipped")+")"}`);
+    else if(row.q.type==="tf"){
+      const d2=dEn(byId(row.q.shown)); const shortD=d2.length>60?d2.slice(0,57)+"...":d2;
+      const ans=row.a===null?"skipped":(row.a?"True":"False");
+      lines.push(`${n}. [T/F] ${c.term} = "${shortD}" - ${row.ok?"OK":"X"} (answered: ${ans}; correct: ${row.q.truth?"True":"False"})`);
+    }
+    else lines.push(`${n}. [Short] Explain "${c.term}": "${(row.a||"").trim()||"(skipped)"}"`);
+  });
+  lines.push("",`Study: Flashcards ${g} got it, ${l} still learning · Learn ${m}/${total} mastered in ${learn.roundNo} round${learn.roundNo===1?"":"s"} · Match best ${bestMatch()}`);
+  return lines.join("\n");
+}
+async function copyRecord(){
+  const txt=recordText(), msg=$("#copyMsg");
+  try{
+    if(!navigator.clipboard||!navigator.clipboard.writeText) throw new Error("no clipboard");
+    await navigator.clipboard.writeText(txt);
+    msg.className="feedback ok"; msg.innerHTML=bi("copied");
+  }catch(e){
+    msg.className="feedback no"; msg.innerHTML=bi("copyFail");
+    const pre=$("#record"); const r=document.createRange(); r.selectNodeContents(pre); const s=getSelection(); s.removeAllRanges(); s.addRange(r); pre.focus();
+  }
+}
+async function pdfRecord(){
+  const msg=$("#copyMsg");
+  const fail=()=>{msg.className="feedback no";msg.innerHTML=bi("pdfFail")};
+  if(!window.jspdf||!window.jspdf.jsPDF) return fail();
+  const doc=new window.jspdf.jsPDF({unit:"pt",format:"letter"});
+  const text=recordText().replace(/·/g,"-");
+  doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text(`Flashcard Bridge - ${DECK.title}`,48,56);
+  doc.setFont("helvetica","normal"); doc.setFontSize(11);
+  const lines=doc.splitTextToSize(text.split("\n").slice(1).join("\n"),516); let y=82;
+  lines.forEach(line=>{if(y>740){doc.addPage();y=56}doc.text(line,48,y);y+=16});
+  const fname=`${DECK.title} - ${state.name||"student"}.pdf`.replace(/[\\/:*?"<>|]/g,"");
+  if(window.claude&&typeof window.claude.use==="function"){
+    try{
+      const dl=await window.claude.use("downloads");
+      if(!dl) return fail();
+      await dl.save({filename:fname,data:doc.output("blob")});
+      msg.className="feedback ok"; msg.innerHTML=bi("pdfSaved");
+    }catch(e){ if(!(e&&e.code==="declined")) fail(); }
+    return;
+  }
+  try{doc.save(fname);msg.className="feedback ok";msg.innerHTML=bi("pdfSaved")}catch(e){fail()}
+}
+function renderTest(st,act){
+  const cfg=testCfg();
+  if(test.phase==="intro"){
+    const typeChips=cfg.types.map(t=>`<span class="pill">${esc(T[{mc:"mcName",tf:"tfName",short:"shortName"}[t]].en)}${uiL2()?` <span class="l2" ${attrs(state.lang)} style="display:inline">${esc(T[{mc:"mcName",tf:"tfName",short:"shortName"}[t]][state.lang])}</span>`:""}</span>`).join("");
+    st.innerHTML=stripHtml("")+`<div class="panel" id="summary" tabindex="-1">
+      <h2>${bi("testIntro")}</h2>
+      <p class="def" style="font-size:17px;margin:0">${bi("testAbout",{n:cfg.count})}</p>
+      <div class="small-row">${typeChips}</div>
+      <div class="two">
+        <div class="field"><label for="tName">${bi("yourName")}</label><input id="tName" autocomplete="off" value="${esc(state.name)}"></div>
+        <div class="field"><label for="tHour">${bi("hour")}</label><input id="tHour" inputmode="numeric" value="${esc(state.hour)}"></div>
+      </div>
+      ${test.msg?`<div class="feedback no" role="alert">${bi(test.msg)}</div>`:""}
+      <div class="row"><button class="btn primary" data-act="testStart">${bi("start")}</button></div></div>`;
+    act.hidden=true; return;
+  }
+  if(test.phase==="done"){
+    const r=test.res, hasShort=r.rows.some(x=>x.ok===null);
+    const missed=r.rows.filter(x=>x.ok===false).length;
+    const rows=r.rows.map((row,i)=>{
+      const c=byId(row.q.id);
+      let body;
+      if(row.q.type==="mc") body=`<b>${esc(c.term)}</b> <span class="muted">${esc(T.mcName.en)}</span><br>${esc(T.yourAnswer.en)}: ${row.a?esc(byId(row.a).term):`<i>${esc(T.skippedOne.en)}</i>`}${row.ok?"":` · ${esc(T.correctAns.en)}: <b>${esc(c.term)}</b>`}`;
+      else if(row.q.type==="tf") body=`<b>${esc(c.term)}</b> = “${esc(dEn(byId(row.q.shown)))}” <span class="muted">${esc(T.tfName.en)}</span><br>${esc(T.yourAnswer.en)}: ${row.a===null?`<i>${esc(T.skippedOne.en)}</i>`:esc(row.a?T.tTrue.en:T.tFalse.en)}${row.ok?"":` · ${esc(T.correctAns.en)}: <b>${esc(row.q.truth?T.tTrue.en:T.tFalse.en)}</b>`}`;
+      else body=`<b>${esc(c.term)}</b> <span class="muted">${esc(T.shortName.en)}</span><br>“${esc((row.a||"").trim())||esc(T.skippedOne.en)}”`;
+      return `<li class="res ${row.ok===true?"ok":row.ok===false?"no":""}"><span class="rk">${row.ok===true?"✓ OK":row.ok===false?"✗ X":"✎"}</span><div>${body}</div></li>`;
+    }).join("");
+    st.innerHTML=stripHtml("")+`<div class="panel results" id="summary" tabindex="-1">
+      <h2><span class="en">${esc(T.score.en)}: <span class="tab-num">${r.right}/${r.auto}</span></span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T.score[state.lang])}: ${r.right}/${r.auto}</span>`:""}</h2>
+      ${hasShort?`<p class="fb-small" style="margin:0">${bi("scoreNote")}</p>`:""}
+      <ol class="reslist">${rows}</ol>
+      <div class="row">${missed?`<button class="btn" data-act="studyMissed">${bi("studyMissed")}</button>`:""}<button class="btn" data-act="retake">${bi("retake")}</button></div>
+      <section class="turnin" aria-labelledby="tiH">
+        <h3 id="tiH">${bi("turnIn")}</h3>
+        <p style="margin:0">${bi("turnInHow")}</p>
+        <pre id="record" tabindex="0">${esc(recordText())}</pre>
+        <div class="row"><button class="btn primary" data-act="copyRec">${bi("copy")}</button><button class="btn" data-act="pdfRec">${bi("pdf")}</button></div>
+        <div id="copyMsg" aria-live="polite"></div>
+      </section></div>`;
+    act.hidden=true; return;
+  }
+  // question
+  const q=test.qs[test.qi], c=byId(q.id), a=test.ans[test.qi], n=test.qs.length;
+  const typeKey={mc:"mcName",tf:"tfName",short:"shortName"}[q.type];
+  const answered=test.qs.filter((x,i)=>testAnswered(i)).length;
+  const head=`<div class="q-head"><b>${esc(en("questionOf",{n:test.qi+1,t:n}))}</b><span class="pill">${esc(T[typeKey].en)}${uiL2()?` · <span ${attrs(state.lang)}>${esc(T[typeKey][state.lang])}</span>`:""}</span>${q.type!=="short"?mineBtn():""}</div>
+    <div class="bar" aria-hidden="true"><i style="width:${answered/n*100}%"></i></div>`;
+  let body="";
+  if(q.type==="mc"){
+    body=`<div class="prompt"><div class="grow"><div class="prompt-ask">${biInline("learnPromptTerm")}</div><p class="def" style="margin:.2em 0 0">${esc(dEn(c))}</p>${defL2(dL2(c))}</div>${sayBtn(dEn(c),dL2(c))}</div>
+      <div class="choices" role="radiogroup" aria-label="Answer choices">${q.choices.map((id,i)=>choiceHtml(byId(id),i,{act:"tpick",picked:a,checked:false,askTerm:true})).join("")}</div>`;
+  }else if(q.type==="tf"){
+    const s=byId(q.shown);
+    body=`<div class="prompt"><div class="grow"><div class="prompt-ask">${biInline("tfPrompt")}</div>
+        <div class="tf-pair">
+          <div><div class="orig-tag">${esc(T.term.en)}</div><p class="term" style="font-size:clamp(22px,3vw,28px);margin:0">${esc(c.term)}</p>${contentL2Visible()?`<div class="term-l2" ${attrs(state.lang)} style="font-size:18px">${esc(tL2(c))}</div>`:""}</div>
+          <div><div class="orig-tag">${esc(T.definition.en)}</div><p class="def" style="margin:0">${esc(dEn(s))}</p>${defL2(dL2(s))}</div>
+        </div></div>${sayBtn(c.term+". "+dEn(s),tL2(c)+". "+dL2(s))}</div>
+      <div class="tf-row" role="radiogroup" aria-label="True or false">
+        <button class="choice tf" role="radio" aria-checked="${a===true}" data-act="ttf" data-v="1"><span class="ctext"><span class="ct">✓ ${esc(T.tTrue.en)}</span>${uiWord("tTrue")}</span></button>
+        <button class="choice tf" role="radio" aria-checked="${a===false}" data-act="ttf" data-v="0"><span class="ctext"><span class="ct">✗ ${esc(T.tFalse.en)}</span>${uiWord("tFalse")}</span></button>
+      </div>`;
+  }else{
+    body=`<div class="prompt"><div class="icon" aria-hidden="true">${iconHtml(c)}</div><div class="grow"><div class="prompt-ask">${esc(T.shortName.en)}</div><p class="def" style="margin:.2em 0 0;font-weight:700">${esc(en("shortPrompt",{x:c.term}))}</p>${uiL2()?`<p class="def-l2" ${attrs(state.lang)} style="margin:4px 0 0">${esc(tx("shortPrompt",{x:tL2(c)||c.term}).l)}</p>`:""}</div>${sayBtn(en("shortPrompt",{x:c.term}),uiL2()?tx("shortPrompt",{x:tL2(c)||c.term}).l:"")}</div>
+      <div class="short">
+        <label class="sr" for="tShort">${esc(T.yourAnswer.en)}</label>
+        <textarea id="tShort" spellcheck="true">${esc(a||"")}</textarea>
+        <div class="frames-lab">${biInline("frames")}</div>
+        <div class="small-row">${FRAMES.map(k=>`<button class="chip-btn" data-act="frame" data-f="${k}"><span class="en">${esc(en(k,{x:c.term}).trim())} …</span>${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(tx(k,{x:tL2(c)||c.term}).l)}</span>`:""}</button>`).join("")}</div>
+      </div>`;
+  }
+  const skipped=test.qs.filter((x,i)=>!testAnswered(i)).length;
+  const warn=test.warn&&skipped?`<div class="feedback no" role="alert">${bi("skipped",{n:skipped})}</div>`:"";
+  st.innerHTML=stripHtml("")+head+body+warn;
+  const last=test.qi===n-1;
+  act.dataset.layout="nav";
+  act.innerHTML=`<button class="btn back" data-act="testBack" ${test.qi===0?"disabled":""}>${btnLabel("back","‹ ")}</button>
+    ${last?`<button class="btn primary" data-act="testFinish">${btnLabel(test.warn&&skipped?"finishAnyway":"finish")}</button>`:`<button class="btn primary" data-act="testNext">${btnLabel("next","","›")}</button>`}`;
+}
+function testGo(i){test.qi=i;state.showMine=false;renderStage();const f=document.querySelector(".choice,#tShort");f&&f.focus()}
+
+/* ============ MODE EVENTS ============ */
+function modeClick(t){
+  const a=t.dataset.act;
+  if(a==="mine"){state.showMine=!state.showMine;renderStage();const b=$('[data-act="mine"]');b&&b.focus();return true}
+  // learn
+  if(a==="pick"){if(!learn.cur.checked){learn.cur.picked=t.dataset.id;renderStage();$(`.choice[data-id="${t.dataset.id}"]`).focus()}return true}
+  if(a==="learnCheck"){learnCheck();return true}
+  if(a==="learnNext"){learnNext();return true}
+  if(a==="learnRound"){learnNewRound();renderStage();const f=document.querySelector(".choice");f&&f.focus();return true}
+  if(a==="learnReset"){learn.mastered={};learn.streak={};learn.roundNo=0;saveProgress();learnNewRound();renderStage();const f=document.querySelector(".choice");f&&f.focus();return true}
+  if(a==="aw"){learn.answerWith=t.dataset.v;if(!learn.cur.checked)learnMakeQ();renderStage();$(`[data-act="aw"][data-v="${learn.answerWith}"]`).focus();return true}
+  // match
+  if(a==="mtype"){match.type=t.dataset.v;matchNew();renderStage();$(`[data-act="mtype"][data-v="${match.type}"]`).focus();return true}
+  if(a==="tile"){matchTap(+t.dataset.i);return true}
+  if(a==="mplay"){matchNew();renderStage();focusTile(0);return true}
+  // test
+  if(a==="testStart"){
+    const nm=$("#tName").value.trim(), hr=$("#tHour").value.trim();
+    if(!nm||!hr){test.msg="needName";renderStage();(nm?$("#tHour"):$("#tName")).focus();return true}
+    if(nm!==state.name){const was=state.name;state.name=nm;was?loadProgress():saveProgress()}
+    state.hour=hr;saveSettings();test.msg="";testBuild();renderChrome();renderStage();
+    const f=document.querySelector(".choice,#tShort");f&&f.focus();return true;
+  }
+  if(a==="tpick"){test.ans[test.qi]=t.dataset.id;renderStage();$(`.choice[data-id="${t.dataset.id}"]`).focus();return true}
+  if(a==="ttf"){test.ans[test.qi]=t.dataset.v==="1";renderStage();$(`[data-act="ttf"][data-v="${t.dataset.v}"]`).focus();return true}
+  if(a==="frame"){
+    const ta=$("#tShort"), c=byId(test.qs[test.qi].id), ins=en(t.dataset.f,{x:c.term});
+    const s=ta.selectionStart??ta.value.length, e2=ta.selectionEnd??s, before=ta.value.slice(0,s);
+    const sep=before&&!/\s$/.test(before)?" ":"";
+    ta.value=before+sep+ins+ta.value.slice(e2); test.ans[test.qi]=ta.value;
+    const p=(before+sep+ins).length; ta.focus(); ta.setSelectionRange(p,p); return true;
+  }
+  if(a==="testBack"){if(test.qi>0)testGo(test.qi-1);return true}
+  if(a==="testNext"){testGo(test.qi+1);return true}
+  if(a==="testFinish"){testFinish();return true}
+  if(a==="copyRec"){copyRecord();return true}
+  if(a==="pdfRec"){pdfRecord();return true}
+  if(a==="studyMissed"){const ids=test.res.rows.filter(x=>x.ok===false).map(x=>x.q.id);state.mode="cards";newRound(ids);renderChrome();renderStage();$("#flipBtn")&&$("#flipBtn").focus();return true}
+  if(a==="retake"){test.phase="intro";renderStage();$("#summary").focus();return true}
+  return false;
+}
+function modeKey(e,tag){
+  if(state.mode==="learn"&&learn.cur&&!learn.done){
+    const q=learn.cur;
+    if(/^[1-4]$/.test(e.key)&&!q.checked){const id=q.choices[+e.key-1];if(id){q.picked=id;renderStage();$(`.choice[data-id="${id}"]`).focus()}return}
+    if(e.key==="Enter"){
+      const isChoice=e.target.classList&&e.target.classList.contains("choice");
+      if(isChoice&&!q.checked&&q.picked!==e.target.dataset.id) return;        // Enter picks the focused choice
+      if(tag==="button"&&!isChoice) return;                                      // other buttons act normally
+      e.preventDefault(); q.checked?learnNext():learnCheck();
+    }
+  }else if(state.mode==="test"&&test.phase==="q"){
+    const q=test.qs[test.qi];
+    if(q.type==="mc"&&/^[1-4]$/.test(e.key)){const id=q.choices[+e.key-1];if(id){test.ans[test.qi]=id;renderStage();$(`.choice[data-id="${id}"]`).focus()}}
+  }
+}
+document.addEventListener("input",e=>{if(e.target.id==="tShort"&&test.phase==="q"){test.ans[test.qi]=e.target.value}});
+
+/* ============ SETTINGS DRAWER ============ */
+function renderDrawer(){
+  const d=$("#drawer");
+  const sup=[["full","full","fullD"],["some","some","someD"],["none","none","noneD"]];
+  d.innerHTML = `
+    <h2 id="setTitle">${bi("settings")}</h2>
+    <div class="two">
+      <div class="field"><label for="fName">${bi("yourName")}</label><input id="fName" autocomplete="off" value="${esc(state.name)}"></div>
+      <div class="field"><label for="fHour">${bi("hour")}</label><input id="fHour" inputmode="numeric" value="${esc(state.hour)}"></div>
+    </div>
+    <div class="field"><div class="lab" id="langLab">${bi("myLang")}</div>
+      <div class="opts langs" role="radiogroup" aria-labelledby="langLab">
+        ${LANGS.map(x=>`<button class="opt" role="radio" aria-checked="${state.lang===x.code}" data-lang="${x.code}"><b ${x.code==="ar"?'lang="ar" dir="rtl"':''}>${esc(x.name)}</b><small>${esc(x.note)}</small></button>`).join("")}
+      </div></div>
+    <div class="field"><div class="lab" id="supLab">${bi("support")}</div>
+      <div class="opts" role="radiogroup" aria-labelledby="supLab">
+        ${sup.map(([v,k,dk])=>`<button class="opt" role="radio" aria-checked="${state.support===v}" data-support="${v}"><b>${esc(T[k].en)}</b><small>${esc(T[dk].en)}${uiL2()?`<span class="l2" ${attrs(state.lang)}>${esc(T[k][state.lang])} · ${esc(T[dk][state.lang])}</span>`:""}</small></button>`).join("")}
+      </div></div>
+    <div class="field"><div class="lab" id="optLab">${bi("options")}</div>
+      <div class="opts" style="grid-template-columns:1fr 1fr">
+        <button class="opt" role="switch" aria-checked="${state.defFirst}" data-toggle="defFirst"><b>${esc(T.defFirst.en)}</b>${uiL2()?`<small><span class="l2" ${attrs(state.lang)}>${esc(T.defFirst[state.lang])}</span></small>`:""}</button>
+        <button class="opt" role="switch" aria-checked="${state.shuffle}" data-toggle="shuffle"><b>${esc(T.shuffle.en)}</b>${uiL2()?`<small><span class="l2" ${attrs(state.lang)}>${esc(T.shuffle[state.lang])}</span></small>`:""}</button>
+      </div></div>
+    <button class="btn primary" data-act="closeSettings" style="margin-top:auto">${bi("done")}</button>`;
+}
+function openSettings(){renderDrawer();$("#scrim").hidden=false;setTimeout(()=>$("#fName").focus(),30)}
+function closeSettings(){
+  const nm=$("#fName").value.trim(), hr=$("#fHour").value.trim();
+  const nameChanged = nm!==state.name;
+  const was=state.name;
+  state.name=nm; state.hour=hr; saveSettings();
+  if(nameChanged){ if(was) loadProgress(); else saveProgress(); }
+  $("#scrim").hidden=true; renderChrome(); renderStage();
+  $("#openSettings").focus();
+}
+
+/* ============ EVENTS ============ */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");
+  const cardEl=e.target.closest("#card");
+  if(t&&t.dataset.speak){
+    e.stopPropagation();
+    const c=card(), tl=L2()&&contentL2Visible()?(c.t[state.lang]||EMPTY_T):null;
+    const useFull=state.support==="full"&&L2();
+    let parts;
+    if(t.dataset.speak==="term") parts=[{text:c.term,lang:"en"},tl&&{text:tl.term,lang:state.lang}];
+    else if(t.dataset.speak==="def") parts=[{text:useFull?c.plain:c.def,lang:"en"},tl&&{text:useFull?tl.plain:tl.def,lang:state.lang}];
+    else parts=[{text:c.def,lang:"en"},tl&&{text:tl.def,lang:state.lang}];
+    speak(parts.filter(Boolean),t); return;
+  }
+  if(t&&t.dataset.say!==undefined){e.stopPropagation();speak(sayReg[+t.dataset.say]||[],t);return}
+  if(t&&t.dataset.act&&modeClick(t)) return;
+  if(t&&t.dataset.mode){state.mode=t.dataset.mode;renderChrome();renderStage();$("#tab-"+state.mode).focus();return}
+  if(t&&t.dataset.lang){state.lang=t.dataset.lang;saveSettings();keepDrawerFields();renderDrawer();restoreDrawerFields();renderChrome();renderStage();$(`[data-lang="${state.lang}"]`).focus();return}
+  if(t&&t.dataset.support){state.support=t.dataset.support;state.showMine=false;saveSettings();keepDrawerFields();renderDrawer();restoreDrawerFields();renderChrome();renderStage();$(`[data-support="${state.support}"]`).focus();return}
+  if(t&&t.dataset.toggle){const k=t.dataset.toggle;state[k]=!state[k];if(k==="shuffle"){newRound(state.summary?allIds():state.order.length?allIds():allIds())}else{state.flipped=false}keepDrawerFields();renderDrawer();restoreDrawerFields();renderStage();$(`[data-toggle="${k}"]`).focus();return}
+  if(t){
+    const a=t.dataset.act;
+    if(a==="flip") return flip();
+    if(a==="got") return mark("got");
+    if(a==="learn") return mark("learn");
+    if(a==="back"&&state.i>0){state.i--;state.flipped=false;state.showMine=false;state.showOrig=false;renderStage();$('[data-act="back"]')&&!$('[data-act="back"]').disabled?$('[data-act="back"]').focus():$("#flipBtn").focus();return}
+    if(a==="toggleMine"){state.showMine=!state.showMine;const f=state.flipped;renderStage();if(f){$("#card").classList.add("flipped")}$('[data-act="toggleMine"]')&&[...document.querySelectorAll('[data-act="toggleMine"]')].pop().focus();return}
+    if(a==="toggleOrig"){state.showOrig=!state.showOrig;renderStage();$('[data-act="toggleOrig"]').focus();return}
+    if(a==="studyLearning"){newRound(learningIds());renderStage();$("#flipBtn").focus();return}
+    if(a==="restart"){state.marks={};saveProgress();newRound(allIds());renderStage();$("#flipBtn").focus();return}
+    if(a==="goCards"){state.mode="cards";renderChrome();renderStage();$("#tab-cards").focus();return}
+    if(a==="closeSettings") return closeSettings();
+    if(t.id==="openSettings") return openSettings();
+    return;
+  }
+  if(cardEl) flip();
+});
+let draft={};
+function keepDrawerFields(){const n=$("#fName"),h=$("#fHour");if(n)draft={name:n.value,hour:h.value}}
+function restoreDrawerFields(){const n=$("#fName"),h=$("#fHour");if(n&&draft.name!==undefined){n.value=draft.name;h.value=draft.hour}}
+$("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")closeSettings()});
+document.addEventListener("keydown",e=>{
+  if(!$("#scrim").hidden){if(e.key==="Escape")closeSettings();return}
+  const tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="textarea") return;
+  if(state.mode!=="cards"){modeKey(e,tag);return}
+  if(state.summary) return;
+  if(e.key===" "&&tag!=="button"){e.preventDefault();flip()}
+  else if(e.key==="1")mark("learn");
+  else if(e.key==="2")mark("got");
+  else if(e.key==="ArrowLeft"&&state.i>0){state.i--;state.flipped=false;renderStage()}
+});
+
+/* ============ START ============ */
+loadProgress();
+newRound(allIds());
+renderChrome();
+renderStage();
+if(DECK.openSetup && !saved.lang) openSettings();
+</script>
+
+</body>
+</html>

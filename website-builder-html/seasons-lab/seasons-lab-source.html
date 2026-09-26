@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Sun Angle &amp; Seasons Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#EDF1F1; --surface:#FFFFFF; --surface-2:#F3F6F6; --ink:#13222A; --muted:#4E5F67; --line:#C8D4D6;
+  --accent:#0E6F6A; --accent-ink:#FFFFFF; --accent-soft:#DCF0EE;
+  --l2c:#8B3A83;
+  --good:#1D7A4B; --good-soft:#E2F2E9; --bad:#B0301F; --bad-soft:#FBE6E2;
+  --focus:#2F7FD0;
+  --sky:#0E1A2B; --sky-2:#172A42; --sky-ink:#E3EAF2; --sky-muted:#A6B6C8; --sky-line:#3A5170; --sky-accent:#7FE0D6; --sky-l2:#F3B8EA;
+  --sun:#F4B42A; --beam:#FFD166; --ground:#6B4F2E; --ground-2:#8A6A40; --earth:#2F7FD0; --land:#3E9E63; --night:#02040C;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --arabic:"Noto Sans Arabic","Geeza Pro","Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0A1215; --surface:#111D21; --surface-2:#16262B; --ink:#E4ECEE; --muted:#A2B3B8; --line:#2A3D43;
+    --accent:#5ED3C8; --accent-ink:#062321; --accent-soft:#123A38;
+    --l2c:#E7A6DD;
+    --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+    --focus:#6FB2F2; --sky:#070F1A; --sky-2:#0F1D30;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0A1215; --surface:#111D21; --surface-2:#16262B; --ink:#E4ECEE; --muted:#A2B3B8; --line:#2A3D43;
+  --accent:#5ED3C8; --accent-ink:#062321; --accent-soft:#123A38;
+  --l2c:#E7A6DD;
+  --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+  --focus:#6FB2F2; --sky:#070F1A; --sky-2:#0F1D30;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:10px 24px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+.en{display:block}
+.l2{display:block;color:var(--l2c);font-size:.8em;line-height:1.35;margin-top:1px}
+.l2[dir="rtl"]{font-family:var(--arabic);text-align:right}
+.inl .en,.inl .l2{display:inline}
+.inl .l2::before{content:" / ";color:var(--muted)}
+.stage .l2{color:var(--sky-l2)}
+bdi{unicode-bidi:isolate}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:6px 10px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brand svg{flex:none}
+.brand h1{font-size:1.45rem;font-weight:800;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--muted);font-size:.9rem}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+select,input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:38px;padding:4px 10px}
+.btn{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:6px 14px;cursor:pointer;font-weight:700;text-align:left}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary .l2{color:inherit;opacity:.85}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
+.btn.sm{min-height:38px;padding:4px 10px;font-family:var(--mono);font-weight:500}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab{border:0;background:none;padding:8px 14px 9px;border-bottom:3px solid transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;min-height:44px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .chip{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.part{display:flex;flex-direction:column;gap:14px}
+.grid{display:grid;grid-template-columns:minmax(290px,380px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.side{display:flex;flex-direction:column;gap:10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.eyebrow{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 6px}
+.eyebrow .l2{text-transform:none;letter-spacing:0}
+.head h2{font-size:1.25rem}
+.steps{margin:0;font-size:.95rem}
+.say{flex:none;width:32px;height:32px;min-width:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);display:inline-grid;place-items:center;cursor:pointer;padding:0;color:var(--ink)}
+.say:hover{border-color:var(--accent)}
+.stage .say{background:var(--sky-2);border-color:var(--sky-line);color:var(--sky-ink)}
+.txt{display:flex;gap:8px;align-items:flex-start}
+.txt>div,.txt>p{flex:1;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.formula{font-family:var(--mono);font-size:.9rem;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.formula .l2{font-family:var(--body)}
+.example{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--accent);border-radius:10px;padding:10px;background:var(--surface-2)}
+.ex-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ex-row svg{flex:none;max-width:100%}
+.ex-row .txt{flex:1 1 150px}
+
+/* stage */
+.stage{background:var(--sky);color:var(--sky-ink);border-radius:14px;position:relative;overflow:hidden}
+.stage-cap{font-size:13px;color:var(--muted);margin:6px 2px 0}
+.stage svg.fig{display:block;width:100%;height:auto}
+.epos svg{display:block;width:46px;height:46px}
+.slabel{font-size:13px;font-weight:700;color:var(--sky-muted);padding:8px 12px 0;text-transform:uppercase;letter-spacing:.06em}
+.slabel .l2{text-transform:none;letter-spacing:0}
+.reads{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--sky-line);border-top:1px solid var(--sky-line)}
+.read{background:var(--sky-2);padding:8px 12px}
+.read .k{font-size:13px;color:var(--sky-muted);font-weight:700}
+.read .v{font-family:var(--mono);font-size:1.25rem;font-variant-numeric:tabular-nums;color:var(--sky-ink)}
+.read .v small{font-size:13px;color:var(--sky-muted);font-family:var(--body)}
+.slider{display:flex;flex-direction:column;gap:6px}
+.slider input[type=range]{width:100%;accent-color:var(--accent);min-height:38px;cursor:pointer}
+
+/* part 2 */
+.st2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media (max-width:700px){.st2{grid-template-columns:minmax(0,1fr)}}
+.st2>div+div{border-left:1px solid var(--sky-line)}
+@media (max-width:700px){.st2>div+div{border-left:0;border-top:1px solid var(--sky-line)}}
+.orb{position:relative;width:100%;aspect-ratio:420/270;max-width:100%}
+.orb svg{position:absolute;inset:0;width:100%;height:100%}
+.epos{position:absolute;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;border:2px dashed var(--sky-accent);background:rgba(14,26,43,.35);cursor:pointer;padding:0;display:grid;place-items:center;color:var(--sky-ink)}
+.epos:hover{background:rgba(127,224,214,.12)}
+.epos[aria-pressed="true"]{border-style:solid;border-width:3px;background:rgba(127,224,214,.18)}
+.epos .dl{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;font-size:13px;font-weight:700;white-space:nowrap;line-height:1.15;text-align:center;color:var(--sky-ink);pointer-events:none}
+.epos .dl.dl-r{left:auto;right:-6px;transform:none;text-align:right}
+.epos .dl.dl-l{left:-6px;transform:none;text-align:left}
+.epos .recd{position:absolute;top:-8px;right:-10px;font:700 13px/1 var(--body);padding:3px 5px;border-radius:6px;background:var(--sky-2);border:1px solid var(--sky-line);color:var(--sky-ink)}
+.seg{display:flex;flex-direction:column;gap:6px}
+.scroll{overflow-x:auto}
+table.data{border-collapse:collapse;width:100%;font-size:.9rem;min-width:720px}
+table.data th,table.data td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle}
+table.data thead th{font-size:13px;color:var(--muted);font-weight:700;vertical-align:bottom}
+table.data td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.data .grp{text-align:center;border-bottom:2px solid var(--line);color:var(--ink)}
+table.data select{min-height:40px;width:100%;min-width:120px}
+table.data input{min-height:40px;width:100%;max-width:130px;font-family:var(--mono)}
+table.data.small{min-width:0}
+.okb{border:2px solid var(--good)!important} .nob{border:2px solid var(--bad)!important}
+.empty{color:var(--muted);font-family:var(--body)}
+
+/* actions */
+.actions{position:sticky;bottom:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:0 -6px 18px rgba(10,20,24,.12)}
+.fb{flex:1 1 320px;min-width:0;max-height:26vh;overflow:auto;display:flex;gap:8px;align-items:flex-start;font-size:.95rem;border-radius:10px;padding:6px 8px;border:1px solid transparent}
+.fb.good{background:var(--good-soft);border-color:var(--good)}
+.fb.bad{background:var(--bad-soft);border-color:var(--bad)}
+.act-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* questions */
+.q textarea{width:100%;min-height:92px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:8px 10px;resize:vertical}
+details.sup{margin-top:8px}
+details.sup summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center;gap:6px}
+.frames{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.frame{text-align:left;border:1px dashed var(--accent);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:38px}
+.words{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.word{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 12px;cursor:pointer;min-height:38px}
+.word:hover,.frame:hover{border-color:var(--accent);border-style:solid}
+.mcq{display:flex;flex-direction:column;gap:6px;padding-block:10px;border-top:1px solid var(--line)}
+.mcq:first-of-type{border-top:0}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:7px 10px;cursor:pointer;min-height:44px}
+.opt:hover{border-color:var(--accent)}
+.opt[aria-pressed="true"]{border:2px solid var(--accent);background:var(--accent-soft);padding:6px 9px}
+.opt .lt{flex:none;font-family:var(--mono);font-weight:500;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:13px;background:var(--surface)}
+.res{font-weight:700;font-size:.9rem}
+.res.ok{color:var(--good)} .res.no{color:var(--bad)}
+
+.vocab{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.vcard{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.vcard .pic{flex:none;width:64px;height:64px;border-radius:10px;background:var(--sky);display:grid;place-items:center}
+.vcard p{margin:2px 0 0;font-size:.9rem}
+
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.9rem}
+@media (max-width:600px){.fb{max-height:17vh}.form{grid-template-columns:1fr}}
+.rec{width:100%;min-height:260px;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:10px;white-space:pre}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.sum{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.sum b{font-family:var(--mono);font-size:1.1rem;font-variant-numeric:tabular-nums}
+.note{font-size:.9rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.foot{font-size:13px;color:var(--muted);margin-top:18px}
+
+/* svg fills */
+.f-sun{fill:var(--sun)} .f-beam{fill:var(--beam)} .f-ground{fill:var(--ground)} .f-ground2{fill:var(--ground-2)} .f-earth{fill:var(--earth)} .f-land{fill:var(--land)} .f-night{fill:var(--night);opacity:.55} .f-sky2{fill:var(--sky-2)} .f-ink{fill:var(--sky-ink)} .f-muted{fill:var(--sky-muted)} .f-acc{fill:var(--sky-accent)}
+.s-line{stroke:var(--sky-line)} .s-ink{stroke:var(--sky-ink)} .s-muted{stroke:var(--sky-muted)} .s-sun{stroke:var(--sun)} .s-beam{stroke:var(--beam)} .s-acc{stroke:var(--sky-accent)}
+svg text{font-family:var(--body);font-size:13px;font-weight:700}
+@media (prefers-reduced-motion: no-preference){
+  .btn,.opt,.epos{transition:border-color .15s,background-color .15s}
+}
+</style>
+<div class="wrap" id="app"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ---------- LANGUAGES ---------- */
+const LANGS=['en','es','fr','ht','ar'];
+const LANG_NAMES={en:'English only',es:'Español',fr:'Français',ht:'Kreyòl',ar:'العربية'};
+
+/* ---------- PAGE TEXT IN EVERY LANGUAGE ----------
+   Each entry: [English, Español, Français, Kreyòl, العربية]  */
+const UI={
+title:["Sun Angle & Seasons Lab","Laboratorio: ángulo del Sol y estaciones","Labo : angle du Soleil et saisons","Laboratwa: ang Solèy ak sezon yo","مختبر زاوية الشمس والفصول"],
+sub:["Why do we have seasons?","¿Por qué tenemos estaciones?","Pourquoi avons-nous des saisons ?","Poukisa nou gen sezon?","لماذا تحدث الفصول؟"],
+lang:["Second language","Segundo idioma","Deuxième langue","Dezyèm lang","اللغة الثانية"],
+pics:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+theme:["Dark / light","Oscuro / claro","Sombre / clair","Fènwa / klè","داكن / فاتح"],
+tab1:["1. Spread the Light","1. La luz se extiende","1. La lumière s'étale","1. Limyè a gaye","1. انتشار الضوء"],
+tab2:["2. Tilt and Seasons","2. Inclinación y estaciones","2. Inclinaison et saisons","2. Panche ak sezon","2. الميل والفصول"],
+tab3:["3. Check Your Thinking","3. Revisa tus ideas","3. Vérifie tes idées","3. Verifye lide ou","3. تحقّق من أفكارك"],
+tab4:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+say:["Read aloud","Leer en voz alta","Lire à voix haute","Li awotvwa","القراءة بصوت عالٍ"],
+noVoice:["This device has no voice for this language, so it read the English only.","Este dispositivo no tiene voz para este idioma. Solo leyó el inglés.","Cet appareil n'a pas de voix pour cette langue. Il a lu seulement l'anglais.","Aparèy sa a pa gen vwa pou lang sa a. Li li angle a sèlman.","لا يوجد صوت لهذه اللغة على هذا الجهاز، لذلك قرأ الإنجليزية فقط."],
+noSpeech:["Read-aloud does not work in this browser.","La lectura en voz alta no funciona en este navegador.","La lecture à voix haute ne marche pas dans ce navigateur.","Lekti awotvwa pa mache nan navigatè sa a.","القراءة بصوت عالٍ لا تعمل في هذا المتصفح."],
+check:["Check","Revisar","Vérifier","Verifye","تحقّق"],
+clear:["Clear this part","Borrar esta parte","Effacer cette partie","Efase pati sa a","امسح هذا الجزء"],
+clearSure:["Tap again to clear","Toca otra vez para borrar","Touche encore pour effacer","Touche ankò pou efase","المس مرة أخرى للمسح"],
+cleared:["This part is cleared. You can start again.","Esta parte está borrada. Puedes empezar otra vez.","Cette partie est effacée. Tu peux recommencer.","Pati sa a efase. Ou ka rekòmanse.","تم مسح هذا الجزء. يمكنك البدء من جديد."],
+checks:["Checks: {n}","Revisiones: {n}","Vérifications : {n}","Verifikasyon: {n}","مرات التحقق: {n}"],
+correct:["Correct.","Correcto.","Correct.","Kòrèk.","صحيح."],
+notYet:["Not yet.","Todavía no.","Pas encore.","Poko.","ليس بعد."],
+answer:["Your answer","Tu respuesta","Ta réponse","Repons ou","إجابتك"],
+frames:["Sentence starters and word bank","Inicios de oración y banco de palabras","Débuts de phrase et banque de mots","Kòmansman fraz ak bank mo","بدايات الجمل وبنك الكلمات"],
+framesTip:["Tap one to add it in English.","Toca uno para añadirlo en inglés.","Touche-en un pour l'ajouter en anglais.","Touche youn pou ajoute l an angle.","المس واحدًا لإضافته بالإنجليزية."],
+wordBank:["Word bank","Banco de palabras","Banque de mots","Bank mo","بنك الكلمات"],
+squares:["squares","cuadros","carrés","kare","مربعات"],
+units:["units","unidades","unités","inite","وحدات"],
+hours:["hours","horas","heures","èdtan","ساعة"],
+mkm:["million km","millones de km","millions de km","milyon km","مليون كم"],
+sunlight:["Sunlight","Luz del sol","Lumière du Soleil","Limyè solèy","ضوء الشمس"],
+sun:["Sun","Sol","Soleil","Solèy","الشمس"],
+
+/* Part 1 */
+p1Head:["Part 1: Spread the Light","Parte 1: La luz se extiende","Partie 1 : La lumière s'étale","Pati 1: Limyè a gaye","الجزء 1: انتشار الضوء"],
+p1Steps:["The Sun sends the same 100 units of energy to the ground at every angle. Move the slider and watch the light on the ground. For each angle in the table: set the angle, press Record, then work out the energy per square.","El Sol envía las mismas 100 unidades de energía al suelo en cada ángulo. Mueve el control y mira la luz en el suelo. Para cada ángulo de la tabla: pon el ángulo, presiona Registrar y luego calcula la energía por cuadro.","Le Soleil envoie les mêmes 100 unités d'énergie au sol à chaque angle. Déplace le curseur et regarde la lumière au sol. Pour chaque angle du tableau : règle l'angle, appuie sur Enregistrer, puis calcule l'énergie par carré.","Solèy la voye menm 100 inite enèji sou tè a nan chak ang. Deplase glisè a epi gade limyè a sou tè a. Pou chak ang nan tablo a: mete ang lan, peze Anrejistre, apre sa kalkile enèji pou chak kare.","ترسل الشمس 100 وحدة الطاقة نفسها إلى الأرض عند كل زاوية. حرّك المنزلق وراقب الضوء على الأرض. لكل زاوية في الجدول: اضبط الزاوية، واضغط سجّل، ثم احسب الطاقة لكل مربع."],
+p1Formula:["Energy per square = 100 ÷ lit squares","Energía por cuadro = 100 ÷ cuadros iluminados","Énergie par carré = 100 ÷ carrés éclairés","Enèji pou chak kare = 100 ÷ kare ki klere","الطاقة لكل مربع = 100 ÷ المربعات المضاءة"],
+exHead:["Example: how to solve","Ejemplo: cómo resolverlo","Exemple : comment faire","Egzanp: kijan pou w rezoud li","مثال: طريقة الحل"],
+exBody:["60 units of energy land on 3 squares. Divide: 60 ÷ 3 = 20. Each square gets 20 units.","60 unidades de energía caen en 3 cuadros. Divide: 60 ÷ 3 = 20. Cada cuadro recibe 20 unidades.","60 unités d'énergie tombent sur 3 carrés. Divise : 60 ÷ 3 = 20. Chaque carré reçoit 20 unités.","60 inite enèji tonbe sou 3 kare. Divize: 60 ÷ 3 = 20. Chak kare resevwa 20 inite.","تسقط 60 وحدة طاقة على 3 مربعات. اقسم: 60 ÷ 3 = 20. يحصل كل مربع على 20 وحدة."],
+exYour:["Your turn: the Sun always sends 100 units. Divide 100 by the lit squares in your table.","Tu turno: el Sol siempre envía 100 unidades. Divide 100 entre los cuadros iluminados de tu tabla.","À toi : le Soleil envoie toujours 100 unités. Divise 100 par le nombre de carrés éclairés de ton tableau.","Se tou pa w: Solèy la toujou voye 100 inite. Divize 100 pa kantite kare ki klere nan tablo ou a.","دورك: الشمس ترسل دائمًا 100 وحدة. اقسم 100 على عدد المربعات المضاءة في جدولك."],
+angleLbl:["Sun angle","Ángulo del Sol","Angle du Soleil","Ang Solèy la","زاوية الشمس"],
+quick:["Table angles","Ángulos de la tabla","Angles du tableau","Ang nan tablo a","زوايا الجدول"],
+litLbl:["Lit area","Área iluminada","Surface éclairée","Espas ki klere","المساحة المضاءة"],
+energyLbl:["Energy in the beam","Energía del haz","Énergie du faisceau","Enèji nan reyon an","الطاقة في الحزمة"],
+sideView:["Side view","Vista de lado","Vue de côté","Gade sou kote","منظر جانبي"],
+topView:["Ground from above (1 dot = 1 unit of energy)","Suelo visto desde arriba (1 punto = 1 unidad de energía)","Le sol vu du dessus (1 point = 1 unité d'énergie)","Tè a jan ou wè l depi anlè (1 pwen = 1 inite enèji)","الأرض من الأعلى (نقطة واحدة = وحدة طاقة واحدة)"],
+p1Cap:["Same Sun, same 100 units of energy. Only the angle changes.","El mismo Sol, las mismas 100 unidades de energía. Solo cambia el ángulo.","Même Soleil, mêmes 100 unités d'énergie. Seul l'angle change.","Menm Solèy la, menm 100 inite enèji yo. Se ang lan sèlman ki chanje.","الشمس نفسها و100 وحدة الطاقة نفسها. الزاوية فقط هي التي تتغير."],
+record:["Record this angle","Registrar este ángulo","Enregistrer cet angle","Anrejistre ang sa a","سجّل هذه الزاوية"],
+recNeed:["Set the angle to 90°, 53°, 24° or 11.5° first. Use the table angle buttons or the slider.","Primero pon el ángulo en 90°, 53°, 24° o 11.5°. Usa los botones de ángulos o el control.","Règle d'abord l'angle sur 90°, 53°, 24° ou 11.5°. Utilise les boutons d'angles ou le curseur.","Mete ang lan sou 90°, 53°, 24° oswa 11.5° anvan. Sèvi ak bouton ang yo oswa glisè a.","اضبط الزاوية أولًا على 90° أو 53° أو 24° أو 11.5°. استخدم أزرار الزوايا أو المنزلق."],
+recorded:["Recorded: at {a}° the light covers about {s} squares. Now work out the energy per square.","Registrado: a {a}° la luz cubre unos {s} cuadros. Ahora calcula la energía por cuadro.","Enregistré : à {a}°, la lumière couvre environ {s} carrés. Calcule maintenant l'énergie par carré.","Anrejistre: nan {a}°, limyè a kouvri anviwon {s} kare. Kounye a, kalkile enèji pou chak kare.","تم التسجيل: عند {a}° يغطي الضوء نحو {s} مربعات. احسب الآن الطاقة لكل مربع."],
+p1Table:["Data table","Tabla de datos","Tableau de données","Tablo done","جدول البيانات"],
+tAngle:["Sun angle","Ángulo del Sol","Angle du Soleil","Ang Solèy","زاوية الشمس"],
+tLit:["Lit squares","Cuadros iluminados","Carrés éclairés","Kare ki klere","المربعات المضاءة"],
+tEnergy:["Energy per square","Energía por cuadro","Énergie par carré","Enèji pou chak kare","الطاقة لكل مربع"],
+notRec:["not recorded","sin registrar","pas enregistré","pa anrejistre","غير مسجّل"],
+p1Fill:["Record all 4 angles and type every energy value first. Missing: {n}.","Primero registra los 4 ángulos y escribe cada valor de energía. Faltan: {n}.","Enregistre d'abord les 4 angles et écris chaque valeur d'énergie. Il manque : {n}.","Anrejistre 4 ang yo epi ekri chak valè enèji anvan. Sa ki manke: {n}.","سجّل الزوايا الأربع واكتب كل قيمة للطاقة أولًا. الناقص: {n}."],
+score4:["{c} of 4 correct.","{c} de 4 correctas.","{c} sur 4 correctes.","{c} sou 4 kòrèk.","{c} من 4 صحيحة."],
+p1Good:["All 4 are correct. The energy is always 100 units. A low angle spreads it over more squares, so each square gets less energy and the ground heats less. The 24° row is close to Michigan's noon Sun in December.","Las 4 están correctas. La energía siempre es 100 unidades. Un ángulo bajo la extiende sobre más cuadros, así que cada cuadro recibe menos energía y el suelo se calienta menos. La fila de 24° se parece al Sol del mediodía en Míchigan en diciembre.","Les 4 sont correctes. L'énergie est toujours de 100 unités. Un angle bas l'étale sur plus de carrés, donc chaque carré reçoit moins d'énergie et le sol chauffe moins. La ligne à 24° ressemble au Soleil de midi au Michigan en décembre.","Tout 4 yo kòrèk. Enèji a toujou 100 inite. Yon ang ki ba gaye l sou plis kare, kidonk chak kare resevwa mwens enèji epi tè a chofe mwens. Liy 24° la sanble ak Solèy midi nan Michigan an desanm.","الأربع كلها صحيحة. الطاقة دائمًا 100 وحدة. الزاوية المنخفضة تنشرها على مربعات أكثر، فيحصل كل مربع على طاقة أقل ويسخن الأرض أقل. صف 24° قريب من شمس الظهر في ميشيغان في ديسمبر."],
+hDivide:["Rows marked X are off. Energy per square = 100 ÷ lit squares. Check your division.","Las filas con X no están bien. Energía por cuadro = 100 ÷ cuadros iluminados. Revisa tu división.","Les lignes marquées X sont fausses. Énergie par carré = 100 ÷ carrés éclairés. Vérifie ta division.","Liy ki make X yo pa bon. Enèji pou chak kare = 100 ÷ kare ki klere. Verifye divizyon ou.","الصفوف المعلّمة بـ X غير صحيحة. الطاقة لكل مربع = 100 ÷ المربعات المضاءة. راجع القسمة."],
+hFlip:["Your energy goes up when the angle goes down. At a low angle, more squares share the same 100 units. Does each square get more or less?","Tu energía sube cuando el ángulo baja. Con un ángulo bajo, más cuadros comparten las mismas 100 unidades. ¿Cada cuadro recibe más o menos?","Ton énergie augmente quand l'angle baisse. Avec un angle bas, plus de carrés partagent les mêmes 100 unités. Chaque carré reçoit-il plus ou moins ?","Enèji ou monte lè ang lan desann. Nan yon ang ki ba, plis kare pataje menm 100 inite yo. Èske chak kare resevwa plis oswa mwens?","طاقتك تزيد عندما تنخفض الزاوية. عند زاوية منخفضة تتقاسم مربعات أكثر 100 الوحدة نفسها. هل يحصل كل مربع على أكثر أم أقل؟"],
+p1Q:["Why does sunlight at a low angle heat the ground less than sunlight from straight above?","¿Por qué la luz del sol con un ángulo bajo calienta menos el suelo que la luz que viene desde arriba?","Pourquoi la lumière du Soleil à un angle bas chauffe-t-elle moins le sol que la lumière qui vient d'en haut ?","Poukisa limyè solèy nan yon ang ki ba chofe tè a mwens pase limyè ki soti tou dwat anlè?","لماذا يسخّن ضوء الشمس بزاوية منخفضة الأرض أقل من الضوء القادم من الأعلى مباشرة؟"],
+
+/* Part 2 */
+p2Head:["Part 2: Tilt and Seasons","Parte 2: Inclinación y estaciones","Partie 2 : Inclinaison et saisons","Pati 2: Panche ak sezon","الجزء 2: الميل والفصول"],
+p2Steps:["Earth's axis is tilted 23.5°. It always points the same way in space. 1. Tap a date on the orbit. 2. Read the noon Sun angle, the daylight and the distance to the Sun. 3. Press Record. Do this for all 4 dates in Michigan and in Sydney, Australia. 4. Choose the season for each row.","El eje de la Tierra está inclinado 23.5°. Siempre apunta hacia el mismo lado en el espacio. 1. Toca una fecha en la órbita. 2. Lee el ángulo del Sol al mediodía, las horas de luz y la distancia al Sol. 3. Presiona Registrar. Hazlo para las 4 fechas en Míchigan y en Sídney, Australia. 4. Elige la estación de cada fila.","L'axe de la Terre est incliné de 23,5°. Il pointe toujours dans la même direction dans l'espace. 1. Touche une date sur l'orbite. 2. Lis l'angle du Soleil à midi, la durée du jour et la distance au Soleil. 3. Appuie sur Enregistrer. Fais-le pour les 4 dates au Michigan et à Sydney, en Australie. 4. Choisis la saison de chaque ligne.","Aks Latè panche 23.5°. Li toujou pwente menm direksyon nan espas. 1. Touche yon dat sou òbit la. 2. Li ang Solèy la a midi, konbyen èdtan limyè, ak distans ak Solèy la. 3. Peze Anrejistre. Fè sa pou 4 dat yo nan Michigan ak nan Sydney, Ostrali. 4. Chwazi sezon an pou chak liy.","محور الأرض مائل بمقدار 23.5°. وهو يشير دائمًا إلى الاتجاه نفسه في الفضاء. 1. المس تاريخًا على المدار. 2. اقرأ زاوية الشمس عند الظهر وساعات النهار والبعد عن الشمس. 3. اضغط سجّل. افعل ذلك للتواريخ الأربعة في ميشيغان وفي سيدني بأستراليا. 4. اختر الفصل لكل صف."],
+place:["Place","Lugar","Lieu","Kote","المكان"],
+mi:["Michigan (42°N)","Míchigan (42°N)","Michigan (42°N)","Michigan (42°N)","ميشيغان (42° شمالًا)"],
+sy:["Sydney, Australia (34°S)","Sídney, Australia (34°S)","Sydney, Australie (34°S)","Sydney, Ostrali (34°S)","سيدني، أستراليا (34° جنوبًا)"],
+miShort:["Michigan","Míchigan","Michigan","Michigan","ميشيغان"],
+syShort:["Sydney","Sídney","Sydney","Sydney","سيدني"],
+tilt:["Earth's tilt","Inclinación de la Tierra","Inclinaison de la Terre","Panche Latè","ميل الأرض"],
+tiltReal:["23.5° (real Earth)","23.5° (la Tierra real)","23,5° (la vraie Terre)","23.5° (vrè Latè a)","23.5° (الأرض الحقيقية)"],
+tiltNone:["0° (what if?)","0° (¿y si…?)","0° (et si… ?)","0° (e si…?)","0° (ماذا لو؟)"],
+d0:["June 21","21 de junio","21 juin","21 jen","21 يونيو"],
+d1:["September 22","22 de septiembre","22 septembre","22 septanm","22 سبتمبر"],
+d2:["December 21","21 de diciembre","21 décembre","21 desanm","21 ديسمبر"],
+d3:["March 20","20 de marzo","20 mars","20 mas","20 مارس"],
+orbitView:["Earth's orbit. Tap a date.","La órbita de la Tierra. Toca una fecha.","L'orbite de la Terre. Touche une date.","Òbit Latè. Touche yon dat.","مدار الأرض. المس تاريخًا."],
+dayView:["Earth at noon on {d}","La Tierra al mediodía el {d}","La Terre à midi le {d}","Latè a midi {d}","الأرض عند الظهر في {d}"],
+noonAngle:["Noon Sun angle","Ángulo del Sol al mediodía","Angle du Soleil à midi","Ang Solèy a midi","زاوية الشمس عند الظهر"],
+daylight:["Daylight","Horas de luz","Durée du jour","Èdtan limyè","ساعات النهار"],
+distance:["Distance to Sun","Distancia al Sol","Distance au Soleil","Distans ak Solèy","البعد عن الشمس"],
+perSq:["Energy per square","Energía por cuadro","Énergie par carré","Enèji pou chak kare","الطاقة لكل مربع"],
+closest:["closest","la más cerca","le plus près","pi pre","الأقرب"],
+farthest:["farthest","la más lejos","le plus loin","pi lwen","الأبعد"],
+record2:["Record this reading","Registrar esta lectura","Enregistrer cette mesure","Anrejistre lekti sa a","سجّل هذه القراءة"],
+rec2Done:["Recorded {p} on {d}.","Registrado: {p}, {d}.","Enregistré : {p}, le {d}.","Anrejistre: {p}, {d}.","تم التسجيل: {p} في {d}."],
+showing:["Showing {p} on {d}. Press Record when you are ready.","Mostrando {p} el {d}. Presiona Registrar cuando estés listo.","Voici {p} le {d}. Appuie sur Enregistrer quand tu es prêt.","N ap montre {p} {d}. Peze Anrejistre lè ou pare.","يُعرض {p} في {d}. اضغط سجّل عندما تكون جاهزًا."],
+noTiltRec:["You can't record with 0° tilt. That is not the real Earth. Set the tilt back to 23.5° to record.","No puedes registrar con 0° de inclinación. Esa no es la Tierra real. Vuelve a poner 23.5° para registrar.","Tu ne peux pas enregistrer avec 0° d'inclinaison. Ce n'est pas la vraie Terre. Remets 23,5° pour enregistrer.","Ou pa ka anrejistre ak 0° panche. Se pa vrè Latè a. Remete 23.5° pou anrejistre.","لا يمكنك التسجيل بميل 0°. هذه ليست الأرض الحقيقية. أعد الميل إلى 23.5° لتسجّل."],
+noTiltNote:["What if Earth had no tilt? Tap each date and watch the noon Sun angle and the daylight.","¿Y si la Tierra no tuviera inclinación? Toca cada fecha y mira el ángulo del Sol al mediodía y las horas de luz.","Et si la Terre n'était pas inclinée ? Touche chaque date et regarde l'angle du Soleil à midi et la durée du jour.","E si Latè pa t panche? Touche chak dat epi gade ang Solèy la a midi ak èdtan limyè yo.","ماذا لو لم تكن الأرض مائلة؟ المس كل تاريخ وراقب زاوية الشمس عند الظهر وساعات النهار."],
+p2Table:["Seasons data table","Tabla de datos de las estaciones","Tableau de données des saisons","Tablo done sezon yo","جدول بيانات الفصول"],
+tDate:["Date","Fecha","Date","Dat","التاريخ"],
+tSeason:["Season that starts","Estación que empieza","Saison qui commence","Sezon ki kòmanse","الفصل الذي يبدأ"],
+choose:["Choose…","Elige…","Choisis…","Chwazi…","اختر…"],
+summer:["Summer","Verano","Été","Ete","الصيف"],
+fall:["Fall","Otoño","Automne","Otòn","الخريف"],
+winter:["Winter","Invierno","Hiver","Ivè","الشتاء"],
+spring:["Spring","Primavera","Printemps","Prentan","الربيع"],
+p2Fill:["Record all 8 readings and choose all 8 seasons first. Missing: {n}.","Primero registra las 8 lecturas y elige las 8 estaciones. Faltan: {n}.","Enregistre d'abord les 8 mesures et choisis les 8 saisons. Il manque : {n}.","Anrejistre 8 lekti yo epi chwazi 8 sezon yo anvan. Sa ki manke: {n}.","سجّل القراءات الثماني واختر الفصول الثمانية أولًا. الناقص: {n}."],
+score8:["{c} of 8 seasons correct.","{c} de 8 estaciones correctas.","{c} saisons sur 8 correctes.","{c} sezon sou 8 kòrèk.","{c} من 8 فصول صحيحة."],
+p2Good:["All 8 seasons are correct. Michigan has summer when its noon Sun is high and its days are long. Earth is closest to the Sun in Michigan's winter, so distance does not cause the seasons. Sydney has the opposite season on the same date.","Las 8 estaciones están correctas. Míchigan tiene verano cuando el Sol del mediodía está alto y los días son largos. La Tierra está más cerca del Sol en el invierno de Míchigan, así que la distancia no causa las estaciones. Sídney tiene la estación opuesta en la misma fecha.","Les 8 saisons sont correctes. Le Michigan a l'été quand le Soleil de midi est haut et que les jours sont longs. La Terre est le plus près du Soleil pendant l'hiver du Michigan, donc la distance ne cause pas les saisons. Sydney a la saison opposée à la même date.","Tout 8 sezon yo kòrèk. Michigan gen ete lè Solèy midi a wo epi jou yo long. Latè pi pre Solèy la pandan ivè Michigan, kidonk se pa distans ki lakòz sezon yo. Sydney gen sezon opoze a nan menm dat la.","الفصول الثمانية كلها صحيحة. يكون الصيف في ميشيغان عندما تكون شمس الظهر عالية والأيام طويلة. تكون الأرض أقرب إلى الشمس في شتاء ميشيغان، لذلك فالبعد ليس سبب الفصول. في سيدني الفصل المعاكس في التاريخ نفسه."],
+hDist:["Some Michigan seasons are off. Don't use the distance column. Earth is closest to the Sun in December. Use the Sun angle and daylight columns.","Algunas estaciones de Míchigan no están bien. No uses la columna de distancia. La Tierra está más cerca del Sol en diciembre. Usa las columnas del ángulo del Sol y de las horas de luz.","Certaines saisons du Michigan sont fausses. N'utilise pas la colonne distance. La Terre est le plus près du Soleil en décembre. Utilise les colonnes angle du Soleil et durée du jour.","Kèk sezon pou Michigan pa bon. Pa sèvi ak kolòn distans lan. Latè pi pre Solèy la nan desanm. Sèvi ak kolòn ang Solèy ak èdtan limyè yo.","بعض فصول ميشيغان غير صحيحة. لا تستخدم عمود البعد. تكون الأرض أقرب إلى الشمس في ديسمبر. استخدم عمودي زاوية الشمس وساعات النهار."],
+hSouth:["Some Sydney seasons are off. Sydney is in the Southern Hemisphere. Use Sydney's own Sun angle and daylight on that date, not Michigan's.","Algunas estaciones de Sídney no están bien. Sídney está en el hemisferio sur. Usa el ángulo del Sol y las horas de luz de Sídney en esa fecha, no las de Míchigan.","Certaines saisons de Sydney sont fausses. Sydney est dans l'hémisphère Sud. Utilise l'angle du Soleil et la durée du jour de Sydney à cette date, pas ceux du Michigan.","Kèk sezon pou Sydney pa bon. Sydney nan emisfè sid la. Sèvi ak ang Solèy ak èdtan limyè pa Sydney nan dat sa a, pa pa Michigan.","بعض فصول سيدني غير صحيحة. تقع سيدني في نصف الكرة الجنوبي. استخدم زاوية الشمس وساعات النهار الخاصة بسيدني في ذلك التاريخ، لا الخاصة بميشيغان."],
+hOrder:["The September and March rows are mixed up. Their Sun angles match, so use the order of the year. What season comes after summer? After winter?","Las filas de septiembre y marzo están mezcladas. Sus ángulos del Sol son iguales, así que usa el orden del año. ¿Qué estación viene después del verano? ¿Y después del invierno?","Les lignes de septembre et de mars sont mélangées. Leurs angles du Soleil sont pareils, alors utilise l'ordre de l'année. Quelle saison vient après l'été ? Après l'hiver ?","Liy septanm ak mas yo melanje. Ang Solèy yo menm, kidonk sèvi ak lòd ane a. Ki sezon ki vini apre ete? Apre ivè?","صفّا سبتمبر ومارس مختلطان. زاويتا الشمس متساويتان، لذا استخدم ترتيب السنة. أي فصل يأتي بعد الصيف؟ وبعد الشتاء؟"],
+axisN:["N pole","Polo N","Pôle N","Pòl N","القطب ش"],
+equator:["Equator","Ecuador","Équateur","Ekwatè","خط الاستواء"],
+night:["Night","Noche","Nuit","Lannwit","الليل"],
+p2Cap:["Sizes and distances are not to scale. Earth's orbit is almost a circle.","Los tamaños y las distancias no están a escala. La órbita de la Tierra es casi un círculo.","Les tailles et les distances ne sont pas à l'échelle. L'orbite de la Terre est presque un cercle.","Gwosè ak distans yo pa bon mezi. Òbit Latè prèske yon sèk.","الأحجام والمسافات ليست بمقياس حقيقي. مدار الأرض دائري تقريبًا."],
+p2Q:["Earth is closest to the Sun in early January. So why is January cold in Michigan? Use evidence from your data.","La Tierra está más cerca del Sol a principios de enero. Entonces, ¿por qué hace frío en Míchigan en enero? Usa evidencia de tus datos.","La Terre est le plus près du Soleil début janvier. Alors pourquoi fait-il froid au Michigan en janvier ? Utilise des preuves tirées de tes données.","Latè pi pre Solèy la nan kòmansman janvye. Alò, poukisa li fè frèt nan Michigan an janvye? Sèvi ak prèv ki soti nan done ou yo.","تكون الأرض أقرب إلى الشمس في أوائل يناير. فلماذا يكون يناير باردًا في ميشيغان؟ استخدم أدلة من بياناتك."],
+
+/* Part 3 */
+p3Head:["Part 3: Check Your Thinking","Parte 3: Revisa tus ideas","Partie 3 : Vérifie tes idées","Pati 3: Verifye lide ou","الجزء 3: تحقّق من أفكارك"],
+p3Steps:["Answer all 5 questions. Use your data from Parts 1 and 2. Then press Check.","Responde las 5 preguntas. Usa tus datos de las Partes 1 y 2. Luego presiona Revisar.","Réponds aux 5 questions. Utilise tes données des Parties 1 et 2. Ensuite, appuie sur Vérifier.","Reponn 5 kesyon yo. Sèvi ak done ou nan Pati 1 ak 2. Apre sa, peze Verifye.","أجب عن الأسئلة الخمسة. استخدم بياناتك من الجزأين 1 و2. ثم اضغط تحقّق."],
+mcFill:["Choose an answer for every question. Empty: {n}.","Elige una respuesta para cada pregunta. Vacías: {n}.","Choisis une réponse pour chaque question. Vides : {n}.","Chwazi yon repons pou chak kesyon. Sa ki vid: {n}.","اختر إجابة لكل سؤال. الفارغة: {n}."],
+score5:["{c} of 5 correct.","{c} de 5 correctas.","{c} sur 5 correctes.","{c} sou 5 kòrèk.","{c} من 5 صحيحة."],
+qn:["Question {n}:","Pregunta {n}:","Question {n} :","Kesyon {n}:","السؤال {n}:"],
+mcGood:["All 5 are correct. The tilt of Earth's axis changes the Sun angle and the hours of daylight as Earth orbits the Sun. That is what causes the seasons.","Las 5 están correctas. La inclinación del eje de la Tierra cambia el ángulo del Sol y las horas de luz mientras la Tierra gira alrededor del Sol. Eso causa las estaciones.","Les 5 sont correctes. L'inclinaison de l'axe de la Terre change l'angle du Soleil et la durée du jour pendant que la Terre tourne autour du Soleil. C'est ce qui cause les saisons.","Tout 5 yo kòrèk. Panche aks Latè chanje ang Solèy la ak èdtan limyè yo pandan Latè ap vire toutotou Solèy la. Se sa ki lakòz sezon yo.","الخمس كلها صحيحة. ميل محور الأرض يغيّر زاوية الشمس وساعات النهار أثناء دوران الأرض حول الشمس. وهذا ما يسبب الفصول."],
+
+m1:["1. Why is Michigan warmer in summer than in winter?","1. ¿Por qué hace más calor en Míchigan en verano que en invierno?","1. Pourquoi fait-il plus chaud au Michigan en été qu'en hiver ?","1. Poukisa li fè pi cho nan Michigan an ete pase an ivè?","1. لماذا تكون ميشيغان أدفأ في الصيف منها في الشتاء؟"],
+m1a:["Earth is closer to the Sun in summer.","La Tierra está más cerca del Sol en verano.","La Terre est plus près du Soleil en été.","Latè pi pre Solèy la an ete.","الأرض أقرب إلى الشمس في الصيف."],
+m1b:["The Sun is higher at noon and the days are longer.","El Sol está más alto al mediodía y los días son más largos.","Le Soleil est plus haut à midi et les jours sont plus longs.","Solèy la pi wo a midi epi jou yo pi long.","الشمس أعلى عند الظهر والأيام أطول."],
+m1c:["The Sun gives off more energy in summer.","El Sol produce más energía en verano.","Le Soleil produit plus d'énergie en été.","Solèy la bay plis enèji an ete.","تطلق الشمس طاقة أكثر في الصيف."],
+m1ah:["Look at the distance column in Part 2. Earth is closest to the Sun in December. What season is that in Michigan?","Mira la columna de distancia en la Parte 2. La Tierra está más cerca del Sol en diciembre. ¿Qué estación es en Míchigan?","Regarde la colonne distance dans la Partie 2. La Terre est le plus près du Soleil en décembre. Quelle saison est-ce au Michigan ?","Gade kolòn distans lan nan Pati 2. Latè pi pre Solèy la nan desanm. Ki sezon sa ye nan Michigan?","انظر إلى عمود البعد في الجزء 2. تكون الأرض أقرب إلى الشمس في ديسمبر. ما الفصل في ميشيغان حينها؟"],
+m1ch:["The Sun's energy output barely changes during the year. What changes is how the light reaches Michigan.","La energía que produce el Sol casi no cambia durante el año. Lo que cambia es cómo llega la luz a Míchigan.","L'énergie produite par le Soleil change très peu pendant l'année. Ce qui change, c'est la façon dont la lumière arrive au Michigan.","Enèji Solèy la bay la prèske pa chanje pandan ane a. Sa ki chanje se fason limyè a rive nan Michigan.","طاقة الشمس لا تتغير تقريبًا خلال السنة. ما يتغير هو طريقة وصول الضوء إلى ميشيغان."],
+m2:["2. Sunlight hits the ground at a low angle instead of straight down. What happens?","2. La luz del sol llega al suelo con un ángulo bajo en vez de directamente desde arriba. ¿Qué pasa?","2. La lumière du Soleil arrive au sol à un angle bas au lieu de tomber droit. Que se passe-t-il ?","2. Limyè solèy la frape tè a nan yon ang ki ba olye li tonbe tou dwat. Kisa k rive?","2. يصل ضوء الشمس إلى الأرض بزاوية منخفضة بدلًا من السقوط مباشرة. ماذا يحدث؟"],
+m2a:["It covers more squares, so each square gets less energy.","Cubre más cuadros, así que cada cuadro recibe menos energía.","Elle couvre plus de carrés, donc chaque carré reçoit moins d'énergie.","Li kouvri plis kare, kidonk chak kare resevwa mwens enèji.","يغطي مربعات أكثر، فيحصل كل مربع على طاقة أقل."],
+m2b:["It covers fewer squares, so each square gets more energy.","Cubre menos cuadros, así que cada cuadro recibe más energía.","Elle couvre moins de carrés, donc chaque carré reçoit plus d'énergie.","Li kouvri mwens kare, kidonk chak kare resevwa plis enèji.","يغطي مربعات أقل، فيحصل كل مربع على طاقة أكثر."],
+m2c:["It covers the same squares with less total energy.","Cubre los mismos cuadros con menos energía total.","Elle couvre les mêmes carrés avec moins d'énergie totale.","Li kouvri menm kare yo ak mwens enèji an tou.","يغطي المربعات نفسها بطاقة كلية أقل."],
+m2bh:["Look at your Part 1 table. Did the 11.5° light cover more squares or fewer than the 90° light?","Mira tu tabla de la Parte 1. ¿La luz a 11.5° cubrió más o menos cuadros que la luz a 90°?","Regarde ton tableau de la Partie 1. La lumière à 11.5° a-t-elle couvert plus ou moins de carrés que celle à 90° ?","Gade tablo Pati 1 ou a. Èske limyè 11.5° la te kouvri plis oswa mwens kare pase limyè 90° la?","انظر إلى جدولك في الجزء 1. هل غطى الضوء عند 11.5° مربعات أكثر أم أقل من الضوء عند 90°؟"],
+m2ch:["In Part 1 the total energy was 100 units at every angle. What changed was the number of lit squares.","En la Parte 1 la energía total fue 100 unidades en cada ángulo. Lo que cambió fue el número de cuadros iluminados.","Dans la Partie 1, l'énergie totale était de 100 unités à chaque angle. Ce qui a changé, c'est le nombre de carrés éclairés.","Nan Pati 1, enèji an tou te 100 inite nan chak ang. Sa ki te chanje se kantite kare ki klere yo.","في الجزء 1 كانت الطاقة الكلية 100 وحدة عند كل زاوية. ما تغيّر هو عدد المربعات المضاءة."],
+m3:["3. It is June and summer is starting in Michigan. What season is starting in Sydney, Australia?","3. Es junio y el verano empieza en Míchigan. ¿Qué estación empieza en Sídney, Australia?","3. C'est juin et l'été commence au Michigan. Quelle saison commence à Sydney, en Australie ?","3. Se jen epi ete ap kòmanse nan Michigan. Ki sezon k ap kòmanse nan Sydney, Ostrali?","3. إنه يونيو والصيف يبدأ في ميشيغان. أي فصل يبدأ في سيدني بأستراليا؟"],
+m3ah:["Sydney is in the Southern Hemisphere. Check Sydney's noon Sun angle for June 21 in your Part 2 table.","Sídney está en el hemisferio sur. Revisa el ángulo del Sol de Sídney el 21 de junio en tu tabla de la Parte 2.","Sydney est dans l'hémisphère Sud. Vérifie l'angle du Soleil à Sydney le 21 juin dans ton tableau de la Partie 2.","Sydney nan emisfè sid la. Verifye ang Solèy Sydney pou 21 jen nan tablo Pati 2 ou a.","تقع سيدني في نصف الكرة الجنوبي. راجع زاوية الشمس في سيدني يوم 21 يونيو في جدول الجزء 2."],
+m3ch:["June 21 is a solstice, not an equinox. Look at Sydney's June row in your Part 2 table.","El 21 de junio es un solsticio, no un equinoccio. Mira la fila de junio de Sídney en tu tabla de la Parte 2.","Le 21 juin est un solstice, pas un équinoxe. Regarde la ligne de juin pour Sydney dans ton tableau de la Partie 2.","21 jen se yon solstis, se pa yon ekinòks. Gade liy jen Sydney nan tablo Pati 2 ou a.","21 يونيو انقلاب وليس اعتدالًا. انظر إلى صف يونيو لسيدني في جدول الجزء 2."],
+m4:["4. What would happen in Michigan if Earth had no tilt?","4. ¿Qué pasaría en Míchigan si la Tierra no tuviera inclinación?","4. Que se passerait-il au Michigan si la Terre n'était pas inclinée ?","4. Kisa k t ap rive nan Michigan si Latè pa t panche?","4. ماذا سيحدث في ميشيغان لو لم تكن الأرض مائلة؟"],
+m4a:["The seasons would be stronger.","Las estaciones serían más fuertes.","Les saisons seraient plus fortes.","Sezon yo t ap pi fò.","ستكون الفصول أشد."],
+m4b:["There would be no seasons. The noon Sun angle would stay the same all year.","No habría estaciones. El ángulo del Sol al mediodía sería igual todo el año.","Il n'y aurait pas de saisons. L'angle du Soleil à midi resterait le même toute l'année.","Pa t ap gen sezon. Ang Solèy la a midi t ap rete menm jan tout ane a.","لن تكون هناك فصول. ستبقى زاوية الشمس عند الظهر ثابتة طوال السنة."],
+m4c:["The seasons would switch places.","Las estaciones cambiarían de lugar.","Les saisons seraient inversées.","Sezon yo t ap chanje plas.","ستتبادل الفصول أماكنها."],
+m4h:["Test it. In Part 2, set the tilt to 0° and tap each date. Does the noon Sun angle change?","Pruébalo. En la Parte 2, pon la inclinación en 0° y toca cada fecha. ¿Cambia el ángulo del Sol al mediodía?","Teste-le. Dans la Partie 2, mets l'inclinaison à 0° et touche chaque date. L'angle du Soleil à midi change-t-il ?","Teste l. Nan Pati 2, mete panche a sou 0° epi touche chak dat. Èske ang Solèy la a midi chanje?","جرّب ذلك. في الجزء 2 اضبط الميل على 0° والمس كل تاريخ. هل تتغير زاوية الشمس عند الظهر؟"],
+m5:["5. What causes the seasons?","5. ¿Qué causa las estaciones?","5. Qu'est-ce qui cause les saisons ?","5. Kisa ki lakòz sezon yo?","5. ما سبب الفصول؟"],
+m5a:["The tilt of Earth's axis as Earth orbits the Sun","La inclinación del eje de la Tierra mientras gira alrededor del Sol","L'inclinaison de l'axe de la Terre pendant qu'elle tourne autour du Soleil","Panche aks Latè pandan l ap vire toutotou Solèy la","ميل محور الأرض أثناء دورانها حول الشمس"],
+m5b:["Earth's distance from the Sun changing","El cambio de la distancia entre la Tierra y el Sol","Le changement de distance entre la Terre et le Soleil","Distans ant Latè ak Solèy la k ap chanje","تغيّر بعد الأرض عن الشمس"],
+m5c:["Earth spinning on its axis","La Tierra girando sobre su eje","La Terre qui tourne sur son axe","Latè k ap vire sou aks li","دوران الأرض حول محورها"],
+m5bh:["If distance caused seasons, Michigan and Sydney would have the same season on the same date. Look at your Part 2 table.","Si la distancia causara las estaciones, Míchigan y Sídney tendrían la misma estación en la misma fecha. Mira tu tabla de la Parte 2.","Si la distance causait les saisons, le Michigan et Sydney auraient la même saison à la même date. Regarde ton tableau de la Partie 2.","Si distans te lakòz sezon yo, Michigan ak Sydney t ap gen menm sezon nan menm dat. Gade tablo Pati 2 ou a.","لو كان البعد سبب الفصول لكان لميشيغان وسيدني الفصل نفسه في التاريخ نفسه. انظر إلى جدول الجزء 2."],
+m5ch:["Earth's spin causes day and night. It happens every 24 hours, not once a year.","El giro de la Tierra causa el día y la noche. Pasa cada 24 horas, no una vez al año.","La rotation de la Terre cause le jour et la nuit. Elle se fait toutes les 24 heures, pas une fois par an.","Wotasyon Latè lakòz lajounen ak lannwit. Sa rive chak 24 èdtan, pa yon fwa pa ane.","دوران الأرض حول محورها يسبب الليل والنهار. يحدث ذلك كل 24 ساعة، لا مرة في السنة."],
+
+/* Part 4 */
+p4Head:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+p4Steps:["Type your name and class hour. Download the PDF or copy your results. Then turn it in on Google Classroom.","Escribe tu nombre y tu hora de clase. Descarga el PDF o copia tus resultados. Luego entrégalo en Google Classroom.","Écris ton nom et ton heure de cours. Télécharge le PDF ou copie tes résultats. Ensuite, remets-le sur Google Classroom.","Ekri non w ak lè klas ou. Telechaje PDF la oswa kopye rezilta ou yo. Apre sa, remèt li sou Google Classroom.","اكتب اسمك وحصة الصف. نزّل ملف PDF أو انسخ نتائجك. ثم سلّمه على Google Classroom."],
+name:["Your name","Tu nombre","Ton nom","Non ou","اسمك"],
+hour:["Class hour","Hora de clase","Heure de cours","Lè klas","حصة الصف"],
+pdf:["Download PDF","Descargar PDF","Télécharger le PDF","Telechaje PDF","تنزيل PDF"],
+copy:["Copy results as text","Copiar resultados como texto","Copier les résultats en texte","Kopye rezilta yo an tèks","نسخ النتائج كنص"],
+copied:["Copied. Paste it into Google Classroom.","Copiado. Pégalo en Google Classroom.","Copié. Colle-le dans Google Classroom.","Kopye. Kole l nan Google Classroom.","تم النسخ. الصقه في Google Classroom."],
+copyFail:["Copy did not work. The text is selected. Press Ctrl+C to copy it.","No se pudo copiar. El texto está seleccionado. Presiona Ctrl+C para copiarlo.","La copie n'a pas marché. Le texte est sélectionné. Appuie sur Ctrl+C pour le copier.","Kopi a pa mache. Tèks la chwazi. Peze Ctrl+C pou kopye l.","لم ينجح النسخ. النص محدد. اضغط Ctrl+C لنسخه."],
+needName:["Type your name first.","Primero escribe tu nombre.","Écris d'abord ton nom.","Ekri non w anvan.","اكتب اسمك أولًا."],
+pdfSaved:["PDF saved. Upload it to Google Classroom.","PDF guardado. Súbelo a Google Classroom.","PDF enregistré. Dépose-le sur Google Classroom.","PDF la anrejistre. Mete l sou Google Classroom.","تم حفظ ملف PDF. ارفعه إلى Google Classroom."],
+pdfFail:["The PDF did not download here. Use Copy results as text instead.","El PDF no se descargó aquí. Usa Copiar resultados como texto.","Le PDF ne s'est pas téléchargé ici. Utilise Copier les résultats en texte.","PDF la pa telechaje isit la. Sèvi ak Kopye rezilta yo an tèks.","لم يُنزَّل ملف PDF هنا. استخدم نسخ النتائج كنص."],
+pdfArabic:["Some answers use letters the PDF can't show. Use Copy results as text.","Algunas respuestas usan letras que el PDF no puede mostrar. Usa Copiar resultados como texto.","Certaines réponses utilisent des lettres que le PDF ne peut pas afficher. Utilise Copier les résultats en texte.","Kèk repons gen lèt PDF la pa ka montre. Sèvi ak Kopye rezilta yo an tèks.","بعض الإجابات تستخدم حروفًا لا يعرضها ملف PDF. استخدم نسخ النتائج كنص."],
+preview:["Your results (in English)","Tus resultados (en inglés)","Tes résultats (en anglais)","Rezilta ou (an angle)","نتائجك (بالإنجليزية)"],
+sumP1:["Spread the light","La luz se extiende","La lumière s'étale","Limyè a gaye","انتشار الضوء"],
+sumP2:["Seasons table","Tabla de estaciones","Tableau des saisons","Tablo sezon","جدول الفصول"],
+sumP3:["Check your thinking","Revisa tus ideas","Vérifie tes idées","Verifye lide ou","تحقّق من أفكارك"],
+sumAns:["Written answers","Respuestas escritas","Réponses écrites","Repons ekri","الإجابات المكتوبة"],
+picsHead:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+credit:["Sun angles and daylight are calculated for noon at 42°N (Michigan) and 34°S (Sydney). Distances are rounded from NASA data. Translations were written by Claude and need review by a native speaker.","Los ángulos del Sol y las horas de luz se calculan para el mediodía a 42°N y 34°S. Las distancias vienen de datos de la NASA, redondeadas. Las traducciones las escribió Claude y necesitan revisión.","Les angles du Soleil et la durée du jour sont calculés pour midi à 42°N et 34°S. Les distances viennent de la NASA, arrondies. Les traductions ont été écrites par Claude et doivent être vérifiées.","Ang Solèy ak èdtan limyè yo kalkile pou midi nan 42°N ak 34°S. Distans yo soti nan done NASA, awondi. Se Claude ki ekri tradiksyon yo, yo bezwen verifikasyon.","زوايا الشمس وساعات النهار محسوبة للظهر عند 42° شمالًا و34° جنوبًا. المسافات مقرّبة من بيانات ناسا. كتب Claude الترجمات وتحتاج إلى مراجعة."]
+};
+
+/* Sentence frames: [English, es, fr, ht, ar] */
+const FRAMES={
+p1:[
+["At a low angle, the same 100 units spread over ___ squares.","Con un ángulo bajo, las mismas 100 unidades se extienden sobre ___ cuadros.","À un angle bas, les mêmes 100 unités s'étalent sur ___ carrés.","Nan yon ang ki ba, menm 100 inite yo gaye sou ___ kare.","عند زاوية منخفضة تنتشر 100 الوحدة نفسها على ___ مربعات."],
+["At 90°, each square gets ___ units. At 11.5°, each square gets ___ units.","A 90°, cada cuadro recibe ___ unidades. A 11.5°, cada cuadro recibe ___ unidades.","À 90°, chaque carré reçoit ___ unités. À 11.5°, chaque carré reçoit ___ unités.","Nan 90°, chak kare resevwa ___ inite. Nan 11.5°, chak kare resevwa ___ inite.","عند 90° يحصل كل مربع على ___ وحدة. عند 11.5° يحصل كل مربع على ___ وحدة."],
+["Less energy per square means the ground ___.","Menos energía por cuadro significa que el suelo ___.","Moins d'énergie par carré veut dire que le sol ___.","Mwens enèji pou chak kare vle di tè a ___.","طاقة أقل لكل مربع تعني أن الأرض ___."]
+],
+p2:[
+["Claim: January is cold in Michigan because ___.","Afirmación: enero es frío en Míchigan porque ___.","Affirmation : janvier est froid au Michigan parce que ___.","Deklarasyon: janvye fè frèt nan Michigan paske ___.","الادعاء: يناير بارد في ميشيغان لأن ___."],
+["Evidence: On December 21, the noon Sun angle in Michigan is ___ and daylight is ___ hours.","Evidencia: el 21 de diciembre, el ángulo del Sol al mediodía en Míchigan es ___ y hay ___ horas de luz.","Preuve : le 21 décembre, l'angle du Soleil à midi au Michigan est de ___ et le jour dure ___ heures.","Prèv: 21 desanm, ang Solèy la a midi nan Michigan se ___ epi gen ___ èdtan limyè.","الدليل: في 21 ديسمبر تكون زاوية الشمس عند الظهر في ميشيغان ___ وساعات النهار ___."],
+["Earth is only ___ million km from the Sun in December, but ___.","La Tierra está a solo ___ millones de km del Sol en diciembre, pero ___.","La Terre n'est qu'à ___ millions de km du Soleil en décembre, mais ___.","Latè sèlman ___ milyon km de Solèy la nan desanm, men ___.","تبعد الأرض ___ مليون كم فقط عن الشمس في ديسمبر، لكن ___."],
+["Reasoning: A low Sun angle spreads the energy over ___, so ___.","Razonamiento: un ángulo bajo del Sol extiende la energía sobre ___, así que ___.","Raisonnement : un angle bas du Soleil étale l'énergie sur ___, donc ___.","Rezònman: yon ang Solèy ki ba gaye enèji a sou ___, kidonk ___.","التفسير: زاوية الشمس المنخفضة تنشر الطاقة على ___، لذلك ___."]
+]};
+const WORDS={
+p1:[["spread out","se extiende","s'étale","gaye","ينتشر"],["more squares","más cuadros","plus de carrés","plis kare","مربعات أكثر"],["less energy","menos energía","moins d'énergie","mwens enèji","طاقة أقل"],["concentrated","concentrada","concentrée","konsantre","مركّزة"],["heats less","se calienta menos","chauffe moins","chofe mwens","يسخن أقل"],["angle","ángulo","angle","ang","زاوية"]],
+p2:[["tilted away from the Sun","inclinado lejos del Sol","incliné loin du Soleil","panche lwen Solèy la","مائل بعيدًا عن الشمس"],["Northern Hemisphere","hemisferio norte","hémisphère Nord","emisfè nò","نصف الكرة الشمالي"],["low Sun angle","ángulo bajo del Sol","angle du Soleil bas","ang Solèy ki ba","زاوية شمس منخفضة"],["shorter days","días más cortos","jours plus courts","jou pi kout","أيام أقصر"],["distance does not cause seasons","la distancia no causa las estaciones","la distance ne cause pas les saisons","distans pa lakòz sezon","البعد لا يسبب الفصول"],["more squares","más cuadros","plus de carrés","plis kare","مربعات أكثر"]]
+};
+
+/* ---------- GLOSSARY (word pictures) ---------- each language: [word, definition] */
+const GL={
+sunAngle:{en:["Sun angle","How high the Sun is above the ground, from 0° (on the horizon) to 90° (straight up)."],es:["ángulo del Sol","Qué tan alto está el Sol sobre el suelo, de 0° (en el horizonte) a 90° (justo arriba)."],fr:["angle du Soleil","La hauteur du Soleil au-dessus du sol, de 0° (à l'horizon) à 90° (tout en haut)."],ht:["ang Solèy","Konbyen Solèy la wo anlè tè a, depi 0° (sou orizon an) rive 90° (tou dwat anlè)."],ar:["زاوية الشمس","ارتفاع الشمس فوق الأرض، من 0° (عند الأفق) إلى 90° (فوق الرأس مباشرة)."]},
+intensity:{en:["energy per square","How much sunlight energy lands on one square of ground. More per square means more heating."],es:["energía por cuadro","Cuánta energía del sol cae en un cuadro de suelo. Más por cuadro significa más calor."],fr:["énergie par carré","La quantité d'énergie du Soleil qui tombe sur un carré de sol. Plus par carré veut dire plus de chaleur."],ht:["enèji pou chak kare","Konbyen enèji solèy tonbe sou yon kare tè. Plis pou chak kare vle di plis chalè."],ar:["الطاقة لكل مربع","مقدار طاقة ضوء الشمس الذي يسقط على مربع واحد من الأرض. أكثر لكل مربع يعني تسخينًا أكثر."]},
+axis:{en:["axis","An imaginary line through the North and South Poles. Earth spins around it."],es:["eje","Una línea imaginaria que pasa por los polos Norte y Sur. La Tierra gira alrededor de ella."],fr:["axe","Une ligne imaginaire qui passe par les pôles Nord et Sud. La Terre tourne autour."],ht:["aks","Yon liy imajinè ki pase nan Pòl Nò ak Pòl Sid. Latè vire toutotou l."],ar:["المحور","خط وهمي يمر بالقطبين الشمالي والجنوبي. تدور الأرض حوله."]},
+tilt:{en:["tilt","Earth's axis leans 23.5°. It always points the same way in space."],es:["inclinación","El eje de la Tierra está inclinado 23.5°. Siempre apunta hacia el mismo lado en el espacio."],fr:["inclinaison","L'axe de la Terre penche de 23,5°. Il pointe toujours dans la même direction."],ht:["panche","Aks Latè panche 23.5°. Li toujou pwente menm direksyon nan espas."],ar:["الميل","محور الأرض مائل بمقدار 23.5°. وهو يشير دائمًا إلى الاتجاه نفسه في الفضاء."]},
+orbit:{en:["orbit","The path Earth takes around the Sun. One trip takes one year."],es:["órbita","El camino de la Tierra alrededor del Sol. Una vuelta tarda un año."],fr:["orbite","Le chemin de la Terre autour du Soleil. Un tour dure un an."],ht:["òbit","Chemen Latè fè toutotou Solèy la. Yon vire pran yon ane."],ar:["المدار","المسار الذي تسلكه الأرض حول الشمس. تستغرق الدورة سنة واحدة."]},
+solstice:{en:["solstice","The day with the most or the least daylight. About June 21 and December 21."],es:["solsticio","El día con más o con menos horas de luz. Cerca del 21 de junio y del 21 de diciembre."],fr:["solstice","Le jour le plus long ou le plus court. Vers le 21 juin et le 21 décembre."],ht:["solstis","Jou ki gen plis oswa mwens limyè. Anviwon 21 jen ak 21 desanm."],ar:["الانقلاب","اليوم الأطول أو الأقصر نهارًا. نحو 21 يونيو و21 ديسمبر."]},
+equinox:{en:["equinox","A day with about 12 hours of daylight everywhere. About March 20 and September 22."],es:["equinoccio","Un día con unas 12 horas de luz en todas partes. Cerca del 20 de marzo y del 22 de septiembre."],fr:["équinoxe","Un jour avec environ 12 heures de lumière partout. Vers le 20 mars et le 22 septembre."],ht:["ekinòks","Yon jou ki gen anviwon 12 èdtan limyè toupatou. Anviwon 20 mas ak 22 septanm."],ar:["الاعتدال","يوم فيه نحو 12 ساعة نهار في كل مكان. نحو 20 مارس و22 سبتمبر."]},
+hemisphere:{en:["hemisphere","Half of Earth. The equator splits it into the Northern and Southern Hemispheres."],es:["hemisferio","La mitad de la Tierra. El ecuador la divide en hemisferio norte y hemisferio sur."],fr:["hémisphère","La moitié de la Terre. L'équateur la sépare en hémisphère Nord et hémisphère Sud."],ht:["emisfè","Mwatye Latè. Ekwatè a separe l an emisfè nò ak emisfè sid."],ar:["نصف الكرة","نصف الأرض. يقسمها خط الاستواء إلى نصف شمالي ونصف جنوبي."]}
+};
+const VOCAB={spread:['sunAngle','intensity'],tilt:['axis','tilt','orbit','solstice','equinox','hemisphere','sunAngle'],check:['tilt','sunAngle','intensity','hemisphere']};
+</script>
+<script>
+/* ---------- HELPERS ---------- */
+const LI=l=>Math.max(0,LANGS.indexOf(l));
+function raw(k,l){const e=UI[k];if(e==null)return k;return e[LI(l)]!=null?e[LI(l)]:e[0];}
+function U(k,vars,l){l=l||S.lang;let s=raw(k,l);if(vars)s=s.replace(/\{(\w+)\}/g,(m,n)=>{const v=vars[n];if(v==null)return m;if(typeof v==='object'&&v.k)return raw(v.k,l);return v;});return s;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function ltr(s){return s.replace(/(\d[\d.,]*\s?(?:°N|°S|°|km)?)/g,'<bdi dir="ltr">$1</bdi>');}
+function l2span(t){if(S.lang==='en')return '';const ar=S.lang==='ar';return `<span class="l2" lang="${S.lang}"${ar?' dir="rtl"':''}>${ar?ltr(esc(t)):esc(t)}</span>`;}
+function B(k,vars){return `<span class="en">${esc(U(k,vars,'en'))}</span>`+l2span(U(k,vars,S.lang));}
+function BI(k,vars){return `<span class="inl">${B(k,vars)}</span>`;}
+function BA(a){return `<span class="en">${esc(a[0])}</span>`+l2span(a[LI(S.lang)]||a[0]);}
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+const rad=d=>d*Math.PI/180;
+
+/* ---------- SCIENCE MODEL ---------- */
+const TARGETS=[90,53,24,11.5];                         // chosen so lit squares are about 4, 5, 10, 20
+const litSquares=a=>4/Math.sin(rad(a));            // beam is 2 x 2 squares straight down
+const perSquare=a=>100/litSquares(a);                // 100 units shared by the lit squares (exact, Part 2)
+const litWhole=a=>Math.round(litSquares(a));
+const target=a=>100/litWhole(a);                      // Part 1 answers: 25, 20, 10, 5
+const LAT={mi:42,sy:-34};
+const KM=[152,150,147,149];                          // million km, rounded (NASA)
+const decl=(i,tilt)=>tilt?[23.5,0,-23.5,0][i]:0;
+const noonAngle=(lat,dec)=>90-Math.abs(lat-dec);
+function dayHours(lat,dec){const x=-Math.tan(rad(lat))*Math.tan(rad(dec));const c=Math.max(-1,Math.min(1,x));return 2*Math.acos(c)*180/Math.PI/15;}
+const SEASONS=['summer','fall','winter','spring'];
+const ANS={mi:['summer','fall','winter','spring'],sy:['winter','spring','summer','fall']};
+const MC=[
+ {q:'m1',o:['m1a','m1b','m1c'],a:1,h:['m1ah',null,'m1ch']},
+ {q:'m2',o:['m2a','m2b','m2c'],a:0,h:[null,'m2bh','m2ch']},
+ {q:'m3',o:['summer','winter','spring'],a:1,h:['m3ah',null,'m3ch']},
+ {q:'m4',o:['m4a','m4b','m4c'],a:1,h:['m4h',null,'m4h']},
+ {q:'m5',o:['m5a','m5b','m5c'],a:0,h:[null,'m5bh','m5ch']}];
+
+/* ---------- READ-ALOUD ---------- */
+const SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+let SAY=new Map(),sid=0;
+function sayBtn(fn){const id='say'+(++sid);SAY.set(id,fn);const lab=esc(U('say',null,'en'));return `<button type="button" class="say" id="${id}" data-say="${id}" aria-label="${lab}" title="${lab}">${SPK}</button>`;}
+function sayK(k,vars){return sayBtn(()=>[U(k,vars,'en'),U(k,vars,S.lang)]);}
+function txt(k,vars){return `<div class="txt"><p class="steps">${B(k,vars)}</p>${sayK(k,vars)}</div>`;}
+function voiceFor(l){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices();const m=vs.filter(v=>v.lang&&v.lang.replace('_','-').toLowerCase().startsWith(l));if(l==='en')return m.find(v=>/en-us/i.test(v.lang.replace('_','-')))||m[0]||null;return m[0]||null;}
+function clean(t){return String(t).replace(/_{2,}/g,', blank, ').replace(/÷/g,' divided by ');}
+function speak(en,l2){
+  if(!('speechSynthesis' in window)){toast(U('noSpeech'));return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(clean(en));u.lang='en-US';const ve=voiceFor('en');if(ve)u.voice=ve;u.rate=.95;speechSynthesis.speak(u);
+  if(S.lang!=='en'&&l2){const v=voiceFor(S.lang);if(v){const u2=new SpeechSynthesisUtterance(clean(l2).replace(/ divided by /g,' ÷ '));u2.lang=v.lang;u2.voice=v;u2.rate=.95;speechSynthesis.speak(u2);}else toast(U('noVoice'));}
+}
+let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4200);}
+function announce(m){const l=document.getElementById('live');l.textContent='';setTimeout(()=>l.textContent=m,30);}
+
+/* ---------- STATE ---------- */
+const KEY='sun-seasons-lab-v1';
+function fresh(){return{v:1,lang:'en',tab:'spread',pics:false,
+  sp:{angle:90,rec:{},en:{},checks:0,marks:null},
+  ti:{date:0,place:'mi',tilt:true,rec:{mi:[null,null,null,null],sy:[null,null,null,null]},sea:{mi:[null,null,null,null],sy:[null,null,null,null]},checks:0,marks:null},
+  mc:{a:[null,null,null,null,null],checks:0,marks:null},
+  ans:{p1:'',p2:''},name:'',hour:'',fb:{}};}
+let S=fresh();
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&d.v===1){const f=fresh();S=Object.assign(f,d);['sp','ti','mc','ans'].forEach(k=>S[k]=Object.assign(f[k],d[k]||{}));}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let clearArm=null,clearT=null;
+const openDet=new Set();
+function setFb(part,type,parts){S.fb[part]={type,parts};announce(parts.map(([k,v])=>U(k,v,'en')).join(' '));}
+
+/* ---------- DRAWINGS ---------- */
+function earthG(cx,cy,r,night){const k=r/30;return `<g transform="translate(${cx} ${cy}) scale(${k})"><circle r="30" class="f-earth"/><path class="f-land" d="M-18-14c6-6 16-6 18 0s-6 8-2 14-8 10-12 4-10-12-4-18z M8 6c6-2 14 0 14 6s-8 10-12 8-6-12-2-14z M4-26c6 0 10 4 6 6s-10-2-6-6z"/>${night?`<path class="f-night" d="M0-30A30 30 0 0 1 0 30Z" transform="rotate(${night})"/>`:''}</g>`;}
+function sunIcon(cx,cy,r){cx=+cx;cy=+cy;let rays='';for(let i=0;i<8;i++){const a=i*Math.PI/4;rays+=`<path d="M${(cx+Math.cos(a)*(r+3)).toFixed(1)} ${(cy+Math.sin(a)*(r+3)).toFixed(1)}L${(cx+Math.cos(a)*(r+8)).toFixed(1)} ${(cy+Math.sin(a)*(r+8)).toFixed(1)}" class="s-sun" stroke-width="2.5" stroke-linecap="round"/>`;}return rays+`<circle cx="${cx}" cy="${cy}" r="${r}" class="f-sun"/>`;}
+
+/* Part 1: side view and top view for one angle */
+function spreadSVG(a){
+  const th=rad(a),c=Math.cos(th),s=Math.sin(th),G=160,Q=36,H=Q; // half beam width = 1 square
+  const Bk=108,cbx=300-Bk*c,cby=G-Bk*s,nx=s,ny=-c;
+  const b1=[cbx-H*nx,cby-H*ny],b2=[cbx+H*nx,cby+H*ny];
+  const foot=b=>b[0]+(G-b[1])/s*c;const x1=foot(b1),x2=foot(b2);
+  let side=`<svg class="fig" viewBox="0 0 600 190" role="img" aria-label="Side view: sunlight at ${a} degrees lights ${f1(litSquares(a))} squares">`;
+  side+=`<rect x="12" y="${G}" width="576" height="18" class="f-ground"/>`;
+  for(let x=48;x<=552;x+=Q)side+=`<path d="M${x} ${G}V${G+18}" class="s-muted" stroke-width="1" opacity=".6"/>`;
+  side+=`<polygon points="${b1[0].toFixed(1)},${b1[1].toFixed(1)} ${x1.toFixed(1)},${G} ${x2.toFixed(1)},${G} ${b2[0].toFixed(1)},${b2[1].toFixed(1)}" class="f-beam" opacity=".38"/>`;
+  [-24,0,24].forEach(k=>{const sx=cbx+k*nx,sy=cby+k*ny,ex=sx+(G-sy)/s*c;side+=`<path d="M${sx.toFixed(1)} ${sy.toFixed(1)}L${(ex-8*c).toFixed(1)} ${(G-8*s).toFixed(1)}" class="s-beam" stroke-width="2"/><path d="M${ex.toFixed(1)} ${G}l${(-12*c-5*s).toFixed(1)} ${(-12*s+5*c).toFixed(1)}l${(10*s).toFixed(1)} ${(-10*c).toFixed(1)}z" class="f-beam"/>`;});
+  side+=`<rect x="${x1.toFixed(1)}" y="${G-3}" width="${(x2-x1).toFixed(1)}" height="6" class="f-beam"/>`;
+  const sx=300-(Bk+30)*c,sy=G-(Bk+30)*s;side+=sunIcon(sx.toFixed(1),sy.toFixed(1),15);
+  const R=46,ax=300-R*c,ay=G-R*s;
+  side+=`<path d="M${300-R} ${G}A${R} ${R} 0 0 1 ${ax.toFixed(1)} ${ay.toFixed(1)}" fill="none" class="s-ink" stroke-width="2"/>`;
+  const la=th/2,lx=300-(R+30)*Math.cos(la),ly=G-(R+14)*Math.sin(la)-4;
+  side+=`<text x="${lx.toFixed(1)}" y="${Math.min(G-6,ly).toFixed(1)}" class="f-ink" text-anchor="middle" style="font-family:var(--mono);font-size:16px;paint-order:stroke;stroke:var(--sky);stroke-width:5px">${a}°</text>`;
+  side+=`<path d="M${x1.toFixed(1)} ${G+26}H${x2.toFixed(1)}" class="s-acc" stroke-width="2"/><path d="M${x1.toFixed(1)} ${G+21}v10M${x2.toFixed(1)} ${G+21}v10" class="s-acc" stroke-width="2"/>`;
+  side+='</svg>';
+  const L=2*Q/s,fx=300-L/2,y0=10,yb=y0+Q;
+  let top=`<svg class="fig" viewBox="0 0 600 164" role="img" aria-label="Ground from above: 100 energy dots spread over ${f1(litSquares(a))} squares">`;
+  top+=`<rect x="48" y="${y0}" width="504" height="${4*Q}" class="f-ground"/>`;
+  top+=`<rect x="${fx.toFixed(1)}" y="${yb}" width="${L.toFixed(1)}" height="${2*Q}" class="f-beam" opacity="${(.18+.5*s).toFixed(2)}"/>`;
+  for(let x=48;x<=552;x+=Q)top+=`<path d="M${x} ${y0}V${y0+4*Q}" class="s-muted" stroke-width="1" opacity=".55"/>`;
+  for(let y=y0;y<=y0+4*Q;y+=Q)top+=`<path d="M48 ${y}H552" class="s-muted" stroke-width="1" opacity=".55"/>`;
+  top+=`<rect x="${fx.toFixed(1)}" y="${yb}" width="${L.toFixed(1)}" height="${2*Q}" fill="none" class="s-beam" stroke-width="2"/>`;
+  let dots='';for(let i=0;i<10;i++)for(let j=0;j<10;j++)dots+=`<circle cx="${(fx+(i+.5)*L/10).toFixed(1)}" cy="${(yb+(j+.5)*2*Q/10).toFixed(1)}" r="2.3" class="f-sun"/>`;
+  top+=dots+'</svg>';
+  return {side,top};
+}
+
+/* small Earth for the orbit: axis tilt + night side away from the Sun */
+function orbitEarth(i,tilt){const night=[180,90,0,270][i];const t=tilt?23.5:0;
+  return `<svg width="46" height="46" viewBox="-23 -23 46 46" aria-hidden="true">${earthG(0,0,13,night)}<path d="M0-21V21" class="s-ink" stroke-width="2" transform="rotate(${t})"/><circle cx="0" cy="-21" r="2.5" class="f-ink" transform="rotate(${t})"/></svg>`;}
+
+/* Earth at noon, cross-section. Sunlight comes from the left. */
+function daySVG(place,dec){
+  const cx=170,cy=140,R=84,lat=LAT[place];
+  const pt=(al,r)=>[cx-(r||R)*Math.cos(rad(al)),cy-(r||R)*Math.sin(rad(al))];
+  let g=`<svg class="fig" viewBox="0 0 300 280" role="img" aria-label="Earth at noon. Noon Sun angle ${f1(noonAngle(lat,dec))} degrees">`;
+  g+=earthG(cx,cy,R,0)+`<path d="M${cx} ${cy-R}A${R} ${R} 0 0 1 ${cx} ${cy+R}Z" class="f-night" style="opacity:.62"/>`;
+  const pn=pt(90-dec,R*1.22),ps=pt(-90-dec,R*1.22);
+  g+=`<path d="M${pn[0].toFixed(1)} ${pn[1].toFixed(1)}L${ps[0].toFixed(1)} ${ps[1].toFixed(1)}" class="s-ink" stroke-width="2.5"/>`;
+  g+=`<text x="${(pn[0]+(dec>0?-14:8)).toFixed(1)}" y="${(pn[1]-4).toFixed(1)}" class="f-ink">N</text>`;
+  const e1=pt(-dec),e2=pt(180-dec);g+=`<path d="M${e1[0].toFixed(1)} ${e1[1].toFixed(1)}L${e2[0].toFixed(1)} ${e2[1].toFixed(1)}" class="s-ink" stroke-width="1.5" stroke-dasharray="5 4" opacity=".8"/>`;
+  const al=lat-dec,p=pt(al),m=pt(180-lat-dec);
+  [44,80,116,152,188,224,260].filter(y=>y<p[1]-26||y>p[1]+36).forEach(y=>g+=`<path d="M6 ${y}H58" class="s-beam" stroke-width="2"/><path d="M64 ${y}l-9-5v10z" class="f-beam"/>`);
+  g+=`<path d="M${p[0].toFixed(1)} ${p[1].toFixed(1)}L${m[0].toFixed(1)} ${m[1].toFixed(1)}" class="s-acc" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+  g+=`<path d="M0 ${p[1].toFixed(1)}H${p[0].toFixed(1)}" class="s-beam" stroke-width="3.5"/>`;
+  const tx=Math.sin(rad(al)),ty=-Math.cos(rad(al));
+  g+=`<path d="M${(p[0]-40*tx).toFixed(1)} ${(p[1]-40*ty).toFixed(1)}L${(p[0]+40*tx).toFixed(1)} ${(p[1]+40*ty).toFixed(1)}" class="s-ink" stroke-width="3"/>`;
+  g+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="6" class="f-acc"/>`;
+  const up=p[1]<cy;g+=`<text x="${(p[0]-6).toFixed(1)}" y="${(p[1]+(up?-12:24)).toFixed(1)}" class="f-ink" text-anchor="end" style="font-family:var(--mono);font-size:16px">${f1(noonAngle(lat,dec))}°</text>`;
+  return g+'</svg>';}
+
+/* word-picture icons, 56x56 on the dark tile */
+function vIcon(k){let g='';
+  switch(k){
+  case 'sunAngle':g=`<path d="M4 46H52" class="s-muted" stroke-width="3"/><path d="M8 18L34 46" class="s-beam" stroke-width="3"/>${sunIcon(10,16,6)}<path d="M20 46A14 14 0 0 1 24 36.5" fill="none" class="s-acc" stroke-width="2"/>`;break;
+  case 'intensity':g=`<rect x="4" y="18" width="20" height="20" class="f-beam" opacity=".85"/><rect x="30" y="22" width="22" height="12" class="f-beam" opacity=".3"/>`;for(let i=0;i<3;i++)for(let j=0;j<3;j++)g+=`<circle cx="${8+i*6}" cy="${22+j*6}" r="1.6" class="f-sun"/>`;for(let i=0;i<3;i++)g+=`<circle cx="${34+i*7}" cy="28" r="1.6" class="f-sun"/>`;break;
+  case 'axis':g=earthG(28,28,15,0)+`<path d="M28 4V52" class="s-ink" stroke-width="2"/><circle cx="28" cy="4" r="2.5" class="f-ink"/>`;break;
+  case 'tilt':g=earthG(28,30,15,0)+`<path d="M28 6V54" class="s-muted" stroke-width="1.5" stroke-dasharray="3 3"/><path d="M18 8L38 52" class="s-ink" stroke-width="2"/><path d="M28 14A16 16 0 0 1 34.5 15.4" fill="none" class="s-acc" stroke-width="2"/>`;break;
+  case 'orbit':g=`<ellipse cx="28" cy="28" rx="23" ry="13" fill="none" class="s-muted" stroke-dasharray="3 3"/>${sunIcon(28,28,5)}${earthG(51,28,4,0)}`;break;
+  case 'solstice':g=`${sunIcon(6,28,5)}${earthG(36,28,14,0)}<path d="M36 28m-14 0" /><path d="M36 14A14 14 0 0 1 36 42Z" class="f-night"/><path d="M30 10L42 46" class="s-ink" stroke-width="2"/>`;break;
+  case 'equinox':g=`${sunIcon(6,28,5)}${earthG(36,28,14,0)}<path d="M36 14A14 14 0 0 1 36 42Z" class="f-night"/><path d="M36 8V48" class="s-ink" stroke-width="2"/><path d="M22 28H50" class="s-acc" stroke-width="1.5" stroke-dasharray="3 2"/>`;break;
+  case 'hemisphere':g=earthG(28,28,18,0)+`<path d="M10 28A18 18 0 0 1 46 28Z" class="f-acc" opacity=".35"/><path d="M8 28H48" class="s-ink" stroke-width="2" stroke-dasharray="4 3"/>`;break;
+  }
+  return `<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">${g}</svg>`;}
+
+/* ---------- SHARED PIECES ---------- */
+function fbHtml(part,fallbackKey){
+  const f=S.fb[part];
+  if(!f){if(!fallbackKey)return `<div class="fb"></div>`;return `<div class="fb"><div>${B(fallbackKey)}</div>${sayK(fallbackKey)}</div>`;}
+  const en=f.parts.map(([k,v])=>U(k,v,'en')).join(' '),l2=f.parts.map(([k,v])=>U(k,v,S.lang)).join(' ');
+  return `<div class="fb ${f.type}"><div><span class="en">${esc(en)}</span>${l2span(l2)}</div>${sayBtn(()=>[en,l2])}</div>`;}
+function actions(part,fallbackKey,checks){
+  const armed=clearArm===S.tab;
+  return `<div class="actions">${fbHtml(part,fallbackKey)}<div class="act-btns"><span class="count">${esc(U('checks',{n:checks},'en'))}</span>
+  <button type="button" class="btn primary" id="checkBtn" data-act="check">${BI('check')}</button>
+  <button type="button" class="btn ${armed?'warn':''}" id="clearBtn" data-act="clear">${BI(armed?'clearSure':'clear')}</button></div></div>`;}
+function question(qk,ak){
+  const fr=FRAMES[ak].map((f,i)=>`<button type="button" class="frame" id="fr-${ak}-${i}" data-act="ins" data-ans="${ak}" data-txt="${esc(f[0])}" data-line="1">${BA(f)}</button>`).join('');
+  const wd=WORDS[ak].map((w,i)=>`<button type="button" class="word" id="wd-${ak}-${i}" data-act="ins" data-ans="${ak}" data-txt="${esc(w[0])}"><span class="inl">${BA(w)}</span></button>`).join('');
+  return `<div class="panel q"><div class="txt"><h3 style="font-size:1.05rem;flex:1">${B(qk)}</h3>${sayK(qk)}</div>
+  <label for="ans-${ak}" class="note" style="display:block;margin:8px 0 4px">${BI('answer')}</label>
+  <textarea id="ans-${ak}" data-ans="${ak}" spellcheck="true">${esc(S.ans[ak])}</textarea>
+  <details class="sup" id="det-${ak}"${openDet.has('det-'+ak)?' open':''}><summary>${BI('frames')}</summary>
+  <p class="note" style="margin:4px 0">${BI('framesTip')}</p><div class="frames">${fr}</div>
+  <p class="eyebrow" style="margin-top:10px">${BI('wordBank')}</p><div class="words">${wd}</div></details></div>`;}
+function vocabBlock(list){
+  if(!S.pics)return '';
+  const cards=list.map(k=>{const g=GL[k];const en=g.en,l=g[S.lang]||g.en;
+    return `<div class="vcard"><div class="pic">${vIcon(k)}</div><div style="flex:1;min-width:0"><b>${esc(en[0])}</b>${S.lang!=='en'?l2span(l[0]):''}<p>${esc(en[1])}</p>${S.lang!=='en'?l2span(l[1]):''}</div>${sayBtn(()=>[en[0]+'. '+en[1],l[0]+'. '+l[1]])}</div>`;}).join('');
+  return `<div class="panel"><p class="eyebrow">${BI('picsHead')}</p><div class="vocab">${cards}</div></div>`;}
+const mark=ok=>`<span class="res ${ok?'ok':'no'}">${ok?'OK':'X'}</span>`;
+
+/* ---------- HEADER + TABS ---------- */
+const TABS=[['spread','tab1'],['tilt','tab2'],['check','tab3'],['turnin','tab4']];
+function tabChip(t){
+  if(t==='spread')return S.sp.marks?Object.values(S.sp.marks).filter(Boolean).length+'/4':'–';
+  if(t==='tilt')return S.ti.marks?[...S.ti.marks.mi,...S.ti.marks.sy].filter(Boolean).length+'/8':'–';
+  if(t==='check')return S.mc.marks?S.mc.marks.filter(Boolean).length+'/5':'–';
+  return '';}
+function header(){
+  const opts=LANGS.map(l=>`<option value="${l}"${S.lang===l?' selected':''}>${esc(LANG_NAMES[l])}</option>`).join('');
+  return `<header class="top"><div class="brand"><svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect width="44" height="44" rx="10" style="fill:var(--sky)"/>${sunIcon(11,12,5)}${earthG(28,28,10,0)}<path d="M23.5 16.5L32.5 39.5" class="s-ink" stroke-width="1.8"/></svg>
+  <div><h1>${B('title')}</h1><p>${BI('sub')}</p></div></div>
+  <div class="tools"><label for="lang">${BI('lang')}</label><select id="lang" data-act="lang">${opts}</select>
+  <button type="button" class="btn" id="picsBtn" data-act="pics" aria-pressed="${S.pics}">${BI('pics')}</button>
+  <button type="button" class="btn" id="themeBtn" data-act="theme">${BI('theme')}</button></div></header>
+  <nav class="tabs" role="tablist" aria-label="Lab parts">${TABS.map(([id,k])=>`<button type="button" role="tab" class="tab" id="tab-${id}" data-act="tab" data-arg="${id}" aria-selected="${S.tab===id}"><span>${B(k)}</span>${tabChip(id)?`<span class="chip">${tabChip(id)}</span>`:''}</button>`).join('')}</nav>`;}
+
+function example(){
+  let sq='';for(let k=0;k<3;k++){const x=6+k*62;sq+=`<rect x="${x}" y="4" width="56" height="56" rx="3" class="f-ground"/>`;
+    for(let i=0;i<4;i++)for(let j=0;j<5;j++)sq+=`<circle cx="${x+10+i*12}" cy="${10+j*11}" r="2.4" class="f-sun"/>`;
+    sq+=`<text x="${x+28}" y="78" text-anchor="middle" style="fill:var(--ink);font-family:var(--mono)">20</text>`;}
+  return `<div class="example"><p class="eyebrow" style="margin:0">${BI('exHead')}</p>
+  <div class="ex-row"><svg width="192" height="84" viewBox="0 0 192 84" role="img" aria-label="3 squares with 20 energy dots each">${sq}</svg>
+  <div class="txt"><p class="steps"><span class="en ex-math">${esc(U('exBody',null,'en'))}</span>${l2span(U('exBody',null,S.lang))}</p>${sayK('exBody')}</div></div>
+  ${txt('exYour')}</div>`;}
+/* ---------- PART 1: SPREAD THE LIGHT ---------- */
+function stage1Inner(){const a=S.sp.angle,d=spreadSVG(a);
+  return `<p class="slabel">${BI('sideView')}</p>${d.side}<p class="slabel">${BI('topView')}</p>${d.top}
+  <div class="reads"><div class="read"><div class="k">${BI('angleLbl')}</div><div class="v">${a}°</div></div>
+  <div class="read"><div class="k">${BI('energyLbl')}</div><div class="v">100 <small>${BI('units')}</small></div></div>
+  <div class="read"><div class="k">${BI('litLbl')}</div><div class="v">≈ ${litWhole(a)} <small>${BI('squares')}</small></div></div></div>`;}
+function renderSpread(){
+  const P=S.sp;
+  const quick=TARGETS.map(t=>`<button type="button" class="btn sm" id="go-${t}" data-act="setAngle" data-arg="${t}" aria-pressed="${P.angle===t}">${t}°</button>`).join('');
+  const rows=TARGETS.map(t=>{const r=P.rec[t];const mk=P.marks&&P.marks[t]!=null?mark(P.marks[t]):'';
+    const cls=P.marks&&P.marks[t]!=null?(P.marks[t]?'okb':'nob'):'';
+    return `<tr><td class="n">${t}°</td><td class="n">${r!=null?'≈ '+r:`<span class="empty">${BI('notRec')}</span>`}</td>
+    <td><div class="row"><input type="text" inputmode="decimal" id="en-${t}" data-en="${t}" class="${cls}" value="${esc(P.en[t]||'')}" aria-label="${esc(U('tEnergy',null,'en')+' at '+t+' degrees'+(mk?(P.marks[t]?', OK':', X'):''))}">${mk}</div></td></tr>`;}).join('');
+  return `<section class="part" aria-labelledby="h-p1"><div class="grid"><div class="side"><div class="panel side">
+    <h2 id="h-p1">${B('p1Head')}</h2>${txt('p1Steps')}
+    <div class="formula">${B('p1Formula')}</div>
+    ${example()}
+    <div class="slider"><label for="angle" class="eyebrow" style="margin:0">${BI('angleLbl')}: <span id="angVal" class="count" style="font-size:15px">${P.angle}°</span></label>
+      <input type="range" id="angle" min="10" max="90" step="0.5" value="${P.angle}"></div>
+    <p class="eyebrow" style="margin:0">${BI('quick')}</p><div class="row">${quick}</div>
+    <button type="button" class="btn primary" id="recBtn" data-act="rec1">${BI('record')}</button>
+    <p class="eyebrow" style="margin:6px 0 0">${BI('p1Table')}</p>
+    <table class="data small"><thead><tr><th>${B('tAngle')}</th><th>${B('tLit')}</th><th>${B('tEnergy')}</th></tr></thead><tbody>${rows}</tbody></table>
+    </div></div>
+    <div><div class="stage" id="stage1">${stage1Inner()}</div><p class="stage-cap">${BI('p1Cap')}</p></div></div>
+    ${actions('sp',null,P.checks)}
+    ${question('p1Q','p1')}${vocabBlock(VOCAB.spread)}</section>`;}
+function num(v){if(v==null)return NaN;const x=parseFloat(String(v).replace(',','.'));return x;}
+function checkSpread(){
+  const P=S.sp;let miss=0;TARGETS.forEach(t=>{if(P.rec[t]==null)miss++;if(isNaN(num(P.en[t])))miss++;});
+  if(miss){setFb('sp','bad',[['notYet'],['p1Fill',{n:miss}]]);return;}
+  P.checks++;P.marks={};TARGETS.forEach(t=>P.marks[t]=Math.abs(num(P.en[t])-target(t))<0.51);
+  const c=TARGETS.filter(t=>P.marks[t]).length;
+  if(c===4){setFb('sp','good',[['correct'],['p1Good']]);return;}
+  const flip=num(P.en[11.5])>num(P.en[90]);
+  setFb('sp','bad',[['score4',{c}],[flip?'hFlip':'hDivide']]);}
+
+/* ---------- PART 2: TILT AND SEASONS ---------- */
+function reading(place,i,tilt){const dec=decl(i,tilt),lat=LAT[place];const a=noonAngle(lat,dec);return{a,h:tilt?dayHours(lat,dec):12,e:perSquare(a)};}
+function renderTilt(){
+  const T=S.ti,i=T.date,r=reading(T.place,i,T.tilt);
+  const POS=[[45,140],[210,228],[375,140],[210,52]];
+  const orbSvg=`<svg viewBox="0 0 420 290" aria-hidden="true"><ellipse cx="210" cy="140" rx="165" ry="88" fill="none" class="s-line" stroke-width="2" stroke-dasharray="5 6"/>
+    <path d="M300 213a165 88 0 0 0 52 -32" fill="none" class="s-acc" stroke-width="2.5"/><path d="M356 176l-1 12-9-6z" class="f-acc"/>
+    <circle cx="210" cy="140" r="36" class="f-sun" opacity=".18"/>${sunIcon(210,140,24)}</svg>`;
+  const epos=POS.map((p,k)=>{const recd=T.rec[T.place][k]!=null;
+    return `<button type="button" class="epos" id="epos-${k}" data-act="date" data-arg="${k}" aria-pressed="${i===k}" style="left:${(p[0]/4.2).toFixed(2)}%;top:${(p[1]/2.9).toFixed(2)}%" aria-label="${esc(U('d'+k,null,'en')+(recd?', recorded':''))}">${orbitEarth(k,T.tilt)}<span class="dl${k===2?" dl-r":k===0?" dl-l":""}">${B("d"+k)}</span>${recd?'<span class="recd" aria-hidden="true">✓</span>':''}</button>`;}).join('');
+  const kmTag=i===2?' closest':i===0?' farthest':'';
+  const reads=`<div class="reads"><div class="read"><div class="k">${BI('noonAngle')}</div><div class="v">${f1(r.a)}°</div></div>
+    <div class="read"><div class="k">${BI('daylight')}</div><div class="v">${f1(r.h)} <small>${BI('hours')}</small></div></div>
+    <div class="read"><div class="k">${BI('distance')}</div><div class="v">${KM[i]} <small>${BI('mkm')}${kmTag?` (${BI(kmTag.trim())})`:''}</small></div></div>
+    <div class="read"><div class="k">${BI('perSq')}</div><div class="v">${f1(r.e)} <small>${BI('units')}</small></div></div></div>`;
+  const stage=`<div class="stage"><div class="st2"><div><p class="slabel">${BI('orbitView')}</p><div class="orb">${orbSvg}${epos}</div></div>
+    <div><p class="slabel">${BI('dayView',{d:{k:'d'+i}})} · ${BI(T.place==='mi'?'miShort':'syShort')}</p>${daySVG(T.place,decl(i,T.tilt))}</div></div>${reads}</div>
+    <p class="stage-cap">${BI('p2Cap')}</p>`;
+  const places=['mi','sy'].map(p=>`<button type="button" class="btn" id="pl-${p}" data-act="place" data-arg="${p}" aria-pressed="${T.place===p}">${B(p)}</button>`).join('');
+  const tilts=[['on','tiltReal'],['off','tiltNone']].map(([v,k])=>`<button type="button" class="btn" id="tilt-${v}" data-act="tilt" data-arg="${v}" aria-pressed="${T.tilt===(v==='on')}">${B(k)}</button>`).join('');
+  /* table */
+  const cell=(p,k,f)=>{const v=T.rec[p][k];return v==null?`<span class="empty">${BI('notRec')}</span>`:f(v);};
+  const selS=(p,k)=>{const v=T.sea[p][k];const m=T.marks&&v?T.marks[p][k]:null;
+    return `<div class="row"><select id="sea-${p}-${k}" data-sea="${p}:${k}" class="${m==null?'':m?'okb':'nob'}" aria-label="${esc(U(p+'Short',null,'en')+', '+U('d'+k,null,'en')+', '+U('tSeason',null,'en')+(m==null?'':m?', OK':', X'))}"><option value="">${esc(U('choose',null,'en'))}</option>${SEASONS.map(s=>`<option value="${s}"${v===s?' selected':''}>${esc(U(s,null,'en'))}${S.lang!=='en'?' / '+esc(U(s,null,S.lang)):''}</option>`).join('')}</select>${m==null?'':mark(m)}</div>`;};
+  const rows=[0,1,2,3].map(k=>`<tr><th scope="row">${B('d'+k)}</th><td class="n">${KM[k]}</td>
+    <td class="n">${cell('mi',k,v=>f1(v.a)+'°')}</td><td class="n">${cell('mi',k,v=>f1(v.h))}</td><td>${selS('mi',k)}</td>
+    <td class="n">${cell('sy',k,v=>f1(v.a)+'°')}</td><td class="n">${cell('sy',k,v=>f1(v.h))}</td><td>${selS('sy',k)}</td></tr>`).join('');
+  const table=`<div class="panel"><p class="eyebrow">${BI('p2Table')}</p><div class="scroll"><table class="data"><thead>
+    <tr><th rowspan="2">${B('tDate')}</th><th rowspan="2">${B('distance')} <span class="count">(${esc(U('mkm',null,'en'))})</span></th><th colspan="3" class="grp">${B('mi')}</th><th colspan="3" class="grp">${B('sy')}</th></tr>
+    <tr><th>${B('noonAngle')}</th><th>${B('daylight')} <span class="count">(${esc(U('hours',null,'en'))})</span></th><th>${B('tSeason')}</th><th>${B('noonAngle')}</th><th>${B('daylight')} <span class="count">(${esc(U('hours',null,'en'))})</span></th><th>${B('tSeason')}</th></tr></thead>
+    <tbody>${rows}</tbody></table></div></div>`;
+  return `<section class="part" aria-labelledby="h-p2"><div class="grid"><div class="side"><div class="panel side">
+    <h2 id="h-p2">${B('p2Head')}</h2>${txt('p2Steps')}
+    <p class="eyebrow" style="margin:0">${BI('place')}</p><div class="seg">${places}</div>
+    <p class="eyebrow" style="margin:0">${BI('tilt')}</p><div class="seg">${tilts}</div>
+    <button type="button" class="btn primary" id="recBtn2" data-act="rec2">${BI('record2')}</button></div></div>
+    <div>${stage}</div></div>
+    ${actions('ti','showing',T.checks)}
+    ${table}${vocabBlock(VOCAB.tilt)}</section>`;}
+function checkTilt(){
+  const T=S.ti;let miss=0;['mi','sy'].forEach(p=>[0,1,2,3].forEach(k=>{if(T.rec[p][k]==null)miss++;if(!T.sea[p][k])miss++;}));
+  if(miss){setFb('ti','bad',[['notYet'],['p2Fill',{n:miss}]]);return;}
+  T.checks++;T.marks={mi:[0,1,2,3].map(k=>T.sea.mi[k]===ANS.mi[k]),sy:[0,1,2,3].map(k=>T.sea.sy[k]===ANS.sy[k])};
+  const c=[...T.marks.mi,...T.marks.sy].filter(Boolean).length;
+  if(c===8){setFb('ti','good',[['correct'],['p2Good']]);return;}
+  const h=[];
+  if(!T.marks.mi[0]||!T.marks.mi[2])h.push(['hDist']);
+  if(T.marks.sy.some(v=>!v))h.push(['hSouth']);
+  if((!T.marks.mi[1]||!T.marks.mi[3])&&T.marks.mi[0]&&T.marks.mi[2])h.push(['hOrder']);
+  if(!h.length)h.push(['hDist']);
+  setFb('ti','bad',[['score8',{c}],...h]);}
+
+/* ---------- PART 3: CHECK YOUR THINKING ---------- */
+function renderCheck(){
+  const M=S.mc;
+  const qs=MC.map((q,qi)=>{const mk=M.marks?mark(M.marks[qi]):'';
+    const opts=q.o.map((o,oi)=>`<button type="button" class="opt" id="mc-${qi}-${oi}" data-act="mc" data-q="${qi}" data-arg="${oi}" aria-pressed="${M.a[qi]===oi}"><span class="lt" aria-hidden="true">${'ABC'[oi]}</span><span>${B(o)}</span></button>`).join('');
+    return `<div class="mcq"><div class="txt"><div style="font-weight:700">${B(q.q)}</div>${sayBtn(()=>[U(q.q,null,'en')+' '+q.o.map((o,oi)=>'ABC'[oi]+'. '+U(o,null,'en')).join(' '),U(q.q,null,S.lang)+' '+q.o.map((o,oi)=>'ABC'[oi]+'. '+U(o,null,S.lang)).join(' ')])}</div>
+    <div class="opts" role="group" aria-label="${esc(U(q.q,null,'en'))}">${opts}</div>${mk}</div>`;}).join('');
+  return `<section class="part" aria-labelledby="h-p3"><div class="panel">
+    <h2 id="h-p3">${B('p3Head')}</h2><div style="margin-top:6px">${txt('p3Steps')}</div>${qs}</div>
+    ${actions('mc',null,M.checks)}
+    ${question('p2Q','p2')}${vocabBlock(VOCAB.check)}</section>`;}
+function checkMC(){
+  const M=S.mc;const miss=M.a.filter(v=>v==null).length;
+  if(miss){setFb('mc','bad',[['notYet'],['mcFill',{n:miss}]]);return;}
+  M.checks++;M.marks=MC.map((q,i)=>M.a[i]===q.a);const c=M.marks.filter(Boolean).length;
+  if(c===5){setFb('mc','good',[['correct'],['mcGood']]);return;}
+  const parts=[['score5',{c}]];
+  MC.forEach((q,i)=>{if(!M.marks[i]){parts.push(['qn',{n:i+1}]);parts.push([q.h[M.a[i]]||'notYet']);}});
+  setFb('mc','bad',parts);}
+
+/* ---------- PART 4: TURN IN ---------- */
+function scores(){const P=S.sp,T=S.ti,M=S.mc;
+  return{sp:TARGETS.filter(t=>!isNaN(num(P.en[t]))&&Math.abs(num(P.en[t])-target(t))<0.51&&P.rec[t]!=null).length,
+    ti:['mi','sy'].reduce((n,p)=>n+[0,1,2,3].filter(k=>T.sea[p][k]===ANS[p][k]).length,0),
+    mc:MC.filter((q,i)=>M.a[i]===q.a).length,ans:['p1','p2'].filter(k=>S.ans[k].trim()).length};}
+function recordText(){
+  const s=scores(),P=S.sp,T=S.ti,M=S.mc,L=[];
+  L.push('SUN ANGLE & SEASONS LAB - RESULTS');L.push('Name: '+(S.name.trim()||'(not entered)'));L.push('Class hour: '+(S.hour.trim()||'-'));
+  L.push('Date: '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}));L.push('');
+  L.push(`PART 1: SPREAD THE LIGHT - ${s.sp}/4 correct (checks: ${P.checks})`);
+  TARGETS.forEach(t=>{const r=P.rec[t];const v=num(P.en[t]);const ok=r!=null&&!isNaN(v)&&Math.abs(v-target(t))<0.51;
+    L.push(`  ${t} deg: lit squares ${r==null?'(not recorded)':'about '+r}, energy per square ${isNaN(v)?'(blank)':P.en[t]} - ${ok?'OK':'X'}`);});
+  L.push('  Q: '+U('p1Q',null,'en'));L.push('  A: '+(S.ans.p1.trim()||'(blank)'));L.push('');
+  L.push(`PART 2: TILT AND SEASONS - ${s.ti}/8 seasons correct (checks: ${T.checks})`);
+  [0,1,2,3].forEach(k=>{const row=['mi','sy'].map(p=>{const r=T.rec[p][k];const se=T.sea[p][k];
+      return `${p==='mi'?'Michigan':'Sydney'} ${r?f1(r.a)+' deg, '+f1(r.h)+' h':'(not recorded)'}, ${se?U(se,null,'en'):'(blank)'} ${se===ANS[p][k]?'OK':'X'}`;}).join(' | ');
+    L.push(`  ${U('d'+k,null,'en')} (${KM[k]} million km): ${row}`);});
+  L.push('');
+  L.push(`PART 3: CHECK YOUR THINKING - ${s.mc}/5 correct (checks: ${M.checks})`);
+  MC.forEach((q,i)=>{const v=M.a[i];L.push(`  ${U(q.q,null,'en')}`);L.push(`     ${v==null?'(blank)':'ABC'[v]+'. '+U(q.o[v],null,'en')} - ${v===q.a?'OK':'X'}`);});
+  L.push('  Q: '+U('p2Q',null,'en'));L.push('  A: '+(S.ans.p2.trim()||'(blank)'));
+  return L.join('\n');}
+function renderTurnIn(){
+  const s=scores();const sum=(k,v)=>`<div class="sum"><b>${v}</b><div>${B(k)}</div></div>`;
+  return `<section class="part" aria-labelledby="h-p4"><div class="panel side">
+    <h2 id="h-p4">${B('p4Head')}</h2>${txt('p4Steps')}
+    <div class="form"><label for="stuName">${BI('name')} *<input type="text" id="stuName" data-f="name" autocomplete="name" value="${esc(S.name)}"></label>
+    <label for="stuHour">${BI('hour')}<input type="text" id="stuHour" data-f="hour" value="${esc(S.hour)}"></label></div>
+    <div class="sumgrid">${sum('sumP1',s.sp+'/4')}${sum('sumP2',s.ti+'/8')}${sum('sumP3',s.mc+'/5')}${sum('sumAns',s.ans+'/2')}</div>
+    <div class="act-btns"><button type="button" class="btn primary" id="pdfBtn" data-act="pdf">${BI('pdf')}</button><button type="button" class="btn" id="copyBtn" data-act="copy">${BI('copy')}</button></div>
+    <div id="tiMsg">${S.fb.tin?fbHtml('tin'):''}</div>
+    <label for="rec" class="eyebrow">${BI('preview')}</label>
+    <textarea id="rec" class="rec" readonly>${esc(recordText())}</textarea></div></section>`;}
+let dlP=null;
+async function makePdf(){
+  if(!S.name.trim()){setFb('tin','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  if(!window.jspdf){setFb('tin','bad',[['pdfFail']]);render();return;}
+  const txtR=recordText();const warn=/[^\x00-\xFF]/.test(S.ans.p1+S.ans.p2+S.name);
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
+  let y=56;doc.setFontSize(10.5);
+  txtR.split('\n').forEach(line=>{const bold=/^(SUN ANGLE|PART)/.test(line);doc.setFont('helvetica',bold?'bold':'normal');
+    doc.splitTextToSize(line.replace(/[^\x00-\xFF]/g,'?')||' ',520).forEach(l=>{if(y>740){doc.addPage();y=56;}doc.text(l,46,y);y+=14;});});
+  const fname='seasons-lab-'+(S.name.trim().replace(/[^a-z0-9]+/gi,'-').toLowerCase()||'student')+'.pdf';
+  const blob=doc.output('blob');let dl=null;try{if(dlP)dl=await dlP;}catch(e){}
+  const extra=warn?[['pdfArabic']]:[];
+  if(dl){try{await dl.save({filename:fname,data:blob});setFb('tin','good',[['pdfSaved'],...extra]);}catch(err){if(!(err&&err.code==='declined'))setFb('tin','bad',[['pdfFail']]);}}
+  else{try{doc.save(fname);setFb('tin','good',[['pdfSaved'],...extra]);}catch(e){setFb('tin','bad',[['pdfFail']]);}}
+  save();render();}
+function copyRec(){
+  if(!S.name.trim()){setFb('tin','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  const t=recordText();const fail=()=>{setFb('tin','bad',[['copyFail']]);render();const r=document.getElementById('rec');r.focus();r.select();};
+  try{navigator.clipboard.writeText(t).then(()=>{setFb('tin','good',[['copied']]);render();},fail);}catch(e){fail();}}
+
+/* ---------- RENDER ---------- */
+const app=document.getElementById('app');
+function render(){
+  const fid=document.activeElement&&document.activeElement.id;
+  SAY.clear();sid=0;
+  if(S.tab==='tilt'&&!S.fb.ti)S.fb.ti={type:'',parts:[['showing',{p:{k:S.ti.place+'Short'},d:{k:'d'+S.ti.date}}]]};
+  const part={spread:renderSpread,tilt:renderTilt,check:renderCheck,turnin:renderTurnIn}[S.tab]();
+  app.innerHTML=header()+`<main>${part}</main><p class="foot">${BI('credit')}</p>`;
+  if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true});}
+}
+
+/* ---------- EVENTS ---------- */
+function doClear(){
+  if(clearArm!==S.tab){clearArm=S.tab;clearTimeout(clearT);clearT=setTimeout(()=>{clearArm=null;render();},3500);return;}
+  clearArm=null;clearTimeout(clearT);const f=fresh();
+  if(S.tab==='spread'){S.sp=f.sp;S.ans.p1='';S.fb.sp={type:'',parts:[['cleared']]};}
+  if(S.tab==='tilt'){S.ti=f.ti;S.fb.ti={type:'',parts:[['cleared']]};}
+  if(S.tab==='check'){S.mc=f.mc;S.ans.p2='';S.fb.mc={type:'',parts:[['cleared']]};}
+  announce(U('cleared',null,'en'));}
+function showFb(){const T=S.ti;if(!T.tilt)setFb('ti','',[['noTiltNote']]);else setFb('ti','',[['showing',{p:{k:T.place+'Short'},d:{k:'d'+T.date}}]]);}
+app.addEventListener('click',e=>{
+  const sb=e.target.closest('[data-say]');if(sb){const f=SAY.get(sb.dataset.say);if(f){const[a,b]=f();speak(a,b);}return;}
+  const t=e.target.closest('[data-act]');if(!t||t.tagName==='SELECT')return;
+  const a=t.dataset.act,arg=t.dataset.arg;
+  switch(a){
+    case 'tab':S.tab=arg;clearArm=null;break;
+    case 'pics':S.pics=!S.pics;break;
+    case 'theme':{const r=document.documentElement;const cur=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const nx=cur==='dark'?'light':'dark';r.dataset.theme=nx;try{localStorage.setItem(KEY+'-theme',nx);}catch(err){}return;}
+    case 'setAngle':S.sp.angle=+arg;break;
+    case 'rec1':{const g=S.sp.angle;if(!TARGETS.includes(g)){setFb('sp','bad',[['recNeed']]);break;}
+      S.sp.rec[g]=litWhole(g);S.sp.marks=null;setFb('sp','',[['recorded',{a:g,s:litWhole(g)}]]);
+      setTimeout(()=>{const el=document.getElementById('en-'+g);if(el)el.focus();},0);break;}
+    case 'date':S.ti.date=+arg;showFb();break;
+    case 'place':S.ti.place=arg;showFb();break;
+    case 'tilt':S.ti.tilt=arg==='on';showFb();break;
+    case 'rec2':{const T=S.ti;if(!T.tilt){setFb('ti','bad',[['noTiltRec']]);break;}
+      const r=reading(T.place,T.date,true);T.rec[T.place][T.date]={a:r.a,h:r.h};T.marks=null;
+      setFb('ti','good',[['rec2Done',{p:{k:T.place+'Short'},d:{k:'d'+T.date}}]]);break;}
+    case 'mc':S.mc.a[+t.dataset.q]=+arg;S.mc.marks=null;break;
+    case 'check':if(S.tab==='spread')checkSpread();else if(S.tab==='tilt')checkTilt();else if(S.tab==='check')checkMC();break;
+    case 'clear':doClear();break;
+    case 'pdf':makePdf();return;
+    case 'copy':copyRec();return;
+    case 'ins':{const k=t.dataset.ans,ta=document.getElementById('ans-'+k);let add=t.dataset.txt;const v=ta.value;
+      const pos=ta.selectionStart!=null&&document.activeElement===ta?ta.selectionStart:v.length;
+      const before=v.slice(0,pos),after=v.slice(pos);
+      if(t.dataset.line&&before.trim())add=(/[.!?]\s*$/.test(before)?' ':'. ')+add;else if(before&&!/\s$/.test(before))add=' '+add;
+      ta.value=before+add+after;S.ans[k]=ta.value;save();ta.focus();const np=(before+add).length;ta.setSelectionRange(np,np);return;}
+    default:return;}
+  save();render();});
+app.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='lang'){S.lang=t.value;save();render();return;}
+  if(t.id==='angle'){save();render();return;}
+  if(t.dataset.sea){const[p,k]=t.dataset.sea.split(':');S.ti.sea[p][+k]=t.value||null;S.ti.marks=null;save();render();}});
+app.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='angle'){S.sp.angle=+t.value;const st=document.getElementById('stage1');if(st){SAY.clear();st.innerHTML=stage1Inner();}
+    const v=document.getElementById('angVal');if(v)v.textContent=t.value+'°';
+    TARGETS.forEach(g=>{const b=document.getElementById('go-'+g);if(b)b.setAttribute('aria-pressed',String(S.sp.angle===g));});return;}
+  if(t.dataset.en){S.sp.en[t.dataset.en]=t.value;if(S.sp.marks){S.sp.marks=null;}save();return;}
+  if(t.dataset.ans&&t.tagName==='TEXTAREA'){S.ans[t.dataset.ans]=t.value;save();}
+  if(t.dataset.f){S[t.dataset.f]=t.value;save();const r=document.getElementById('rec');if(r)r.value=recordText();}});
+app.addEventListener('toggle',e=>{const t=e.target;if(t.tagName==='DETAILS'&&t.id){t.open?openDet.add(t.id):openDet.delete(t.id);}},true);
+
+/* ---------- BOOT ---------- */
+load();
+try{const th=localStorage.getItem(KEY+'-theme');if(th)document.documentElement.dataset.theme=th;}catch(e){}
+try{if(window.claude&&typeof window.claude.use==='function')dlP=window.claude.use('downloads');}catch(e){}
+if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Flashcard Bridge Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+Arabic:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --desk:#EEF0EA; --card:#FFFDF6; --panel:#F6F7F2; --line:#D9DDD3; --line-strong:#BFC5BA;
+  --ink:#1D2429; --muted:#5A646B;
+  --action:#2E5BD8; --action-ink:#FFFFFF; --action-soft:#E4EBFC;
+  --l2:#0F7C74; --l2-soft:#E3F3F1;
+  --cog:#FFE08A; --cog-ink:#4A3A00;
+  --ok:#2F8A45; --ok-soft:#E4F3E7; --no:#C23B3B; --no-soft:#FBE7E7;
+  --warn-bg:#FFF4D6; --warn-ink:#6A4B00;
+  --shadow:0 1px 0 rgba(29,36,41,.05), 0 8px 24px -14px rgba(29,36,41,.3);
+  --display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --arabic:"Noto Sans Arabic","Geeza Pro","Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --desk:#15191A; --card:#1F2527; --panel:#1A2022; --line:#313A3D; --line-strong:#46514F;
+    --ink:#E8ECEE; --muted:#9AA5AC;
+    --action:#7FA2FF; --action-ink:#0E1630; --action-soft:#23304F;
+    --l2:#5CC8BD; --l2-soft:#15302D;
+    --cog:#5A4A12; --cog-ink:#FFE9A8;
+    --ok:#6CCB82; --ok-soft:#173120; --no:#F08080; --no-soft:#3A1C1C;
+    --warn-bg:#3A3015; --warn-ink:#F5DA92;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 26px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --desk:#15191A; --card:#1F2527; --panel:#1A2022; --line:#313A3D; --line-strong:#46514F;
+  --ink:#E8ECEE; --muted:#9AA5AC;
+  --action:#7FA2FF; --action-ink:#0E1630; --action-soft:#23304F;
+  --l2:#5CC8BD; --l2-soft:#15302D;
+  --cog:#5A4A12; --cog-ink:#FFE9A8;
+  --ok:#6CCB82; --ok-soft:#173120; --no:#F08080; --no-soft:#3A1C1C;
+  --warn-bg:#3A3015; --warn-ink:#F5DA92;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 26px -14px rgba(0,0,0,.7);
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--desk);color:var(--ink);font:16px/1.45 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--action);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:14px 10px}
+.brand{display:flex;gap:10px;align-items:center;flex:1;min-width:240px}
+.brand svg{width:36px;height:36px;color:var(--action);flex:none}
+.eyebrow{font-size:13px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:700}
+.top h1{font-family:var(--display);font-weight:800;font-size:24px;line-height:1.1;margin:0}
+.savestate{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.savestate .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.savestate.ok .dot{background:var(--ok)} .savestate.warn .dot{background:#D39B16}
+
+/* stepper */
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-block:4px 16px;padding:0;list-style:none}
+.steps button{width:100%;text-align:start;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px;min-height:56px;cursor:pointer;display:flex;gap:10px;align-items:center;line-height:1.2}
+.steps button:hover{border-color:var(--action)}
+.steps .num{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.steps .lab b{display:block;font-size:15px}
+.steps .lab small{display:block;color:var(--muted);font-size:13px}
+.steps button[aria-current="step"]{border-color:var(--action);background:var(--action-soft)}
+.steps button[aria-current="step"] .num{background:var(--action);border-color:var(--action);color:var(--action-ink)}
+.steps .done .num{border-color:var(--ok);color:var(--ok)}
+
+/* generic */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px clamp(16px,2.4vw,24px)}
+.stack{display:flex;flex-direction:column;gap:14px}
+h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;line-height:1.15;text-wrap:balance}
+h3{font-size:17px;margin:0}
+.help{color:var(--muted);margin:0;max-width:70ch}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+.btn{border-radius:10px;min-height:42px;padding:6px 16px;font-weight:700;cursor:pointer;border:2px solid var(--line-strong);background:var(--card);line-height:1.2}
+.btn:hover:not(:disabled){border-color:var(--action)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--action);border-color:var(--action);color:var(--action-ink)}
+.btn.danger{border-color:var(--no);color:var(--no)}
+.btn.small{min-height:38px;padding:4px 12px;font-size:14px}
+.btn.link{border:none;background:none;color:var(--action);padding-inline:4px;min-height:38px;text-decoration:underline;text-underline-offset:3px}
+label.lab,.lab{font-weight:700;font-size:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+input[type=text],input[type=number],select,textarea{border:1.5px solid var(--line-strong);border-radius:9px;padding:7px 10px;background:var(--card);min-height:40px;width:100%}
+textarea{resize:vertical;line-height:1.4}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--action);flex:none}
+.check{display:inline-flex;gap:8px;align-items:center;cursor:pointer;min-height:38px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:99px;padding:2px 10px;font-size:14px;font-weight:700;background:var(--card);white-space:nowrap}
+.pill.ok{border-color:var(--ok);color:var(--ok)} .pill.no{border-color:var(--no);color:var(--no)} .pill.warn{border-color:#D39B16;color:var(--warn-ink);background:var(--warn-bg)}
+.msg{border-radius:10px;padding:10px 14px;border:2px solid var(--line);background:var(--card)}
+.msg.ok{border-color:var(--ok);background:var(--ok-soft)} .msg.no{border-color:var(--no);background:var(--no-soft)} .msg.warn{border-color:#D39B16;background:var(--warn-bg);color:var(--warn-ink)}
+.msg:empty{display:none}
+.mono{font-family:var(--mono);font-size:13px}
+.l2{color:var(--l2)}
+[lang="ar"]{font-family:var(--arabic)}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+
+/* import */
+.import{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}
+#raw{min-height:210px;font-family:var(--mono);font-size:13px;white-space:pre;overflow:auto}
+.sample-tag{font-size:13px;color:var(--warn-ink);background:var(--warn-bg);border-radius:6px;padding:2px 8px;font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top;text-align:start}
+th{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;background:var(--panel);position:sticky;top:0}
+td.n{width:40px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:16px}
+td.x{width:52px}
+tr.warnrow td{background:var(--warn-bg)}
+.rowwarn{font-size:13px;color:var(--warn-ink);margin-top:4px}
+.iconbtn{width:38px;height:38px;border-radius:9px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;display:grid;place-items:center}
+.iconbtn:hover{border-color:var(--no);color:var(--no)}
+
+/* translate */
+.langs{display:flex;gap:10px;flex-wrap:wrap}
+.langs .check{border:1.5px solid var(--line);border-radius:10px;padding:4px 12px;background:var(--card)}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--action);transition:width .3s}
+.log{font-family:var(--mono);font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;max-height:180px;overflow:auto;white-space:pre-wrap;margin:0}
+details.alt{border:1.5px dashed var(--line-strong);border-radius:12px;padding:10px 14px}
+details.alt summary{cursor:pointer;font-weight:700;min-height:32px;display:flex;align-items:center}
+.tstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tstat .box{border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;background:var(--panel)}
+.tstat .num{font-family:var(--display);font-weight:800;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+
+/* review */
+.ltabs{display:flex;gap:6px;flex-wrap:wrap}
+.ltabs button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:6px 14px;min-height:44px;cursor:pointer;font-weight:700;display:flex;gap:8px;align-items:center}
+.ltabs button[aria-pressed="true"]{border-color:var(--action);background:var(--action-soft)}
+.ltabs .cnt{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.ltabs .cnt.full{color:var(--ok)}
+.rv{display:grid;grid-template-columns:1fr 1.25fr 110px;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rv>div{padding:12px 14px;border-bottom:1px solid var(--line)}
+.rv .hd{background:var(--panel);font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding-block:8px}
+.rv .en-col{background:var(--card)}
+.rv .tr-col{background:color-mix(in srgb,var(--l2-soft) 60%,var(--card))}
+.rv .ck-col{background:var(--card);display:flex;align-items:flex-start;justify-content:center}
+.rv .done{background:color-mix(in srgb,var(--ok-soft) 70%,var(--card))}
+.rv .term{font-family:var(--display);font-weight:800;font-size:19px}
+.rv .odef{font-size:14px;color:var(--muted);margin:2px 0 8px}
+.rv .mini{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.rv .tr-col input[type=text]{font-weight:700;font-size:17px}
+.note{font-size:13px;background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:4px 8px;margin-top:6px}
+.cogchip{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:700;background:var(--cog);color:var(--cog-ink);border-radius:6px;padding:2px 8px;cursor:pointer;min-height:30px}
+.rvcheck{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
+.rvcheck input{width:26px;height:26px}
+
+/* pictures */
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.pic textarea{font-size:14px;min-height:64px}
+.pic .field{width:100%;text-align:start}
+.picsrc{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.picsrc.ai{color:var(--action)}
+.drawing{position:relative}
+.picbox.queued::after{content:"Waiting…";position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--card) 80%,transparent);font-weight:700;font-size:14px;border-radius:14px;color:var(--muted)}
+.picbox.queued{position:relative}
+.drawing::after{content:"Drawing…";position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--card) 80%,transparent);font-weight:700;font-size:14px;border-radius:14px;color:var(--action)}
+.pic .alt{font-size:13px;color:var(--muted);margin:0;text-align:start;width:100%}
+.pic{border:1.5px solid var(--line);border-radius:12px;background:var(--card);padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center}
+.pic.sel{border-color:var(--action);background:var(--action-soft)}
+.picbox{width:132px;height:132px;border-radius:14px;border:1px solid var(--line);background:var(--panel);padding:10px;color:var(--ink)}
+.picbox.full{padding:0;overflow:hidden}
+.picbox svg,.picbox img{width:100%;height:100%;display:block;object-fit:cover;border-radius:8px}
+.pic .t{font-family:var(--display);font-weight:800;font-size:16px;line-height:1.15}
+.picker{border:2px solid var(--action);border-radius:14px;padding:14px;background:var(--card)}
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin-top:10px}
+.picker-grid button{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--ink)}
+.picker-grid button:hover,.picker-grid button[aria-pressed="true"]{border-color:var(--action);background:var(--action-soft)}
+.picker-grid svg{width:40px;height:40px}
+
+/* export */
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.checklist li{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--card)}
+.checklist .mk{flex:none;font-weight:700;min-width:22px}
+.checklist .ok .mk,.checklist li.ok .mk{color:var(--ok)} .checklist li.warn{background:var(--warn-bg);border-color:#D39B16;color:var(--warn-ink)}
+.checklist li.no{background:var(--no-soft);border-color:var(--no)}
+.preview{width:100%;height:680px;border:2px solid var(--line-strong);border-radius:12px;background:var(--desk)}
+ol.howto{margin:0;padding-inline-start:22px;display:grid;gap:4px}
+
+/* library drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,14,16,.45);display:flex;justify-content:flex-end;z-index:20}
+.drawer{background:var(--desk);width:min(480px,100%);height:100%;overflow:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.libitem{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.libitem.current{border-color:var(--action)}
+.libitem b{font-size:17px}
+.libitem small{color:var(--muted)}
+
+@media (max-width:860px){
+  .steps{grid-template-columns:repeat(5,minmax(56px,1fr))}
+  .steps .lab small{display:none}
+  .import{grid-template-columns:1fr}
+  .rv{grid-template-columns:1fr}
+  .rv .hd:not(:first-child){display:none}
+  .rv .ck-col{justify-content:flex-start;border-bottom:3px solid var(--line-strong)}
+  .rvcheck{flex-direction:row}
+}
+@media (max-width:560px){
+  .steps .lab{display:none}
+  .steps button{justify-content:center}
+  .two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 34 34" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="8" width="20" height="16" rx="3"/><rect x="11" y="4" width="20" height="16" rx="3" fill="var(--card)"/><path d="M15 26c3 4 9 4 12 0" stroke-linecap="round"/></svg>
+      <div><div class="eyebrow">Flashcard Bridge · Teacher Studio</div><h1 id="setName">New set</h1></div>
+    </div>
+    <span class="savestate" id="saveState" aria-live="polite"><span class="dot"></span><span id="saveText">Not saved yet</span></span>
+    <button class="btn small" data-act="openLib">My sets</button>
+    <button class="btn small" data-act="newSet" id="newSetBtn">New set</button>
+  </header>
+
+  <ol class="steps" id="steps" aria-label="Steps"></ol>
+  <main id="main"></main>
+  <div class="nav" id="nav"></div>
+</div>
+
+<div class="scrim" id="libScrim" hidden>
+  <section class="drawer" role="dialog" aria-modal="true" aria-labelledby="libTitle" id="lib"></section>
+</div>
+
+<script>
+/* ================= STATE ================= */
+const LANG_INFO = {
+  es:{name:"Español",en:"Spanish",voice:"Spanish (Latin American, school register)"},
+  fr:{name:"Français",en:"French",voice:"French (school register)"},
+  ht:{name:"Kreyòl",en:"Haitian Creole",voice:"Haitian Creole (Kreyòl ayisyen, standard school spelling)"},
+  ar:{name:"العربية",en:"Arabic",voice:"Modern Standard Arabic"}
+};
+const ALL_LANGS=["es","fr","ht","ar"];
+const SAMPLE_EXPORT = `plate tectonics\tThe theory that Earth's lithosphere is broken into large plates that move slowly over the mantle.
+lithosphere\tThe rigid outer layer of Earth, made of the crust and the uppermost part of the mantle.
+mantle\tThe thick layer of hot, solid rock between Earth's crust and core.
+convergent boundary\tA place where two plates move toward each other.
+divergent boundary\tA place where two plates move apart.
+transform boundary\tA place where two plates slide past each other.
+subduction\tThe process in which one plate sinks under another plate into the mantle.
+earthquake\tThe shaking of Earth's surface caused by the sudden movement of rock along a fault.`;
+
+function uid(){return Math.random().toString(36).slice(2,8)}
+function slug(s){return (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"set"}
+function newDeck(){
+  return {id:"set-"+uid(),title:"",unit:"",created:new Date().toISOString().slice(0,10),updated:Date.now(),
+    languages:ALL_LANGS.slice(),defaultLang:"en",openSetup:true,titleT:{},reviewed:{},reviewedCards:{es:{},fr:{},ht:{},ar:{}},
+    test:{count:10,types:["mc","tf","short"]},wantPlain:true,cards:[]};
+}
+const state={
+  step:1, deck:newDeck(), raw:"", rawIsSample:false,
+  sep:"auto", sepCustom:"", rowSep:"auto", rowCustom:"",
+  parseMsg:null, replaceArmed:false,
+  reviewLang:"es", onlyUnchecked:false, markAllArmed:false,
+  pickFor:null,
+  draw:{running:false,ids:{},done:0,total:0,ctl:null,msg:null},
+  trans:{running:false,done:0,total:0,log:[],ctl:null,errors:[]},
+  exportMsg:null, showPreview:false, newArmed:false, delArmed:null, manualMsg:null
+};
+const CAP={sample:undefined,db:undefined,dl:undefined};
+let ICONS={}, TEMPLATE=null, TEMPLATE_ERR=null;
+
+/* ================= HELPERS ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function getPath(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o)}
+function setPath(o,p,v){const ks=p.split(".");let a=o;for(let i=0;i<ks.length-1;i++){if(a[ks[i]]==null)a[ks[i]]={};a=a[ks[i]]}a[ks[ks.length-1]]=v}
+const D=()=>state.deck;
+function langs(){return D().languages}
+function hasTrans(c,l){return !!(c.t&&c.t[l]&&c.t[l].term)}
+function needsTrans(c){return !c.t||c.stale||langs().some(l=>!hasTrans(c,l))||(D().wantPlain&&!c.plain)}
+function reviewedCount(l){const r=D().reviewedCards[l]||{};return D().cards.filter(c=>r[c.id]&&hasTrans(c,l)).length}
+function langReviewed(l){return D().cards.length>0&&reviewedCount(l)===D().cards.length}
+function iconSvg(c){return c.svg?c.svg:c.img?`<img src="${esc(c.img)}" alt="">`:(ICONS[c.icon]||ICONS.book||"")}
+function toast(sel,cls,html){const el=$(sel);if(el){el.className="msg "+cls;el.innerHTML=html}}
+
+/* ================= CAPABILITIES ================= */
+async function initCaps(){
+  if(!(window.claude&&typeof window.claude.use==="function")){CAP.sample=CAP.db=CAP.dl=null;render();return}
+  try{CAP.sample=await window.claude.use("sample")}catch(e){CAP.sample=null}
+  try{CAP.dl=await window.claude.use("downloads")}catch(e){CAP.dl=null}
+  try{CAP.db=await window.claude.use("db")}catch(e){CAP.db=null}
+  setSave(CAP.db?"":"warn",CAP.db?"Not saved yet":"Library unavailable here. Download the deck file to keep your work.");
+  render();
+}
+async function loadTemplate(){
+  try{
+    const r=await fetch("student-template.html",{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    TEMPLATE=await r.text();
+    const a=TEMPLATE.indexOf("/*ICONS_START*/"), b=TEMPLATE.indexOf("/*ICONS_END*/");
+    if(a<0||b<0) throw new Error("icon block missing");
+    ICONS=new Function(TEMPLATE.slice(a+15,b)+"\nreturn ICONS;")();
+  }catch(e){TEMPLATE_ERR=String(e.message||e)}
+  render();
+}
+
+/* ================= SAVE / LIBRARY ================= */
+let saveTimer=null;
+function setSave(cls,text){const s=$("#saveState");if(!s)return;s.className="savestate "+cls;$("#saveText").textContent=text}
+function dirty(){
+  D().updated=Date.now(); D().isSample=false;
+  $("#setName").textContent=D().title||"New set";
+  if(!CAP.db) return;
+  setSave("","Saving…");
+  clearTimeout(saveTimer); saveTimer=setTimeout(saveDeck,1200);
+}
+async function saveDeck(){
+  if(!CAP.db||!D().cards.length){setSave(CAP.db?"":"warn",CAP.db?"Not saved yet":"Library unavailable here");return}
+  let json=JSON.stringify(D()), dropped=false;
+  if(json.length>240000){const copy=JSON.parse(json);copy.cards.forEach(c=>{delete c.img});json=JSON.stringify(copy);dropped=true}
+  try{
+    await CAP.db.doc("decks/"+D().id).set({id:D().id,title:D().title||"Untitled set",unit:D().unit||"",updated:D().updated,count:D().cards.length,
+      reviewed:Object.fromEntries(langs().map(l=>[l,reviewedCount(l)])),json});
+    setSave(dropped?"warn":"ok",dropped?"Saved without uploaded pictures (too big). Download the deck file to keep them.":"Saved to My sets");
+  }catch(e){setSave("warn","Couldn't save ("+(e.code||"error")+"). Download the deck file to keep your work.")}
+}
+async function openLib(){
+  $("#libScrim").hidden=false; state.delArmed=null; renderLib([] ,true);
+  if(!CAP.db){renderLib(null);return}
+  try{const snap=await CAP.db.collection("decks").orderBy("updated","desc").limit(100).get();renderLib(snap.docs.map(d=>d.data()))}
+  catch(e){renderLib(null,false,e.code)}
+}
+let libCache=[];
+function renderLib(items,loading,err){
+  if(items) libCache=items;
+  const el=$("#lib");
+  let body;
+  if(loading) body=`<p class="help">Loading your sets…</p>`;
+  else if(items===null) body=`<div class="msg warn">My sets isn't available in this view${err?" ("+esc(err)+")":""}. Use <b>Open a file</b> on step 1 to reopen a saved deck file or student page.</div>`;
+  else if(!libCache.length) body=`<p class="help">No saved sets yet. Sets save here automatically once they have cards.</p>`;
+  else body=libCache.map(d=>`<div class="libitem ${d.id===D().id?"current":""}">
+      <b>${esc(d.title)}</b>
+      <small>${esc(d.unit||"No unit")} · ${d.count} cards · updated ${new Date(d.updated).toLocaleDateString("en-US")}</small>
+      <div class="row">${Object.entries(d.reviewed||{}).map(([l,n])=>`<span class="pill ${n===d.count?"ok":""}">${esc(LANG_INFO[l]?.name||l)} ${n}/${d.count}</span>`).join("")}</div>
+      <div class="row">${d.id===D().id?`<span class="pill ok">Open now</span>`:`<button class="btn small primary" data-act="libOpen" data-id="${esc(d.id)}">Open</button>`}
+        <button class="btn small danger" data-act="libDel" data-id="${esc(d.id)}">${state.delArmed===d.id?"Yes, delete this set":"Delete"}</button></div>
+    </div>`).join("");
+  el.innerHTML=`<div class="row"><h2 id="libTitle">My sets</h2><span class="spacer"></span><button class="btn small" data-act="closeLib">Close</button></div>${body}`;
+}
+
+/* ================= PARSING ================= */
+const SEP_CHARS={tab:"\t",comma:",",semicolon:";",dash:" - "};
+function detect(text){
+  const lines=text.split("\n").filter(l=>l.trim());
+  let row="\n";
+  if(state.rowSep==="semicolon") row=";"; else if(state.rowSep==="newline") row="\n"; else if(state.rowSep==="custom"&&state.rowCustom) row=state.rowCustom;
+  else if(state.rowSep==="auto"&&lines.length<=1&&text.includes(";")&&(text.includes("\t")||text.includes(","))) row=";";
+  let sep;
+  if(state.sep==="custom"&&state.sepCustom) sep=state.sepCustom;
+  else if(state.sep!=="auto"&&state.sep!=="custom") sep=SEP_CHARS[state.sep];
+  else{
+    const rows=text.split(row).filter(r=>r.trim());
+    const share=ch=>rows.filter(r=>r.includes(ch)).length/Math.max(rows.length,1);
+    if(share("\t")>=.5) sep="\t"; else if(share(" - ")>=.6) sep=" - "; else if(row!==";"&&share(";")>share(",")) sep=";"; else sep=",";
+  }
+  return {sep,row};
+}
+function splitCsvLine(line,sep){
+  // quoted fields: "a, b","c"
+  const out=[];let cur="",q=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(q){if(ch==='"'&&line[i+1]==='"'){cur+='"';i++}else if(ch==='"')q=false;else cur+=ch}
+    else if(ch==='"'&&cur==="")q=true;
+    else if(line.startsWith(sep,i)&&out.length===0){out.push(cur);cur="";i+=sep.length-1}
+    else cur+=ch;
+  }
+  out.push(cur);return out;
+}
+function parseExport(text){
+  text=(text||"").replace(/\r\n?/g,"\n").replace(/^﻿/,"");
+  if(!text.trim()) return {cards:[],sep:null};
+  const {sep,row}=detect(text);
+  const rows=text.split(row);
+  const cards=[];
+  for(const raw of rows){
+    const line=raw.replace(/\s+$/,"");
+    if(!line.trim()) continue;
+    const parts = line.trim().startsWith('"') ? splitCsvLine(line.trim(),sep) : (()=>{const i=line.indexOf(sep);return i<0?[line]:[line.slice(0,i),line.slice(i+sep.length)]})();
+    if(parts.length<2){ if(cards.length&&row==="\n"){cards[cards.length-1].def+=" "+line.trim()} else cards.push({term:line.trim(),def:""}); continue }
+    const unq=x=>{x=x.trim();return x.length>1&&x.startsWith('"')&&x.endsWith('"')?x.slice(1,-1).replace(/""/g,'"'):x};
+    cards.push({term:unq(parts[0]),def:unq(parts[1])});
+  }
+  if(cards.length&&/^(term|terms|word)$/i.test(cards[0].term)&&/^(definition|definitions|meaning)$/i.test(cards[0].def)) cards.shift();
+  return {cards,sep};
+}
+function sepName(s){return s==="\t"?"tab":s===","?"comma":s===";"?"semicolon":s===" - "?"dash":`"${s}"`}
+function applyParse(){
+  const {cards,sep}=parseExport(state.raw);
+  if(!cards.length){state.parseMsg={cls:"no",html:"No cards found. Paste the text from Quizlet's <b>Export → Copy text</b>, then press <b>Read cards</b>."};render();return}
+  D().cards=cards.map(c=>({id:"c"+uid(),term:c.term,def:c.def,plain:"",icon:"book",img:null,t:{}}));
+  D().reviewedCards={es:{},fr:{},ht:{},ar:{}};
+  state.replaceArmed=false;
+  const warn=D().cards.filter(c=>!c.def||!c.term).length;
+  state.parseMsg={cls:warn?"warn":"ok",html:`Read <b>${cards.length} cards</b> (split on ${sepName(sep)}).${warn?` ${warn} card${warn>1?"s have":" has"} an empty side. Fix ${warn>1?"them":"it"} in the table below.`:" Check the table, then go to Translate."}`};
+  dirty(); render();
+}
+
+/* ================= TRANSLATION ================= */
+function iconKeys(){return Object.keys(ICONS).filter(k=>k!=="book")}
+function buildPrompt(cards,tm){
+  const L=langs();
+  const fixed=[];
+  for(const c of cards) for(const l of L){const hit=tm[l]&&tm[l][slug(c.term)];if(hit)fixed.push(`${c.term} → ${l}: ${hit.tterm}${hit.cog?" (cognate)":""}`)}
+  const eg={id:"c1",plain:D().wantPlain?"Short plain sentences.":"",icon:"volcano",t:Object.fromEntries(L.map(l=>[l,{term:"…",def:"…",plain:D().wantPlain?"…":"",cog:false,note:""}]))};
+  return `You are translating vocabulary flashcards for an 8th grade Earth Science class in Michigan. Many students are multilingual learners who are new to English. Accuracy and a school-appropriate register matter more than style.
+
+Set title: "${D().title||"Untitled"}"${D().unit?` (unit: ${D().unit})`:""}
+Target languages:
+${L.map(l=>`- ${l} = ${LANG_INFO[l].voice}`).join("\n")}
+
+For EACH card return:
+- "id": the card id, unchanged.
+- "plain": ${D().wantPlain?`the definition rewritten in plain English for WIDA levels 1-3. Short present-tense sentences, one idea per sentence, 25 words or fewer. Keep the key science words. Do not add facts that are not in the original.`:`an empty string.`}
+- "icon": the best matching picture key from this list, or "book" if none fits: ${iconKeys().join(", ")}.
+- "t": an object with one entry per language code, each with:
+  - "term": the standard school/science term in that language (the word a textbook in that language would use).
+  - "def": a faithful translation of the original definition.
+  - "plain": ${D().wantPlain?`a translation of your plain English definition.`:`an empty string.`}
+  - "cog": true only if the translated term clearly looks or sounds like the English term (a cognate a student would notice), else false.
+  - "note": a short note in English for the teacher ONLY if there is a false friend, a regional variation, or a choice a native speaker should double-check. Otherwise "".
+Rules: keep chemical formulas, numbers and units exactly as written (CO₂, H₂O, km, g, mL). Do not translate proper nouns like "Earth" incorrectly (use the language's normal name for the planet).
+${fixed.length?`\nThe teacher already approved these term translations. Use them exactly:\n${fixed.join("\n")}\n`:""}
+Also return "title": the set title translated into each language, as an object keyed by language code.
+
+Cards:
+${JSON.stringify(cards.map(c=>({id:c.id,term:c.term,definition:c.def})),null,0)}
+
+Reply with ONLY a JSON object in this shape:
+${JSON.stringify({title:Object.fromEntries(L.map(l=>[l,"…"])),cards:[eg]})}`;
+}
+async function loadTM(){
+  const tm={};
+  if(!CAP.db) return tm;
+  for(const l of langs()){
+    tm[l]={};
+    try{const snap=await CAP.db.collection("tm").where("lang","==",l).limit(1000).get();snap.docs.forEach(d=>{const v=d.data();tm[l][v.key]=v})}catch(e){}
+  }
+  return tm;
+}
+function mergeResult(res,cardsIn){
+  if(!res||typeof res!=="object") throw {code:"invalid_json"};
+  const arr=Array.isArray(res)?res:res.cards;
+  if(!Array.isArray(arr)) throw {code:"invalid_json"};
+  if(res.title&&typeof res.title==="object"){for(const l of langs()) if(res.title[l]&&!D().titleT[l]) D().titleT[l]=String(res.title[l])}
+  let merged=0; const missing=[];
+  for(const c of cardsIn){
+    const r=arr.find(x=>x&&x.id===c.id);
+    if(!r||!r.t){missing.push(c);continue}
+    if(D().wantPlain&&r.plain) c.plain=String(r.plain);
+    if(r.icon&&ICONS[r.icon]&&(c.icon==="book"||!c.icon)) c.icon=r.icon;
+    c.t=c.t||{};
+    let okAll=true;
+    for(const l of langs()){
+      const v=r.t[l];
+      if(!v||!v.term){okAll=false;continue}
+      c.t[l]={term:String(v.term),def:String(v.def||""),plain:String(v.plain||""),cog:!!v.cog,note:String(v.note||"")};
+      if(D().reviewedCards[l]) delete D().reviewedCards[l][c.id];   // new text needs a new check
+    }
+    c.stale=false;
+    if(okAll) merged++; else missing.push(c);
+  }
+  return {merged,missing};
+}
+const ERR_TEXT={
+  not_granted:"You chose not to let this page use Claude. Reload the page to be asked again, or use “Translate in a Claude chat” below.",
+  rate_limited:"Claude is busy right now. Wait a minute, then press Translate again.",
+  cancelled:"Stopped.",
+  invalid_json:"Claude's answer couldn't be read.",
+  empty_completion:"Claude sent an empty answer.",
+  prompt_too_large:"This batch was too big.",
+  sampling_disabled:"Claude isn't turned on for this page in your account.",
+  refused:"Claude declined this batch. Check the cards for unusual text.",
+  session_expired:"Your Claude session ended. Reload the page."
+};
+async function runTranslate(onlyNeeded){
+  const tr=state.trans;
+  if(tr.running||!CAP.sample) return;
+  const todo=D().cards.filter(c=>onlyNeeded?needsTrans(c):true);
+  if(!todo.length) return;
+  tr.running=true; tr.done=0; tr.total=todo.length; tr.log=[]; tr.errors=[]; tr.ctl=new AbortController();
+  tr.log.push(`Translating ${todo.length} cards into ${langs().map(l=>LANG_INFO[l].en).join(", ")}…`);
+  render();
+  const tm=await loadTM();
+  const tmCount=Object.values(tm).reduce((a,o)=>a+Object.keys(o).length,0);
+  if(tmCount) tr.log.push(`Using ${tmCount} approved term${tmCount>1?"s":""} from your translation memory.`);
+  const batches=[];for(let i=0;i<todo.length;i+=6)batches.push(todo.slice(i,i+6));
+  let next=0; let fatal=null;
+  async function worker(){
+    while(next<batches.length&&!fatal){
+      const b=batches[next++]; const label=`Cards ${D().cards.indexOf(b[0])+1}–${D().cards.indexOf(b[b.length-1])+1}`;
+      try{
+        const res=await CAP.sample.json(buildPrompt(b,tm),{signal:tr.ctl.signal,modelTier:"default"});
+        const {merged,missing}=mergeResult(res,b);
+        tr.done+=merged; tr.log.push(`${label}: done${missing.length?` (${missing.length} incomplete)`:""}.`);
+        missing.forEach(c=>tr.errors.push(c.id));
+      }catch(e){
+        const code=e&&e.code||"upstream_error";
+        if(code==="cancelled"||code==="not_granted"||code==="sampling_disabled"||code==="session_expired"){fatal=code}
+        tr.log.push(`${label}: ${ERR_TEXT[code]||"failed ("+code+")."}`);
+        b.forEach(c=>tr.errors.push(c.id));
+        if(code==="rate_limited") fatal=code;
+      }
+      dirty(); if(state.step===2) renderMain();
+    }
+  }
+  await Promise.all([worker(),worker()]);
+  tr.running=false; tr.ctl=null;
+  if(fatal) tr.log.push(ERR_TEXT[fatal]||fatal);
+  else tr.log.push(tr.errors.length?`Finished. ${tr.errors.length} card${tr.errors.length>1?"s":""} still need translating. Press “Translate the cards that still need it”.`:"Finished. Go to Review to check each language.");
+  dirty(); render();
+}
+async function applyManual(){
+  const box=$("#manualAns"); let txt=box.value.trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
+  try{
+    const res=JSON.parse(txt);
+    const {merged,missing}=mergeResult(res,D().cards.filter(c=>needsTrans(c)));
+    state.manualMsg={cls:missing.length?"warn":"ok",html:`Added translations for ${merged} card${merged===1?"":"s"}.${missing.length?` ${missing.length} card${missing.length>1?"s were":" was"} missing or incomplete.`:""}`};
+    box.value=""; dirty();
+  }catch(e){state.manualMsg={cls:"no",html:"That text isn't valid JSON. Copy Claude's whole answer (it starts with { ) and paste it again."}}
+  render();
+}
+
+/* ================= TRANSLATION MEMORY ================= */
+async function rememberTerm(c,l){
+  if(!CAP.db||!hasTrans(c,l)) return;
+  const key=slug(c.term);
+  try{await CAP.db.doc(`tm/${l}__${key}`).set({key,lang:l,term:c.term,tterm:c.t[l].term,cog:!!c.t[l].cog,updated:Date.now()})}catch(e){}
+}
+
+/* ================= EXPORT ================= */
+function deckForStudents(){
+  const d=JSON.parse(JSON.stringify(D()));
+  d.reviewed=Object.fromEntries(d.languages.map(l=>[l,langReviewed(l)]));
+  d.cards=d.cards.map(c=>{const o={id:c.id,term:c.term,def:c.def,plain:c.plain||c.def,icon:c.icon||"book",t:{}};if(c.img)o.img=c.img;if(c.svg){o.svg=c.svg;o.alt=c.picAlt||""}
+    for(const l of d.languages){const v=c.t&&c.t[l];o.t[l]=v?{term:v.term,def:v.def,plain:v.plain||v.def,cog:!!v.cog}:{term:"",def:"",plain:"",cog:false}}return o});
+  delete d.reviewedCards; delete d.wantPlain; delete d.isSample;
+  d.titleT=Object.fromEntries(d.languages.map(l=>[l,D().titleT[l]||""]));
+  d.defaultLang="en"; d.openSetup=true;
+  d.test={count:Math.min(d.test.count,d.cards.length),types:d.test.types.length?d.test.types:["mc"]};
+  return d;
+}
+function buildStudentHtml(){
+  if(!TEMPLATE) throw new Error("template");
+  const json=JSON.stringify(deckForStudents()).replace(/</g,"\\u003c").split(String.fromCharCode(0x2028)).join("\\u2028").split(String.fromCharCode(0x2029)).join("\\u2029");
+  let body=TEMPLATE.replace(/\/\*DECK_START\*\/[\s\S]*?\/\*DECK_END\*\//,()=>"/*DECK_START*/const DECK = "+json+";/*DECK_END*/");
+  body=body.replace(/<title>[\s\S]*?<\/title>\s*/,"");
+  return `<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<title>${esc(D().title||"Flashcards")} · Flashcard Bridge</title>\n</head>\n<body>\n${body}\n</body>\n</html>\n`;
+}
+async function saveFile(filename,data){
+  if(!CAP.dl) return {ok:false,code:"unavailable"};
+  try{await CAP.dl.save({filename,data});return {ok:true}}catch(e){return {ok:false,code:e&&e.code||"unavailable"}}
+}
+async function doExport(kind){
+  let html;
+  if(kind!=="json"){try{html=buildStudentHtml()}catch(e){state.exportMsg={cls:"no",html:`The student page template didn't load${TEMPLATE_ERR?` (${esc(TEMPLATE_ERR)})`:""}. Reload the Studio and try again.`};render();return}}
+  const base=slug(D().title||"flashcards");
+  if(kind==="copy"){
+    try{await navigator.clipboard.writeText(html);state.exportMsg={cls:"ok",html:`Copied the student page (${Math.round(html.length/1024)} KB). In Google Sites: <b>Insert → Embed → Embed code</b>, paste, then press Next and Insert.`}}
+    catch(e){state.exportMsg={cls:"warn",html:`Copying was blocked. Use <b>Download student page</b> instead, then open the file in a text editor and copy it.`}}
+    render();return;
+  }
+  const r = kind==="json" ? await saveFile(base+".flashcards.json",JSON.stringify(D(),null,1)) : await saveFile(base+".html",html);
+  if(r.ok) state.exportMsg={cls:"ok",html: kind==="json"?"Deck file saved. Open it later on step 1 to keep editing.":"Student page saved. Put it in Google Sites (steps below), or open it in a browser to check it."};
+  else if(r.code==="declined") state.exportMsg=null;
+  else if(r.code==="extension_not_enabled"||r.code==="rejected_extension") state.exportMsg={cls:"warn",html:`This file type can't be downloaded here. Use <b>Copy page HTML</b> instead.`};
+  else state.exportMsg={cls:"warn",html:`Downloads aren't available in this view. Use <b>Copy page HTML</b> instead.`};
+  render();
+}
+function openDeckFile(text){
+  let deck=null;
+  try{
+    const t=text.trim();
+    if(t.startsWith("{")) deck=JSON.parse(t);
+    else{const m=t.match(/\/\*DECK_START\*\/\s*const DECK = ([\s\S]*?);\/\*DECK_END\*\//);if(m) deck=JSON.parse(m[1])}
+  }catch(e){deck=null}
+  if(!deck||!Array.isArray(deck.cards)) return false;
+  const d=newDeck(); Object.assign(d,deck);
+  d.languages=(deck.languages||ALL_LANGS).filter(l=>ALL_LANGS.includes(l));
+  d.reviewedCards=deck.reviewedCards||{};
+  for(const l of ALL_LANGS){d.reviewedCards[l]=d.reviewedCards[l]||{}; if(deck.reviewed&&deck.reviewed[l]&&!deck.reviewedCards) d.cards.forEach(c=>d.reviewedCards[l][c.id]=true)}
+  if(d.wantPlain===undefined) d.wantPlain=true;
+  d.test=deck.test||{count:10,types:["mc","tf","short"]};
+  d.cards.forEach(c=>{c.t=c.t||{};c.icon=c.icon||"book"});
+  state.deck=d; state.raw=""; state.rawIsSample=false; state.parseMsg={cls:"ok",html:`Opened <b>${esc(d.title||"your set")}</b> with ${d.cards.length} cards.`};
+  return true;
+}
+
+/* ================= IMAGES ================= */
+function shrinkImage(file){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{const img=new Image();img.onload=()=>{
+      const max=240, k=Math.min(1,max/Math.max(img.width,img.height));
+      const cv=document.createElement("canvas");cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      let url=cv.toDataURL("image/webp",.8); if(!url.startsWith("data:image/webp")) url=cv.toDataURL("image/jpeg",.82);
+      res(url)};img.onerror=rej;img.src=fr.result};
+    fr.onerror=rej; fr.readAsDataURL(file);
+  });
+}
+
+
+/* ================= CLAUDE PICTURES ================= */
+const SVG_OK=new Set(["svg","g","path","circle","ellipse","rect","line","polyline","polygon","defs","lineargradient","radialgradient","stop","clippath","mask","use","animate","animatetransform","animatemotion","set","mpath","title","desc"]);
+function cleanSvg(raw,prefix){
+  if(typeof raw!=="string") return null;
+  const m=raw.match(/<svg[\s\S]*<\/svg>/i); if(!m) return null;
+  const doc=new DOMParser().parseFromString(m[0],"image/svg+xml");
+  const root=doc.documentElement;
+  if(!root||root.localName!=="svg"||doc.getElementsByTagName("parsererror").length) return null;
+  const walk=el=>{
+    [...el.children].forEach(ch=>{if(!SVG_OK.has(ch.localName.toLowerCase())){ch.remove();return} walk(ch)});
+    [...el.attributes].forEach(a=>{
+      const n=a.name.toLowerCase(), v=a.value;
+      if(n.startsWith("on")||n==="class") el.removeAttribute(a.name);
+      else if((n==="href"||n==="xlink:href")&&!v.trim().startsWith("#")) el.removeAttribute(a.name);
+      else if(/javascript:|expression\(|@import|url\(\s*['"]?\s*(?!#)/i.test(v)) el.removeAttribute(a.name);
+    });
+  };
+  walk(root);
+  if(!root.getAttribute("viewBox")) root.setAttribute("viewBox","0 0 120 120");
+  root.removeAttribute("width"); root.removeAttribute("height");
+  root.setAttribute("preserveAspectRatio","xMidYMid meet");
+  root.setAttribute("data-fb","ai");
+  const ids=[...root.querySelectorAll("[id]")].map(e=>e.id);
+  let out=new XMLSerializer().serializeToString(root);
+  ids.forEach(id=>{const nid=prefix+"-"+id;
+    out=out.split(`id="${id}"`).join(`id="${nid}"`).split(`#${id})`).join(`#${nid})`).split(`"#${id}"`).join(`"#${nid}"`).split(`'#${id}'`).join(`'#${nid}'`);});
+  if(out.length>14000) return null;
+  return out;
+}
+function drawPrompt(cards){
+  return `You are drawing animated picture cards for an 8th grade Earth Science vocabulary set. Many students are multilingual learners who are new to English, so each picture has to SHOW what the term means. A student who can't read the definition should still understand the idea from the picture.
+
+Rules for every SVG:
+- Start with <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"> and no width or height.
+- The first child is a background <rect width="120" height="120" rx="14"> in a soft light color, so the picture works on light and dark pages.
+- Simple, bold, flat shapes with dark outlines (#1D2429, stroke-width 2 to 3). Use real-world colors: water blue, rock brown or gray, magma and lava orange-red, plants green, sky pale blue. Chemistry colors if atoms appear: oxygen red, carbon charcoal, nitrogen blue, hydrogen white.
+- NO text, letters, numbers, labels or speech bubbles anywhere. The picture must work in every language and must not give away the word. Arrows are fine.
+- Animate the key process with SMIL only: <animate>, <animateTransform>, <animateMotion>. Loop forever (repeatCount="indefinite"), each loop 2 to 6 seconds, calm movement. No flashing, no fast blinking, no strobing.
+- Do not use <style>, class attributes, CSS, <script>, <text>, <image>, <foreignObject>, or any link outside the SVG. Gradients in <defs> with simple ids are fine. Do not refer to ids in "begin" attributes.
+- Keep each SVG under 6,000 characters.
+- Be scientifically accurate for 8th grade (for example, in subduction the denser oceanic plate sinks under the continental plate; in erosion material is carried away, in deposition it settles).
+- If "teacherDescription" is given, follow it closely. It is the teacher's idea for the picture.
+- If "attempt" is more than 1, the teacher asked for a redraw because they did not like the last picture. Make a clearly different composition this time.
+
+Cards:
+${JSON.stringify(cards.map(c=>({id:c.id,term:c.term,definition:c.plain||c.def,teacherDescription:(c.picDesc||"").trim(),attempt:(c.drawCount||0)+1})))}
+
+Reply with ONLY a JSON object:
+{"pictures":[{"id":"c1","alt":"One short sentence saying what the picture shows and how it moves.","svg":"<svg ...>...</svg>"}]}`;
+}
+function picStale(c){return !!c.svg&&(c.picDesc||"").trim()!==(c.picDescUsed||"").trim()}
+function picState(c){const st=state.draw.ids[c.id];return st==="drawing"?"drawing":st==="queued"?"queued":""}
+function picCard(c,i){
+  const avail=CAP.sample, dr=state.draw, st=picState(c), stale=picStale(c);
+  const src=c.svg?`<span class="picsrc ai">Drawn by Claude · animated</span>`:c.img?`<span class="picsrc">Your image</span>`:`<span class="picsrc">Preset icon</span>`;
+  return `<div class="pic ${state.pickFor===i?"sel":""}" id="pc-${i}">
+      <div class="picbox ${c.svg||c.img?"full":""} ${st}" id="pb-${i}" aria-hidden="true">${iconSvg(c)}</div>
+      <div class="t">${esc(c.term)}</div><span id="ps-${i}">${src}</span>
+      <p class="alt" id="pa-${i}" ${c.svg&&c.picAlt?"":"hidden"}>${esc(c.picAlt||"")}</p>
+      <div class="field"><label class="lab" for="pd-${i}">Describe the picture <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <textarea id="pd-${i}" rows="2" data-path="cards.${i}.picDesc" placeholder="e.g. An ocean plate slides under a land plate and melts into magma">${esc(c.picDesc||"")}</textarea>
+        <div class="note" id="pn-${i}" ${stale?"":"hidden"}>You changed the description. Press <b>Redraw</b> to use it.</div></div>
+      <div class="row" style="justify-content:center;gap:6px">
+        <button class="btn small primary" id="pdb-${i}" data-act="drawOne" data-i="${i}" ${!avail||dr.running?"disabled":""}>${drawLabel(c)}</button>
+        <button class="btn small" data-act="pick" data-i="${i}" id="pk-${i}">${state.pickFor===i?"Close icons":"Icon"}</button>
+        <label class="btn small" for="up-${i}" style="display:inline-flex;align-items:center">Upload</label><input type="file" id="up-${i}" data-upload="${i}" accept="image/*" hidden>
+      </div>
+      ${c.svg?`<button class="btn small link" data-act="rmSvg" data-i="${i}">Remove drawing</button>`:c.img?`<button class="btn small link" data-act="rmImg" data-i="${i}">Remove image</button>`:""}
+    </div>`;
+}
+function drawLabel(c){const st=picState(c);if(st==="drawing")return "Drawing…";if(st==="queued")return "Waiting…";if(!c.svg)return "Draw with Claude";return picStale(c)?"Redraw with new description":"Redraw"}
+function drawTargets(){return D().cards.map((c,i)=>i).filter(i=>!D().cards[i].svg||picStale(D().cards[i]))}
+function drawAllLabel(){const n=drawTargets().length,d=D();if(!n)return "Every card has a drawing";const stale=d.cards.filter(picStale).length;return n===d.cards.length?`Draw pictures for all ${n} cards`:`Draw the ${n} card${n===1?"":"s"} that need${n===1?"s":""} a new picture${stale?` (${stale} with a changed description)`:""}`}
+/* Refresh one card in place. If the teacher is typing inside it, patch only the parts that changed so the cursor stays put. */
+function refreshPic(i){
+  if(state.step!==4) return;
+  const el=document.getElementById("pc-"+i); if(!el) return;
+  const c=D().cards[i];
+  if(el.contains(document.activeElement)&&document.activeElement.tagName==="TEXTAREA"){
+    const b=document.getElementById("pb-"+i); b.innerHTML=iconSvg(c); b.className=`picbox ${c.svg||c.img?"full":""} ${picState(c)}`;
+    document.getElementById("ps-"+i).innerHTML=c.svg?`<span class="picsrc ai">Drawn by Claude · animated</span>`:c.img?`<span class="picsrc">Your image</span>`:`<span class="picsrc">Preset icon</span>`;
+    const pa=document.getElementById("pa-"+i); pa.textContent=c.picAlt||""; pa.hidden=!(c.svg&&c.picAlt);
+    document.getElementById("pn-"+i).hidden=!picStale(c);
+    const btn=document.getElementById("pdb-"+i); btn.textContent=drawLabel(c); btn.disabled=!CAP.sample||state.draw.running;
+  }else{
+    const hadFocus=el.contains(document.activeElement)?document.activeElement.id:null;
+    el.outerHTML=picCard(c,i);
+    if(hadFocus){const f=document.getElementById(hadFocus);f&&f.focus()}
+  }
+}
+function drawBarHtml(){const dr=state.draw, avail=CAP.sample;return `<div class="row">
+      ${dr.running?`<button class="btn danger" data-act="stopDraw">Stop</button><span id="drawProg" class="help" aria-live="polite">Drew ${dr.done} of ${dr.total}</span><span class="help" style="font-size:14px">Each group of 3 takes about 30–90 seconds.</span>`:
+      `<button class="btn primary" id="drawAllBtn" data-act="drawAll" ${!avail||!drawTargets().length?"disabled":""}>${drawAllLabel()}</button>`}
+    </div>`;}
+function refreshDrawBar(){const b=$("#drawAllBtn");if(b){b.textContent=drawAllLabel();b.disabled=!CAP.sample||!drawTargets().length||state.draw.running}}
+async function runDraw(indices){
+  const dr=state.draw;
+  if(dr.running||!CAP.sample||!indices.length) return;
+  dr.running=true; dr.done=0; dr.total=indices.length; dr.ids={}; dr.ctl=new AbortController(); dr.msg=null;
+  indices.forEach(i=>dr.ids[D().cards[i].id]="queued");
+  if(state.step===4&&$("#drawBar")){$("#drawBar").innerHTML=drawBarHtml();$("#drawMsg").innerHTML="";D().cards.forEach((c,i)=>refreshPic(i))} else renderMain();
+  const batches=[]; for(let k=0;k<indices.length;k+=3) batches.push(indices.slice(k,k+3));
+  let next=0, fatal=null, failed=0;
+  async function worker(){
+    while(next<batches.length&&!fatal){
+      const b=batches[next++]; const cards=b.map(i=>D().cards[i]);
+      b.forEach(i=>{dr.ids[D().cards[i].id]="drawing";refreshPic(i)});
+      const sentDesc=cards.map(c=>(c.picDesc||"").trim());
+      try{
+        const res=await CAP.sample.json(drawPrompt(cards),{signal:dr.ctl.signal,modelTier:"default",cache:false});
+        const pics=Array.isArray(res)?res:(res&&res.pictures)||[];
+        b.forEach(i=>{
+          const c=D().cards[i], r=pics.find(x=>x&&x.id===c.id);
+          const svg=r?cleanSvg(r.svg,"p"+c.id+"v"+((c.drawCount||0)+1)):null;
+          if(svg){c.svg=svg;c.picAlt=String(r.alt||"");c.img=null;c.picDescUsed=sentDesc[cards.indexOf(c)];c.drawCount=(c.drawCount||0)+1;dr.done++}else failed++;
+          delete dr.ids[c.id]; refreshPic(i);
+        });
+      }catch(e){
+        const code=e&&e.code||"upstream_error";
+        if(["cancelled","not_granted","sampling_disabled","session_expired","rate_limited"].includes(code)) fatal=code;
+        failed+=b.length; b.forEach(i=>{delete dr.ids[D().cards[i].id];refreshPic(i)});
+        if(!fatal) dr.lastErr=code;
+      }
+      const pr=$("#drawProg"); if(pr) pr.textContent=`Drew ${dr.done} of ${dr.total}${failed?` · ${failed} didn't work`:""}`;
+      dirty();
+    }
+  }
+  await Promise.all([worker(),worker()]);
+  dr.running=false; dr.ctl=null; dr.ids={};
+  if(fatal) dr.msg={cls:fatal==="cancelled"?"":"warn",html:esc(ERR_TEXT[fatal]||fatal)};
+  else if(failed) dr.msg={cls:"warn",html:`Drew ${dr.done} picture${dr.done===1?"":"s"}. ${failed} didn't come back usable. Press <b>Draw with Claude</b> on those cards to try again, or add a short description first.`};
+  else dr.msg={cls:"ok",html:`Drew ${dr.done} picture${dr.done===1?"":"s"}. Press <b>Redraw</b> on any you don't like. A short description usually helps.`};
+  dirty();
+  if(state.step===4&&$("#drawBar")){
+    $("#drawBar").innerHTML=drawBarHtml();
+    $("#drawMsg").innerHTML=dr.msg?`<div class="msg ${dr.msg.cls}">${dr.msg.html}</div>`:"";
+    D().cards.forEach((c,i)=>refreshPic(i));
+    renderNav();
+  } else render();
+}
+
+/* ================= RENDER ================= */
+const STEPS=[["Import","Paste Quizlet export"],["Translate","Claude translates"],["Review","Check each language"],["Pictures","Icons and images"],["Test & export","Make the student page"]];
+function stepDone(i){
+  const d=D();
+  if(i===1) return d.cards.length>0;
+  if(i===2) return d.cards.length>0&&!d.cards.some(needsTrans);
+  if(i===3) return d.cards.length>0&&langs().every(langReviewed);
+  if(i===4) return d.cards.length>0&&d.cards.every(c=>c.svg||c.img||(c.icon&&c.icon!=="book"));
+  return false;
+}
+function render(){
+  $("#setName").textContent=D().title||"New set";
+  $("#newSetBtn").textContent=state.newArmed?"Yes, start a new set":"New set";
+  $("#steps").innerHTML=STEPS.map(([a,b],i)=>`<li><button data-act="go" data-step="${i+1}" ${state.step===i+1?'aria-current="step"':""} class="${stepDone(i+1)?"done":""}"><span class="num">${stepDone(i+1)&&state.step!==i+1?"✓":i+1}</span><span class="lab"><b>${a}</b><small>${b}</small></span></button></li>`).join("");
+  renderMain();
+  renderNav();
+}
+function renderNav(){
+  $("#steps").innerHTML=STEPS.map(([a,b],i)=>`<li><button data-act="go" data-step="${i+1}" ${state.step===i+1?'aria-current="step"':""} class="${stepDone(i+1)?"done":""}"><span class="num">${stepDone(i+1)&&state.step!==i+1?"✓":i+1}</span><span class="lab"><b>${a}</b><small>${b}</small></span></button></li>`).join("");
+  const n=state.step;
+  $("#nav").innerHTML=`${n>1?`<button class="btn" data-act="go" data-step="${n-1}">‹ ${STEPS[n-2][0]}</button>`:"<span></span>"}${n<5?`<button class="btn primary" data-act="go" data-step="${n+1}" ${n===1&&!D().cards.length?"disabled":""}>${STEPS[n][0]} ›</button>`:""}`;
+}
+function renderMain(){
+  const m=$("#main");
+  const f=[null,vImport,vTranslate,vReview,vPictures,vExport][state.step];
+  const focusId=document.activeElement&&document.activeElement.id;
+  m.innerHTML=f();
+  if(state.step===1){$("#sep").value=state.sep;$("#rowSep").value=state.rowSep}
+  if(focusId){const el=document.getElementById(focusId);if(el&&m.contains(el))el.focus()}
+}
+
+function vImport(){
+  const d=D();
+  const rows=d.cards.map((c,i)=>{const w=!c.term||!c.def;return `<tr class="${w?"warnrow":""}">
+      <td class="n">${i+1}</td>
+      <td><input type="text" aria-label="Term ${i+1}" data-path="cards.${i}.term" value="${esc(c.term)}">${!c.term?`<div class="rowwarn">Term is empty</div>`:""}</td>
+      <td><textarea rows="2" aria-label="Definition ${i+1}" data-path="cards.${i}.def">${esc(c.def)}</textarea>${!c.def?`<div class="rowwarn">Definition is empty</div>`:""}${c.def.split(/\s+/).length>40?`<div class="rowwarn">Long definition (${c.def.split(/\s+/).length} words). The plain-English version will help.</div>`:""}</td>
+      <td class="x"><button class="iconbtn" data-act="delCard" data-i="${i}" aria-label="Remove card ${i+1}" title="Remove card">✕</button></td></tr>`}).join("");
+  return `<div class="stack">
+  <section class="card stack">
+    <div class="row"><h2>Paste your Quizlet export</h2>${state.rawIsSample?`<span class="sample-tag">Sample export, replace with yours</span>`:""}</div>
+    <p class="help">In Quizlet on the website: open your set, choose <b>⋯ → Export</b>, then <b>Copy text</b>. Paste it below. Only sets you created can be exported.</p>
+    <div class="import">
+      <div class="field">
+        <label class="lab" for="raw">Export text</label>
+        <textarea id="raw" spellcheck="false" placeholder="term[tab]definition, one card per line">${esc(state.raw)}</textarea>
+        <div class="row"><label class="btn small" for="fileIn" style="display:inline-flex;align-items:center">Open a file…</label><input id="fileIn" type="file" accept=".txt,.csv,.tsv,.json,.html,text/plain,text/csv,application/json,text/html" hidden><span class="help" style="font-size:14px">.txt or .csv export, a saved deck file (.json), or a student page (.html)</span></div>
+      </div>
+      <div class="stack">
+        <div class="field"><label class="lab" for="sep">Between term and definition</label>
+          <select id="sep"><option value="auto">Figure it out for me</option><option value="tab">Tab (Quizlet default)</option><option value="comma">Comma</option><option value="semicolon">Semicolon</option><option value="dash">Dash ( - )</option><option value="custom">Something else…</option></select>
+          <input type="text" id="sepCustom" placeholder="Type the separator" value="${esc(state.sepCustom)}" ${state.sep==="custom"?"":"hidden"}></div>
+        <div class="field"><label class="lab" for="rowSep">Between cards</label>
+          <select id="rowSep"><option value="auto">Figure it out for me</option><option value="newline">New line (Quizlet default)</option><option value="semicolon">Semicolon</option><option value="custom">Something else…</option></select>
+          <input type="text" id="rowCustom" placeholder="Type the separator" value="${esc(state.rowCustom)}" ${state.rowSep==="custom"?"":"hidden"}></div>
+        <button class="btn primary" data-act="parse">${d.cards.length&&state.replaceArmed?`Yes, replace my ${d.cards.length} cards`:"Read cards"}</button>
+        ${d.cards.length&&state.replaceArmed?`<p class="help" style="font-size:14px">This replaces the cards below and any translations. Press again to confirm.</p>`:""}
+      </div>
+    </div>
+    ${state.parseMsg?`<div class="msg ${state.parseMsg.cls}" role="status">${state.parseMsg.html}</div>`:""}
+  </section>
+  <section class="card stack">
+    <h2>Set details</h2>
+    <div class="two">
+      <div class="field"><label class="lab" for="fTitle">Set title (students see this)</label><input type="text" id="fTitle" data-path="title" value="${esc(d.title)}" placeholder="e.g. Plate Tectonics Vocab"></div>
+      <div class="field"><label class="lab" for="fUnit">Unit</label><input type="text" id="fUnit" data-path="unit" value="${esc(d.unit)}" placeholder="e.g. Earth's Structure"></div>
+    </div>
+  </section>
+  <section class="card stack">
+    <div class="row"><h2>Cards</h2><span class="pill">${d.cards.length} card${d.cards.length===1?"":"s"}</span><span class="spacer"></span><button class="btn small" data-act="addCard">+ Add a card</button></div>
+    ${d.cards.length?`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Term</th><th>Definition (from Quizlet)</th><th><span style="position:absolute;left:-9999px">Remove</span></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<p class="help">No cards yet. Paste an export above and press <b>Read cards</b>.</p>`}
+  </section></div>`;
+}
+
+function vTranslate(){
+  const d=D(), tr=state.trans;
+  const need=d.cards.filter(needsTrans).length, doneN=d.cards.length-need;
+  const avail=CAP.sample;
+  const langsBox=ALL_LANGS.map(l=>`<label class="check"><input type="checkbox" data-lang-toggle="${l}" ${d.languages.includes(l)?"checked":""}> <span><b ${l==="ar"?'lang="ar"':""}>${LANG_INFO[l].name}</b> <span class="help" style="font-size:13px">${LANG_INFO[l].en}</span></span></label>`).join("");
+  const pct=tr.total?Math.round(tr.done/tr.total*100):0;
+  const stale=d.cards.filter(c=>c.stale).length;
+  return `<div class="stack">
+  <section class="card stack">
+    <h2>Translate with Claude</h2>
+    <p class="help">Claude translates every term and definition, writes a plain-English version of each definition, marks cognates, and suggests a picture. This uses your Claude account. Students never need one.</p>
+    <div class="field"><span class="lab">Languages</span><div class="langs">${langsBox}</div></div>
+    <label class="check"><input type="checkbox" id="wantPlain" data-path="wantPlain" ${d.wantPlain?"checked":""}> Write plain-English definitions (short sentences for WIDA levels 1–3)</label>
+    <div class="tstat">
+      <div class="box"><div class="num">${d.cards.length}</div>cards</div>
+      <div class="box"><div class="num" style="color:var(--ok)">${doneN}</div>translated</div>
+      <div class="box"><div class="num" style="color:${need?"var(--no)":"var(--muted)"}">${need}</div>still need it${stale?` (${stale} changed)`:""}</div>
+    </div>
+    ${avail===undefined?`<div class="msg">Connecting to Claude…</div>`:avail===null?`<div class="msg warn"><b>Claude translation isn't available in this view.</b> Open the Studio from claude.ai to translate here, or use “Translate in a Claude chat” below.</div>`:""}
+    <div class="row">
+      ${tr.running?`<button class="btn danger" data-act="stopTr">Stop</button>`:
+        `<button class="btn primary" data-act="tr" data-only="1" ${!avail||!need||!d.languages.length?"disabled":""}>${need===d.cards.length?`Translate all ${d.cards.length} cards`:`Translate the ${need} card${need===1?"":"s"} that still need it`}</button>
+         <button class="btn" data-act="tr" data-only="0" ${!avail||!d.cards.length||!d.languages.length?"disabled":""}>Redo every card</button>`}
+    </div>
+    ${tr.running||tr.log.length?`<div class="bar" aria-hidden="true"><i style="width:${tr.running?pct:need?pct:100}%"></i></div><pre class="log" aria-live="polite">${esc(tr.log.join("\n"))}${tr.running?"\nWorking… each batch of 6 cards takes about 20–60 seconds.":""}</pre>`:""}
+  </section>
+  <details class="alt card" ${avail===null?"open":""}>
+    <summary>Translate in a Claude chat instead</summary>
+    <div class="stack" style="margin-top:10px">
+      <p class="help">Use this if translation here isn't working. 1) Copy the instructions. 2) Paste them into a new Claude chat. 3) Copy Claude's whole answer and paste it below.</p>
+      <div class="row"><button class="btn" data-act="copyPrompt" ${!need?"disabled":""}>Copy instructions for ${need} card${need===1?"":"s"}</button></div>
+      <div class="field"><label class="lab" for="manualAns">Claude's answer</label><textarea id="manualAns" rows="5" class="mono" placeholder='{"title": {...}, "cards": [...]}'></textarea></div>
+      <div class="row"><button class="btn primary" data-act="applyManual">Add these translations</button></div>
+      ${state.manualMsg?`<div class="msg ${state.manualMsg.cls}" role="status">${state.manualMsg.html}</div>`:""}
+    </div>
+  </details></div>`;
+}
+
+function vReview(){
+  const d=D(); if(!d.languages.includes(state.reviewLang)) state.reviewLang=d.languages[0]||"es";
+  const l=state.reviewLang, rc=d.reviewedCards[l]=d.reviewedCards[l]||{}, ar=l==="ar", dir=ar?' dir="rtl" lang="ar"':` lang="${l}"`;
+  const tabs=d.languages.map(x=>{const n=reviewedCount(x);return `<button data-act="rlang" data-l="${x}" aria-pressed="${x===l}"><span ${x==="ar"?'lang="ar"':""}>${LANG_INFO[x].name}</span><span class="cnt ${n===d.cards.length&&n?"full":""}">${n}/${d.cards.length} ✓</span></button>`}).join("");
+  const list=d.cards.map((c,i)=>({c,i})).filter(({c})=>!state.onlyUnchecked||!rc[c.id]);
+  const rows=list.map(({c,i})=>{
+    const v=c.t&&c.t[l]; const done=!!rc[c.id]&&!!v;
+    if(!v) return `<div class="en-col"><div class="term">${esc(c.term)}</div><div class="odef">${esc(c.def)}</div></div><div class="tr-col"><div class="msg warn">Not translated into ${LANG_INFO[l].en} yet. Go back to Translate.</div></div><div class="ck-col"></div>`;
+    const P=`cards.${i}.t.${l}`;
+    return `<div class="en-col ${done?"done":""}">
+        <div class="term">${esc(c.term)}</div>
+        <div class="mini">Quizlet definition</div><div class="odef">${esc(c.def)}</div>
+        <div class="mini"><label for="pl-${i}">Plain English</label></div><textarea id="pl-${i}" rows="2" data-path="cards.${i}.plain">${esc(c.plain)}</textarea>
+      </div>
+      <div class="tr-col ${done?"done":""}">
+        <div class="row" style="gap:8px"><input type="text" id="tt-${i}" aria-label="${LANG_INFO[l].en} term for ${esc(c.term)}" data-path="${P}.term" value="${esc(v.term)}"${dir} style="flex:1;min-width:160px">
+          <label class="cogchip" title="Cognate: looks or sounds like the English word"><input type="checkbox" data-path="${P}.cog" ${v.cog?"checked":""} style="width:16px;height:16px"> Cognate</label></div>
+        <div class="mini"><label for="td-${i}">Definition</label></div><textarea id="td-${i}" rows="2" data-path="${P}.def"${dir}>${esc(v.def)}</textarea>
+        <div class="mini"><label for="tp-${i}">Plain definition</label></div><textarea id="tp-${i}" rows="2" data-path="${P}.plain"${dir}>${esc(v.plain)}</textarea>
+        ${v.note?`<div class="note"><b>Note from Claude:</b> ${esc(v.note)}</div>`:""}
+      </div>
+      <div class="ck-col ${done?"done":""}"><label class="rvcheck"><input type="checkbox" data-review="${c.id}" ${done?"checked":""}> ${done?"Checked":"Check"}</label></div>`;
+  }).join("");
+  const n=reviewedCount(l);
+  return `<div class="stack">
+  <section class="card stack">
+    <h2>Review the translations</h2>
+    <p class="help">Check one language at a time. Fix anything that's wrong, then tick <b>Check</b> on each card. Students see a “not checked yet” note for any language that isn't fully checked. Checked terms are remembered and reused in your future sets.</p>
+    <div class="ltabs" role="group" aria-label="Language">${tabs}</div>
+    <div class="row">
+      <div class="field" style="flex:1;min-width:240px"><label class="lab" for="titleT">Set title in ${LANG_INFO[l].en}</label><input type="text" id="titleT" data-path="titleT.${l}" value="${esc(d.titleT[l]||"")}"${dir}></div>
+    </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="onlyUn" ${state.onlyUnchecked?"checked":""}> Show only cards I haven't checked</label>
+      <span class="spacer"></span>
+      <button class="btn small" data-act="copyEL">Copy ${LANG_INFO[l].en} list for EL staff</button>
+      <button class="btn small" data-act="markAll" ${n===d.cards.length?"disabled":""}>${state.markAllArmed?`Yes, mark all ${d.cards.length} as checked`:"Mark all as checked"}</button>
+    </div>
+    <div id="rvMsg" class="msg" role="status"></div>
+  </section>
+  ${d.cards.length?`<div class="rv"><div class="hd">English</div><div class="hd">${LANG_INFO[l].en}</div><div class="hd">Checked</div>${rows||`<div style="grid-column:1/-1" class="help">Every card in ${LANG_INFO[l].en} is checked.</div>`}</div>`:`<p class="help">No cards yet.</p>`}
+  </div>`;
+}
+
+function vPictures(){
+  const d=D(), dr=state.draw, avail=CAP.sample;
+  const noSvg=d.cards.map((c,i)=>i).filter(i=>!d.cards[i].svg);
+  const cards=d.cards.map((c,i)=>picCard(c,i)).join("");
+  let picker="";
+  if(state.pickFor!==null&&d.cards[state.pickFor]){
+    const c=d.cards[state.pickFor];
+    picker=`<section class="picker" aria-label="Pick an icon for ${esc(c.term)}"><div class="row"><h3>Icon for “${esc(c.term)}”</h3><span class="spacer"></span><button class="btn small" data-act="pick" data-i="${state.pickFor}">Done</button></div>
+      <p class="help" style="font-size:14px">Picking an icon replaces the drawing or image on this card.</p>
+      <div class="picker-grid">${Object.keys(ICONS).map(k=>`<button data-act="setIcon" data-k="${k}" aria-pressed="${!c.img&&!c.svg&&c.icon===k}">${ICONS[k]}<span>${esc(k.replace(/-/g," "))}</span></button>`).join("")}</div></section>`;
+  }
+  return `<div class="stack">
+  <section class="card stack">
+    <h2>Pictures</h2>
+    <p class="help">Claude can draw an animated picture for each card that shows what the word means, with no words in it. Describe what you want to see, or leave the box empty and Claude works from the definition. You can also pick a preset icon or upload your own image.</p>
+    ${avail===null?`<div class="msg warn"><b>Drawing with Claude isn't available in this view.</b> Open the Studio from claude.ai to draw pictures. Icons and uploads still work.</div>`:""}
+    <div id="drawBar">${drawBarHtml()}</div>
+    <div id="drawMsg" role="status">${dr.msg?`<div class="msg ${dr.msg.cls}">${dr.msg.html}</div>`:""}</div>
+    ${!Object.keys(ICONS).length?`<div class="msg warn">The icon set didn't load${TEMPLATE_ERR?` (${esc(TEMPLATE_ERR)})`:""}. Reload the Studio.</div>`:""}
+    <div id="picMsg" class="msg" role="status"></div>
+  </section>
+  ${picker}
+  <div class="pics">${cards||`<p class="help">No cards yet.</p>`}</div></div>`;
+}
+
+function vExport(){
+  const d=D(), n=d.cards.length;
+  const items=[];
+  items.push(n?{c:"ok",t:`${n} cards`}:{c:"no",t:"No cards yet. Go to step 1."});
+  if(!d.title) items.push({c:"warn",t:"The set has no title. Add one on step 1."});
+  const missing=d.cards.filter(needsTrans).length;
+  items.push(missing?{c:"no",t:`${missing} card${missing>1?"s":""} still need translating (step 2). Students would see blanks.`}:{c:"ok",t:`Translated into ${d.languages.map(l=>LANG_INFO[l].en).join(", ")}`});
+  for(const l of d.languages){const r=reviewedCount(l);items.push(r===n&&n?{c:"ok",t:`${LANG_INFO[l].en}: all ${n} checked`}:{c:"warn",t:`${LANG_INFO[l].en}: ${r} of ${n} checked. Students will see a “machine translated” note.`})}
+  const empty=d.cards.filter(c=>!c.def||!c.term).length; if(empty) items.push({c:"no",t:`${empty} card${empty>1?"s have":" has"} an empty side (step 1).`});
+  const types=[["mc","Multiple choice"],["tf","True or false"],["short","Short answer (1 question, read by you)"]];
+  const counts=[];for(let k=5;k<=Math.min(30,Math.max(n,5));k+=5)counts.push(k); if(n&&!counts.includes(n)&&n<30)counts.push(n); counts.sort((a,b)=>a-b);
+  let preview="";
+  if(state.showPreview){try{preview=`<iframe class="preview" title="Student page preview" sandbox="allow-scripts" srcdoc="${esc(buildStudentHtml())}"></iframe>`}catch(e){preview=`<div class="msg no">The student page template didn't load. Reload the Studio.</div>`}}
+  return `<div class="stack">
+  <section class="card stack">
+    <h2>Practice test</h2>
+    <div class="row" style="align-items:flex-end">
+      <div class="field" style="width:200px"><label class="lab" for="tCount">Number of questions</label><select id="tCount">${counts.map(k=>`<option value="${k}" ${Math.min(d.test.count,n||d.test.count)===k?"selected":""}>${k}${k===n?" (every card)":""}</option>`).join("")}</select></div>
+      ${types.map(([k,lab])=>`<label class="check"><input type="checkbox" data-ttype="${k}" ${d.test.types.includes(k)?"checked":""}> ${lab}</label>`).join("")}
+    </div>
+    <p class="help" style="font-size:14px">Each question uses a different card, so the test can't be longer than the set.</p>
+  </section>
+  <section class="card stack">
+    <h2>Ready to share?</h2>
+    <ul class="checklist">${items.map(i=>`<li class="${i.c}"><span class="mk">${i.c==="ok"?"✓":i.c==="warn"?"!":"✗"}</span><span>${i.t}</span></li>`).join("")}</ul>
+    <div class="row">
+      <button class="btn primary" data-act="exp" data-k="html" ${n?"":"disabled"}>Download student page (.html)</button>
+      <button class="btn" data-act="exp" data-k="copy" ${n?"":"disabled"}>Copy page HTML</button>
+      <button class="btn" data-act="exp" data-k="json" ${n?"":"disabled"}>Download deck file (.json)</button>
+      <button class="btn" data-act="preview" ${n?"":"disabled"}>${state.showPreview?"Hide preview":"Preview student page"}</button>
+    </div>
+    ${state.exportMsg?`<div class="msg ${state.exportMsg.cls}" role="status">${state.exportMsg.html}</div>`:""}
+    ${preview}
+  </section>
+  <section class="card stack">
+    <h3>Put it in Google Sites</h3>
+    <ol class="howto">
+      <li>Press <b>Copy page HTML</b> above.</li>
+      <li>In Google Sites, choose <b>Insert → Embed → Embed code</b>, paste, and press <b>Next</b>, then <b>Insert</b>.</li>
+      <li>Drag the embed box to full width and about <b>680 px</b> tall so the buttons stay on screen on Chromebooks.</li>
+      <li>Publish the site and open it once as a student would to check it.</li>
+    </ol>
+    <p class="help" style="font-size:14px">The <b>deck file</b> is your editable copy. Open it on step 1 to change the set later, then export a new student page.</p>
+  </section></div>`;
+}
+
+/* ================= EVENTS ================= */
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="raw"){state.raw=el.value;state.rawIsSample=false;return}
+  if(el.id==="sepCustom"){state.sepCustom=el.value;return}
+  if(el.id==="rowCustom"){state.rowCustom=el.value;return}
+  if(el.dataset.path&&el.type!=="checkbox"){
+    const p=el.dataset.path; setPath(D(),p,el.value);
+    const pd=p.match(/^cards\.(\d+)\.picDesc$/); if(pd){const i=+pd[1],c=D().cards[i];const n=document.getElementById("pn-"+i);if(n)n.hidden=!picStale(c);const bt=document.getElementById("pdb-"+i);if(bt)bt.textContent=drawLabel(c);refreshDrawBar()}
+    const m=p.match(/^cards\.(\d+)\.(term|def)$/); if(m){const c=D().cards[+m[1]];if(c.t&&Object.keys(c.t).length)c.stale=true}
+    const t=p.match(/^cards\.(\d+)\.t\.(\w+)\./); if(t){const c=D().cards[+t[1]];if(D().reviewedCards[t[2]]&&D().reviewedCards[t[2]][c.id]){/* edited after check: keep check, refresh memory */rememberTerm(c,t[2])}}
+    dirty();
+  }
+});
+document.addEventListener("change",async e=>{
+  const el=e.target;
+  if(el.id==="sep"){state.sep=el.value;renderMain();return}
+  if(el.id==="rowSep"){state.rowSep=el.value;renderMain();return}
+  if(el.id==="fileIn"&&el.files[0]){
+    const f=el.files[0]; const text=await f.text();
+    if(/\.(json|html?)$/i.test(f.name)||/^\s*[{<]/.test(text)){
+      if(openDeckFile(text)){dirty();render();return}
+      state.parseMsg={cls:"no",html:"That file isn't a Flashcard Bridge deck or student page."};render();return;
+    }
+    state.raw=text;state.rawIsSample=false;state.replaceArmed=false;applyParse();return;
+  }
+  if(el.dataset.path&&el.type==="checkbox"){setPath(D(),el.dataset.path,el.checked);dirty();if(el.dataset.path==="wantPlain")renderMain();return}
+  if(el.dataset.langToggle){const l=el.dataset.langToggle;const L=D().languages;if(el.checked&&!L.includes(l))L.push(l);if(!el.checked)D().languages=L.filter(x=>x!==l);D().languages.sort((a,b)=>ALL_LANGS.indexOf(a)-ALL_LANGS.indexOf(b));dirty();render();return}
+  if(el.dataset.review){
+    const l=state.reviewLang, c=D().cards.find(x=>x.id===el.dataset.review);
+    D().reviewedCards[l][c.id]=el.checked; if(!el.checked) delete D().reviewedCards[l][c.id];
+    if(el.checked) rememberTerm(c,l);
+    dirty(); render();
+    const nxt=[...document.querySelectorAll("[data-review]")].find(x=>!x.checked); if(state.onlyUnchecked&&nxt) nxt.focus(); else {const same=document.querySelector(`[data-review="${c.id}"]`);same&&same.focus()}
+    return;
+  }
+  if(el.id==="onlyUn"){state.onlyUnchecked=el.checked;renderMain();$("#onlyUn").focus();return}
+  if(el.id==="tCount"){D().test.count=+el.value;dirty();return}
+  if(el.dataset.ttype){const k=el.dataset.ttype;let T=D().test.types.filter(x=>x!==k);if(el.checked)T.push(k);if(!T.length){el.checked=true;return}D().test.types=["mc","tf","short"].filter(x=>T.includes(x));dirty();return}
+  if(el.dataset.upload!==undefined&&el.files[0]){
+    const i=+el.dataset.upload;
+    try{const url=await shrinkImage(el.files[0]);D().cards[i].img=url;D().cards[i].svg=null;dirty();renderMain();toast("#picMsg","ok",`Added your image to “${esc(D().cards[i].term)}” (${Math.round(url.length/1024)} KB).`)}
+    catch(err){toast("#picMsg","no","That file couldn't be read as an image. Try a .png or .jpg.")}
+  }
+});
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-act]"); if(!t) return;
+  const a=t.dataset.act;
+  if(a!=="newSet") state.newArmed=false;
+  if(a!=="markAll") state.markAllArmed=false;
+  if(a==="go"){state.step=+t.dataset.step;state.pickFor=null;render();window.scrollTo({top:0});return}
+  if(a==="parse"){
+    if(D().cards.length&&!state.replaceArmed&&!state.rawIsSample&&D().cards.some(c=>c.t&&Object.keys(c.t).length)){state.replaceArmed=true;renderMain();return}
+    applyParse();return;
+  }
+  if(a==="addCard"){D().cards.push({id:"c"+uid(),term:"",def:"",plain:"",icon:"book",img:null,t:{}});dirty();renderMain();const ins=document.querySelectorAll('[data-path$=".term"]');ins[ins.length-1]&&ins[ins.length-1].focus();return}
+  if(a==="delCard"){D().cards.splice(+t.dataset.i,1);dirty();render();return}
+  if(a==="tr"){runTranslate(t.dataset.only==="1");return}
+  if(a==="stopTr"){state.trans.ctl&&state.trans.ctl.abort();return}
+  if(a==="copyPrompt"){
+    const tm=await loadTM(); const txt=buildPrompt(D().cards.filter(needsTrans),tm);
+    try{await navigator.clipboard.writeText(txt);state.manualMsg={cls:"ok",html:"Instructions copied. Paste them into a new Claude chat."}}
+    catch(err){state.manualMsg={cls:"warn",html:"Copying was blocked. Select the text below and copy it:<textarea class='mono' rows='6' readonly style='margin-top:6px'>"+esc(txt)+"</textarea>"}}
+    renderMain();return;
+  }
+  if(a==="applyManual"){applyManual();return}
+  if(a==="rlang"){state.reviewLang=t.dataset.l;renderMain();const b=document.querySelector(`[data-act="rlang"][data-l="${state.reviewLang}"]`);b&&b.focus();return}
+  if(a==="markAll"){
+    if(!state.markAllArmed){state.markAllArmed=true;renderMain();$('[data-act="markAll"]').focus();return}
+    const l=state.reviewLang; D().cards.forEach(c=>{if(hasTrans(c,l)){D().reviewedCards[l][c.id]=true;rememberTerm(c,l)}});
+    state.markAllArmed=false; dirty(); render(); return;
+  }
+  if(a==="copyEL"){
+    const l=state.reviewLang, d=D();
+    const txt=[`${d.title||"Flashcard set"} - ${LANG_INFO[l].en} translations to check`,`Please check each term and definition. Note any fixes next to the number.`,""]
+      .concat(d.cards.map((c,i)=>{const v=c.t&&c.t[l];return `${i+1}. ${c.term} → ${v?v.term:"(not translated)"}\n   English: ${c.plain||c.def}\n   ${LANG_INFO[l].en}: ${v?(v.plain||v.def):""}${v&&v.note?`\n   Note: ${v.note}`:""}`})).join("\n");
+    try{await navigator.clipboard.writeText(txt);toast("#rvMsg","ok",`Copied the ${LANG_INFO[l].en} list. Paste it into an email or doc for your EL colleague.`)}
+    catch(err){toast("#rvMsg","warn","Copying was blocked. Select the text and copy it:<textarea class='mono' rows='6' readonly style='margin-top:6px'>"+esc(txt)+"</textarea>")}
+    return;
+  }
+  if(a==="pick"){const i=+t.dataset.i;state.pickFor=state.pickFor===i?null:i;renderMain();const f=state.pickFor!==null?document.querySelector('.picker-grid button[aria-pressed="true"]')||document.querySelector('.picker-grid button'):$("#pk-"+i);f&&f.focus();return}
+  if(a==="setIcon"){const c=D().cards[state.pickFor];c.icon=t.dataset.k;c.img=null;c.svg=null;c.picAlt="";dirty();const i=state.pickFor;renderMain();const b=document.querySelector(`[data-act="setIcon"][data-k="${c.icon}"]`);b&&b.focus();return}
+  if(a==="rmImg"){D().cards[+t.dataset.i].img=null;dirty();renderMain();return}
+  if(a==="rmSvg"){const c=D().cards[+t.dataset.i];c.svg=null;c.picAlt="";dirty();renderMain();return}
+  if(a==="drawOne"){runDraw([+t.dataset.i]);return}
+  if(a==="drawAll"){runDraw(drawTargets());return}
+  if(a==="stopDraw"){state.draw.ctl&&state.draw.ctl.abort();return}
+  if(a==="exp"){doExport(t.dataset.k);return}
+  if(a==="preview"){state.showPreview=!state.showPreview;renderMain();return}
+  if(a==="openLib"){openLib();return}
+  if(a==="closeLib"){$("#libScrim").hidden=true;$('[data-act="openLib"]').focus();return}
+  if(a==="libOpen"){
+    const d=libCache.find(x=>x.id===t.dataset.id);
+    if(d&&openDeckFile(d.json)){$("#libScrim").hidden=true;state.step=1;state.trans={running:false,done:0,total:0,log:[],ctl:null,errors:[]};setSave("ok","Saved to My sets");render()}
+    return;
+  }
+  if(a==="libDel"){
+    const id=t.dataset.id;
+    if(state.delArmed!==id){state.delArmed=id;renderLib();return}
+    try{await CAP.db.doc("decks/"+id).delete();libCache=libCache.filter(x=>x.id!==id);state.delArmed=null;renderLib()}catch(err){}
+    return;
+  }
+  if(a==="newSet"){
+    if(!state.newArmed&&D().cards.length&&!D().isSample){state.newArmed=true;render();return}
+    clearTimeout(saveTimer); if(D().cards.length&&!D().isSample) await saveDeck();
+    state.deck=newDeck();state.raw="";state.rawIsSample=false;state.parseMsg=null;state.step=1;state.newArmed=false;state.trans={running:false,done:0,total:0,log:[],ctl:null,errors:[]};state.exportMsg=null;state.showPreview=false;state.draw={running:false,ids:{},done:0,total:0,ctl:null,msg:null};
+    setSave(CAP.db?"":"warn",CAP.db?"Not saved yet":"Library unavailable here");render();$("#raw").focus();return;
+  }
+});
+$("#libScrim").addEventListener("click",e=>{if(e.target.id==="libScrim"){$("#libScrim").hidden=true}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#libScrim").hidden){$("#libScrim").hidden=true;$('[data-act="openLib"]').focus()}});
+
+/* ================= START ================= */
+state.raw=SAMPLE_EXPORT; state.rawIsSample=true;
+{const {cards}=parseExport(SAMPLE_EXPORT);D().isSample=true;D().title="Plate Tectonics Vocab";D().unit="Earth's Structure";D().cards=cards.map(c=>({id:"c"+uid(),term:c.term,def:c.def,plain:"",icon:"book",img:null,t:{}}));
+ state.parseMsg={cls:"ok",html:`This is a <b>sample export</b> so you can see how it works. Paste your own Quizlet export above and press <b>Read cards</b>, or press <b>New set</b>.`}}
+render();
+initCaps();
+loadTemplate();
+</script>
+
+</body>
+</html>

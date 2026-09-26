@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Astronomy Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#ECEEF4; --surface:#FFFFFF; --surface-2:#F4F5FA; --ink:#141932; --muted:#525C7A; --line:#CCD2E2;
+  --accent:#5B3FD6; --accent-ink:#FFFFFF; --accent-soft:#E9E4FC;
+  --l2c:#8A4B0F;
+  --good:#1D7A4B; --good-soft:#E2F2E9; --bad:#B0301F; --bad-soft:#FBE6E2;
+  --focus:#2F7FD0;
+  --space:#0D1230; --space-2:#171D47; --space-ink:#DCE2F5; --space-muted:#A3ACD0; --space-line:#3C4679; --space-accent:#B9A8FF;
+  --sun:#F4B42A; --sun-glow:#F9D375; --earth:#2F7FD0; --land:#3E9E63; --moon-lit:#F2EFE4; --moon-dark:#3A4163; --blood:#8E2A1E; --umbra:#02030A; --penumbra:#02030A;
+  --p-mer:#A9A39A; --p-ven:#E6C27A; --p-ear:#2F7FD0; --p-mar:#C8553A; --p-jup:#C99A6B; --p-sat:#E3CC8B; --p-ura:#8FD3D8; --p-nep:#3F63C9; --p-band:#9E7148; --day-sky:#79AEDF;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --arabic:"Noto Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0A0E20; --surface:#121833; --surface-2:#182044; --ink:#E5E8F4; --muted:#A0A9CA; --line:#2B355E;
+    --accent:#A58BFF; --accent-ink:#130B35; --accent-soft:#2A2262;
+    --l2c:#F0B77A;
+    --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+    --focus:#6FB2F2;
+    --space:#060919; --space-2:#10163A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0A0E20; --surface:#121833; --surface-2:#182044; --ink:#E5E8F4; --muted:#A0A9CA; --line:#2B355E;
+  --accent:#A58BFF; --accent-ink:#130B35; --accent-soft:#2A2262;
+  --l2c:#F0B77A;
+  --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+  --focus:#6FB2F2;
+  --space:#060919; --space-2:#10163A;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:10px 24px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+.en{display:block}
+.l2{display:block;color:var(--l2c);font-size:.8em;line-height:1.35;margin-top:1px}
+.l2[dir="rtl"]{font-family:var(--arabic);text-align:right}
+.inl .en,.inl .l2{display:inline}
+.inl .l2::before{content:" / ";color:var(--muted)}
+.stage .l2{color:var(--sun-glow)}
+bdi{unicode-bidi:isolate}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:6px 10px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brand svg{flex:none}
+.brand h1{font-size:1.45rem;font-weight:800;letter-spacing:-.01em}
+.brand p{margin:0;color:var(--muted);font-size:.9rem}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+select,input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:38px;padding:4px 10px}
+.btn{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:6px 14px;cursor:pointer;font-weight:700;text-align:left}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary .l2{color:inherit;opacity:.85}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab{border:0;background:none;padding:8px 14px 9px;border-bottom:3px solid transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;min-height:44px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab .chip{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* parts */
+.part{display:flex;flex-direction:column;gap:14px}
+.grid{display:grid;grid-template-columns:minmax(290px,370px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.side{display:flex;flex-direction:column;gap:10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.eyebrow{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 6px}
+.eyebrow .l2{text-transform:none;letter-spacing:0}
+.head{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.head h2{font-size:1.25rem}
+.steps{margin:0;font-size:.95rem}
+.say{flex:none;width:32px;height:32px;min-width:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);display:inline-grid;place-items:center;cursor:pointer;padding:0;color:var(--ink)}
+.say:hover{border-color:var(--accent)}
+.say.playing{background:var(--accent);color:var(--accent-ink)}
+.txt{display:flex;gap:8px;align-items:flex-start}
+.txt>div{flex:1;min-width:0}
+
+/* card bank */
+.bank{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.card{display:flex;align-items:center;gap:8px;min-height:44px;padding:5px 8px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;text-align:left;font-size:.9rem;font-weight:700;line-height:1.2}
+.card:hover{border-color:var(--accent)}
+.card[aria-pressed="true"]{border:2px solid var(--accent);background:var(--accent-soft);padding:4px 7px}
+.card .where{margin-left:auto;flex:none;font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:500;white-space:nowrap}
+.card svg{flex:none}
+.card .nm{min-width:0}
+.card .l2{font-weight:400}
+
+/* stage */
+.stage{background:var(--space);color:var(--space-ink);border-radius:14px;position:relative;overflow:hidden}
+.stage-cap{font-size:13px;color:var(--muted);margin:6px 2px 0}
+.orbit{position:relative;width:min(100%, calc(100vh - 250px), 560px);min-width:280px;aspect-ratio:1;margin:0 auto}
+.orbit svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.slot{position:absolute;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;border:2px dashed var(--space-accent);background:rgba(13,18,48,.55);color:var(--space-ink);cursor:pointer;display:grid;place-items:center;padding:0}
+.slot:hover{background:var(--space-2)}
+.slot.filled{border-style:solid}
+.slot .num{position:absolute;top:-9px;left:-9px;min-width:22px;height:22px;border-radius:11px;background:var(--space-2);border:1px solid var(--space-line);font:500 13px/20px var(--mono);text-align:center;color:var(--space-ink)}
+.mark{position:absolute;bottom:-10px;right:-12px;font:700 13px/1 var(--body);padding:3px 6px;border-radius:6px}
+.mark.ok{background:var(--good);color:#fff}
+.mark.no{background:var(--bad);color:#fff}
+.lbl{position:absolute;transform:translate(-50%,-50%);font-size:13px;font-weight:700;text-align:center;pointer-events:none;line-height:1.2;color:var(--space-ink)}
+.lbl .l2{font-weight:400}
+
+/* actions */
+.actions{position:sticky;bottom:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:0 -6px 18px rgba(10,14,32,.12)}
+.fb{flex:1 1 320px;min-width:0;max-height:26vh;overflow:auto;display:flex;gap:8px;align-items:flex-start;font-size:.95rem;border-radius:10px;padding:6px 8px;border:1px solid transparent}
+.fb.good{background:var(--good-soft);border-color:var(--good)}
+.fb.bad{background:var(--bad-soft);border-color:var(--bad)}
+.fb .tag{font-weight:700}
+.fb.good .tag{color:var(--good)} .fb.bad .tag{color:var(--bad)}
+.act-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* questions */
+.q textarea{width:100%;min-height:92px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:8px 10px;resize:vertical}
+details.sup{margin-top:8px}
+details.sup summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center;gap:6px;color:var(--ink)}
+.frames{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.frame{text-align:left;border:1px dashed var(--accent);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:38px}
+.words{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.word{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 12px;cursor:pointer;min-height:38px}
+.word:hover,.frame:hover{border-color:var(--accent);border-style:solid}
+.mc{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.qrow{display:flex;flex-direction:column;gap:4px;padding-block:8px;border-top:1px solid var(--line)}
+.qrow:first-of-type{border-top:0}
+.res{font-weight:700;font-size:.9rem}
+.res.ok{color:var(--good)} .res.no{color:var(--bad)}
+
+/* vocab */
+.vocab{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.vcard{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.vcard .pic{flex:none;width:64px;height:64px;border-radius:10px;background:var(--space);display:grid;place-items:center}
+.vcard b{font-size:1rem}
+.vcard p{margin:2px 0 0;font-size:.9rem}
+
+/* eclipse */
+.goals{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.goal{position:relative}
+.goal .done{display:block;font-size:13px;color:var(--good);font-weight:700;margin-top:2px}
+.seg{display:flex;flex-direction:column;gap:6px}
+.ecl{position:relative;width:100%;aspect-ratio:700/250;max-width:100%}
+.ecl svg{position:absolute;inset:0;width:100%;height:100%}
+.eslot{position:absolute;transform:translate(-50%,-50%);width:15%;max-width:92px;aspect-ratio:1;border-radius:50%;border:2px dashed var(--space-accent);background:transparent;cursor:pointer;padding:0;color:var(--space-ink)}
+.eslot:hover{background:rgba(185,168,255,.08)}
+.eslot .sl{position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap;color:var(--space-ink)}
+.estage{display:grid;grid-template-columns:minmax(0,1fr) 200px}
+.eview{display:flex;flex-direction:column;gap:10px;align-items:center;padding:12px;border-left:1px solid var(--space-line)}
+@media (max-width:700px){.estage{grid-template-columns:minmax(0,1fr)}.eview{flex-direction:row;border-left:0;border-top:1px solid var(--space-line)}}
+.eview .sky{flex:none;width:96px;height:96px;border-radius:50%;overflow:hidden;display:block}
+.eview .cap{min-width:0;font-size:.9rem;width:100%}
+.ecl-wrap{display:flex;align-items:center;padding-block:10px 22px}
+
+/* solar */
+.sys{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;padding:16px 12px 16px 64px;position:relative}
+.sys .sunbar{position:absolute;left:-70px;top:50%;transform:translateY(-50%);width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 60% 50%,var(--sun-glow),var(--sun) 60%,transparent 72%)}
+.sys .sunlbl{position:absolute;left:8px;top:8px;font-size:13px;font-weight:700;color:var(--space);z-index:1}
+.pslot{position:relative;min-height:112px;border:2px dashed var(--space-accent);border-radius:12px;background:rgba(13,18,48,.5);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px 2px 6px;color:var(--space-ink);font-size:13px;font-weight:700;text-align:center;line-height:1.15}
+.pslot.filled{border-style:solid}
+.pslot .num{position:absolute;top:4px;left:6px;font:500 13px var(--mono);color:var(--space-muted)}
+.pslot .mark{bottom:auto;top:-8px;right:-6px}
+@media (max-width:700px){.sys{grid-template-columns:repeat(4,minmax(0,1fr));padding-left:12px;padding-top:34px}.sys .sunbar{left:50%;top:-70px;transform:translateX(-50%)}.sys .sunlbl{left:50%;transform:translateX(-50%);top:4px}}
+.scroll{overflow-x:auto}
+table.data{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+table.data th,table.data td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.data th{font-size:13px;color:var(--muted);font-weight:700}
+table.data td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.data .l2{font-size:13px}
+.cmp{display:grid;grid-template-columns:minmax(0,1.1fr) 1fr 1fr;gap:6px 8px;align-items:center}
+.cmp .ch{font-size:13px;font-weight:700;color:var(--muted)}
+.cmp .rl{font-size:.9rem;font-weight:700}
+.cmp select{width:100%;min-height:44px}
+.cmp select.okb{border:2px solid var(--good)} .cmp select.nob{border:2px solid var(--bad)}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap}
+
+/* turn in */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.9rem}
+@media (max-width:600px){.fb{max-height:17vh}.form{grid-template-columns:1fr}.bank{grid-template-columns:1fr}}
+.rec{width:100%;min-height:260px;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:10px;white-space:pre}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.sum{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.sum b{font-family:var(--mono);font-size:1.1rem;font-variant-numeric:tabular-nums}
+.note{font-size:.9rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.foot{font-size:13px;color:var(--muted);margin-top:18px}
+
+/* svg fills */
+.f-lit{fill:var(--moon-lit)} .f-dark{fill:var(--moon-dark)} .f-sun{fill:var(--sun)} .f-glow{fill:var(--sun-glow)} .f-earth{fill:var(--earth)} .f-land{fill:var(--land)}
+.f-night{fill:var(--umbra);opacity:.55} .f-umbra{fill:var(--umbra);opacity:.8} .f-pen{fill:var(--penumbra);opacity:.35} .f-blood{fill:var(--blood)} .f-sky{fill:var(--space-2)} .f-day{fill:var(--day-sky)}
+.pf-mer{fill:var(--p-mer)} .pf-ven{fill:var(--p-ven)} .pf-ear{fill:var(--p-ear)} .pf-mar{fill:var(--p-mar)} .pf-jup{fill:var(--p-jup)} .pf-sat{fill:var(--p-sat)} .pf-ura{fill:var(--p-ura)} .pf-nep{fill:var(--p-nep)}
+.ps-sat{stroke:var(--p-sat);opacity:.85} .ps-band{stroke:var(--p-band)}
+.s-line{stroke:var(--space-line)} .s-ink{stroke:var(--space-ink)} .s-muted{stroke:var(--space-muted)} .s-sun{stroke:var(--sun)} .s-acc{stroke:var(--space-accent)}
+.t-ink{fill:var(--space-ink)}
+@media (prefers-reduced-motion: no-preference){
+  .card,.slot,.pslot,.btn{transition:border-color .15s, background-color .15s}
+  .pulse{animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 4px rgba(185,168,255,.35)}}
+}
+</style>
+<div class="wrap" id="app"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ---------- LANGUAGES ---------- */
+const LANGS=['en','es','fr','ht','ar'];
+const LANG_NAMES={en:'English only',es:'Español',fr:'Français',ht:'Kreyòl',ar:'العربية'};
+const VOICE={en:'en',es:'es',fr:'fr',ht:'ht',ar:'ar'};
+
+/* ---------- PAGE TEXT IN EVERY LANGUAGE ----------
+   Each entry: [English, Español, Français, Kreyòl, العربية]  */
+const UI={
+title:["Astronomy Lab","Laboratorio de astronomía","Labo d'astronomie","Laboratwa astwonomi","مختبر علم الفلك"],
+sub:["Moon phases, eclipses and the solar system","Fases de la Luna, eclipses y el sistema solar","Phases de la Lune, éclipses et système solaire","Faz lalin, eklips ak sistèm solè a","أطوار القمر والكسوف والخسوف والنظام الشمسي"],
+lang:["Second language","Segundo idioma","Deuxième langue","Dezyèm lang","اللغة الثانية"],
+pics:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+theme:["Dark / light","Oscuro / claro","Sombre / clair","Fènwa / klè","داكن / فاتح"],
+tab1:["Moon Phases","Fases de la Luna","Phases de la Lune","Faz lalin","أطوار القمر"],
+tab2:["Eclipses","Eclipses","Éclipses","Eklips","الكسوف والخسوف"],
+tab3:["Solar System","Sistema solar","Système solaire","Sistèm solè","النظام الشمسي"],
+tab4:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+say:["Read aloud","Leer en voz alta","Lire à voix haute","Li awotvwa","القراءة بصوت عالٍ"],
+noVoice:["This device has no voice for this language, so it read the English only.","Este dispositivo no tiene voz para este idioma. Solo leyó el inglés.","Cet appareil n'a pas de voix pour cette langue. Il a lu seulement l'anglais.","Aparèy sa a pa gen vwa pou lang sa a. Li li angle a sèlman.","لا يوجد صوت لهذه اللغة على هذا الجهاز، لذلك قرأ الإنجليزية فقط."],
+noSpeech:["Read-aloud does not work in this browser.","La lectura en voz alta no funciona en este navegador.","La lecture à voix haute ne marche pas dans ce navigateur.","Lekti awotvwa pa mache nan navigatè sa a.","القراءة بصوت عالٍ لا تعمل في هذا المتصفح."],
+check:["Check","Revisar","Vérifier","Verifye","تحقّق"],
+clear:["Clear this part","Borrar esta parte","Effacer cette partie","Efase pati sa a","امسح هذا الجزء"],
+clearSure:["Tap again to clear","Toca otra vez para borrar","Touche encore pour effacer","Touche ankò pou efase","المس مرة أخرى للمسح"],
+cleared:["This part is cleared. You can start again.","Esta parte está borrada. Puedes empezar otra vez.","Cette partie est effacée. Tu peux recommencer.","Pati sa a efase. Ou ka rekòmanse.","تم مسح هذا الجزء. يمكنك البدء من جديد."],
+checks:["Checks: {n}","Revisiones: {n}","Vérifications : {n}","Verifikasyon: {n}","مرات التحقق: {n}"],
+pickFirst:["Pick a card first. Then tap a spot.","Primero elige una tarjeta. Luego toca un lugar.","Choisis d'abord une carte. Ensuite, touche un endroit.","Chwazi yon kat anvan. Apre sa, touche yon kote.","اختر بطاقة أولًا. ثم المس مكانًا."],
+picked:["You picked {x}. Now tap a spot.","Elegiste {x}. Ahora toca un lugar.","Tu as choisi {x}. Maintenant, touche un endroit.","Ou chwazi {x}. Kounye a, touche yon kote.","اخترت {x}. الآن المس مكانًا."],
+placed:["{x} is in spot {n}.","{x} está en el lugar {n}.","{x} est à l'endroit {n}.","{x} nan kote {n}.","{x} في المكان {n}."],
+back:["{x} went back to the cards.","{x} volvió a las tarjetas.","{x} est revenu dans les cartes.","{x} tounen nan kat yo.","عاد {x} إلى البطاقات."],
+fillAll:["Fill every spot before you check. Empty spots: {n}.","Llena todos los lugares antes de revisar. Lugares vacíos: {n}.","Remplis tous les endroits avant de vérifier. Endroits vides : {n}.","Ranpli tout kote yo anvan ou verifye. Kote ki vid: {n}.","املأ كل الأماكن قبل التحقق. الأماكن الفارغة: {n}."],
+score8:["{c} of 8 correct.","{c} de 8 correctas.","{c} sur 8 correctes.","{c} sou 8 kòrèk.","{c} من 8 صحيحة."],
+xMarked:["Spots marked X need another look.","Los lugares con X necesitan otra mirada.","Les endroits marqués X sont à revoir.","Kote ki make X yo bezwen yon lòt gade.","الأماكن المعلَّمة بـ X تحتاج إلى نظرة أخرى."],
+inSpot:["Spot {n}","Lugar {n}","Endroit {n}","Kote {n}","المكان {n}"],
+sunlight:["Sunlight","Luz del sol","Lumière du Soleil","Limyè solèy","ضوء الشمس"],
+earth:["Earth","Tierra","Terre","Latè","الأرض"],
+moon:["Moon","Luna","Lune","Lalin","القمر"],
+sun:["Sun","Sol","Soleil","Solèy","الشمس"],
+answer:["Your answer","Tu respuesta","Ta réponse","Repons ou","إجابتك"],
+frames:["Sentence starters and word bank","Inicios de oración y banco de palabras","Débuts de phrase et banque de mots","Kòmansman fraz ak bank mo","بدايات الجمل وبنك الكلمات"],
+framesTip:["Tap one to add it in English.","Toca uno para añadirlo en inglés.","Touche-en un pour l'ajouter en anglais.","Touche youn pou ajoute l an angle.","المس واحدًا لإضافته بالإنجليزية."],
+wordBank:["Word bank","Banco de palabras","Banque de mots","Bank mo","بنك الكلمات"],
+picsHead:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+correct:["Correct.","Correcto.","Correct.","Kòrèk.","صحيح."],
+notYet:["Not yet.","Todavía no.","Pas encore.","Poko.","ليس بعد."],
+
+/* Part 1 */
+p1Head:["Part 1: Moon Phases","Parte 1: Fases de la Luna","Partie 1 : Phases de la Lune","Pati 1: Faz lalin","الجزء 1: أطوار القمر"],
+p1Steps:["The Sun always lights half of the Moon. The diagram shows the Moon from space. Pick a phase card. Then tap the spot on the orbit where people on Earth see that phase. Spot 1 is between Earth and the Sun.","El Sol siempre ilumina la mitad de la Luna. El diagrama muestra la Luna desde el espacio. Elige una tarjeta de fase. Luego toca el lugar de la órbita donde la gente en la Tierra ve esa fase. El lugar 1 está entre la Tierra y el Sol.","Le Soleil éclaire toujours la moitié de la Lune. Le schéma montre la Lune vue de l'espace. Choisis une carte de phase. Ensuite, touche l'endroit de l'orbite où les gens sur la Terre voient cette phase. L'endroit 1 est entre la Terre et le Soleil.","Solèy la toujou klere mwatye lalin nan. Dyagram nan montre lalin nan jan ou wè l nan espas. Chwazi yon kat faz. Apre sa, touche kote sou òbit la kote moun sou Latè wè faz sa a. Kote 1 an ant Latè ak Solèy la.","الشمس تضيء نصف القمر دائمًا. يُظهر الرسم القمر من الفضاء. اختر بطاقة طور. ثم المس المكان في المدار الذي يرى فيه الناس على الأرض هذا الطور. المكان 1 يقع بين الأرض والشمس."],
+p1Cards:["Phase cards: what people on Earth see","Tarjetas de fases: lo que se ve desde la Tierra","Cartes de phases : ce qu'on voit depuis la Terre","Kat faz: sa moun sou Latè wè","بطاقات الأطوار: ما يراه الناس على الأرض"],
+p1Cap:["View from above Earth's North Pole. The Moon moves counterclockwise. Not to scale.","Vista desde arriba del Polo Norte de la Tierra. La Luna se mueve en sentido contrario a las agujas del reloj. No está a escala.","Vue du dessus du pôle Nord de la Terre. La Lune tourne dans le sens inverse des aiguilles d'une montre. Pas à l'échelle.","Nou gade depi anlè Pòl Nò Latè. Lalin nan vire nan sans kontrè ak zegwi mont. Se pa bon mezi yo.","منظر من فوق القطب الشمالي للأرض. يتحرك القمر عكس اتجاه عقارب الساعة. الرسم ليس بمقياس حقيقي."],
+p1Good:["All 8 phases are correct. From New Moon to Full Moon the lit part grows (waxing). Then it shrinks (waning).","Las 8 fases están correctas. De luna nueva a luna llena, la parte iluminada crece (creciente). Luego se achica (menguante).","Les 8 phases sont correctes. De la nouvelle lune à la pleine lune, la partie éclairée grandit (croissante). Ensuite, elle diminue (décroissante).","Tout 8 faz yo kòrèk. Depi lalin nouvo rive lalin plen, pati ki klere a grandi. Apre sa, li diminye.","الأطوار الثمانية كلها صحيحة. من المحاق إلى البدر يكبر الجزء المضيء (متزايد). ثم يصغر (متناقص)."],
+hDir:["Some cards have waxing and waning switched. Follow the arrow: after New Moon the lit part grows (waxing), and the right side lights up first.","Algunas tarjetas tienen creciente y menguante al revés. Sigue la flecha: después de la luna nueva, la parte iluminada crece (creciente). Primero se ilumina el lado derecho.","Certaines cartes ont croissant et décroissant inversés. Suis la flèche : après la nouvelle lune, la partie éclairée grandit (croissante). Le côté droit s'éclaire d'abord.","Kèk kat gen 'k ap grandi' ak 'k ap diminye' chanje plas. Swiv flèch la: apre lalin nouvo, pati ki klere a grandi. Bò dwat la klere anvan.","بعض البطاقات فيها المتزايد والمتناقص مقلوبان. اتبع السهم: بعد المحاق يكبر الجزء المضيء (متزايد)، ويضيء الجانب الأيمن أولًا."],
+hShape:["Some cards mix up crescent and gibbous. Crescent: less than half looks lit. Gibbous: more than half looks lit.","Algunas tarjetas confunden la forma de hoz con la gibosa. Hoz (creciente o menguante): se ve iluminada menos de la mitad. Gibosa: más de la mitad.","Certaines cartes confondent croissant et gibbeuse. Croissant : moins de la moitié paraît éclairée. Gibbeuse : plus de la moitié paraît éclairée.","Kèk kat melanje kwasan ak jibè. Kwasan: mwens pase mwatye sanble klere. Jibè: plis pase mwatye sanble klere.","بعض البطاقات تخلط بين الهلال والأحدب. الهلال: أقل من النصف يبدو مضيئًا. الأحدب: أكثر من النصف يبدو مضيئًا."],
+hFar:["Some cards are far from their spot. Look at the Moon in that spot. The half facing the Sun is lit. How much of that lit half faces Earth?","Algunas tarjetas están lejos de su lugar. Mira la Luna en ese lugar. La mitad que mira al Sol está iluminada. ¿Cuánto de esa mitad mira hacia la Tierra?","Certaines cartes sont loin de leur endroit. Regarde la Lune à cet endroit. La moitié tournée vers le Soleil est éclairée. Quelle part de cette moitié est tournée vers la Terre ?","Kèk kat byen lwen bon kote yo. Gade lalin nan kote sa a. Mwatye ki bay sou Solèy la klere. Konbyen nan mwatye sa a ki bay sou Latè?","بعض البطاقات بعيدة عن مكانها. انظر إلى القمر في ذلك المكان. النصف المواجه للشمس مضيء. كم من هذا النصف يواجه الأرض؟"],
+p1Q:["Why does the Moon seem to change shape during a month?","¿Por qué la Luna parece cambiar de forma durante un mes?","Pourquoi la Lune semble-t-elle changer de forme pendant un mois ?","Poukisa lalin nan sanble chanje fòm pandan yon mwa?","لماذا يبدو أن القمر يتغير شكله خلال الشهر؟"],
+
+/* Part 2 */
+p2Head:["Part 2: Eclipses","Parte 2: Eclipses","Partie 2 : Éclipses","Pati 2: Eklips","الجزء 2: الكسوف والخسوف"],
+p2Steps:["An eclipse happens when a shadow falls on Earth or the Moon. 1. Choose a goal. 2. Tap Earth or the Moon, then tap Spot A or Spot B. 3. Choose how well they line up. 4. Press Check.","Un eclipse ocurre cuando una sombra cae sobre la Tierra o la Luna. 1. Elige una meta. 2. Toca la Tierra o la Luna y luego toca el Lugar A o el Lugar B. 3. Elige qué tan bien se alinean. 4. Presiona Revisar.","Une éclipse se produit quand une ombre tombe sur la Terre ou sur la Lune. 1. Choisis un objectif. 2. Touche la Terre ou la Lune, puis touche l'endroit A ou l'endroit B. 3. Choisis si elles sont bien alignées. 4. Appuie sur Vérifier.","Yon eklips rive lè yon lonbraj tonbe sou Latè oswa sou lalin nan. 1. Chwazi yon objektif. 2. Touche Latè oswa lalin nan, apre sa touche Kote A oswa Kote B. 3. Chwazi si yo byen aliyen. 4. Peze Verifye.","يحدث الكسوف أو الخسوف عندما يقع ظل على الأرض أو على القمر. 1. اختر هدفًا. 2. المس الأرض أو القمر، ثم المس المكان أ أو المكان ب. 3. اختر مدى اصطفافها. 4. اضغط تحقّق."],
+goal:["Goal","Meta","Objectif","Objektif","الهدف"],
+g0:["Total solar eclipse","Eclipse solar total","Éclipse solaire totale","Eklips solè total","كسوف كلي للشمس"],
+g1:["Partial solar eclipse","Eclipse solar parcial","Éclipse solaire partielle","Eklips solè pasyèl","كسوف جزئي للشمس"],
+g2:["Total lunar eclipse","Eclipse lunar total","Éclipse lunaire totale","Eklips lalin total","خسوف كلي للقمر"],
+g3:["Partial lunar eclipse","Eclipse lunar parcial","Éclipse lunaire partielle","Eklips lalin pasyèl","خسوف جزئي للقمر"],
+done:["Done","Hecho","Fait","Fini","تم"],
+goalsDone:["Goals done: {n} of 4","Metas hechas: {n} de 4","Objectifs faits : {n} sur 4","Objektif fini: {n} sou 4","الأهداف المنجزة: {n} من 4"],
+bodies:["Earth and Moon","La Tierra y la Luna","La Terre et la Lune","Latè ak lalin nan","الأرض والقمر"],
+spotA:["Spot A","Lugar A","Endroit A","Kote A","المكان أ"],
+spotB:["Spot B","Lugar B","Endroit B","Kote B","المكان ب"],
+picked2:["You picked {x}. Now tap Spot A or Spot B.","Elegiste {x}. Ahora toca el Lugar A o el Lugar B.","Tu as choisi {x}. Maintenant, touche l'endroit A ou l'endroit B.","Ou chwazi {x}. Kounye a, touche Kote A oswa Kote B.","اخترت {x}. الآن المس المكان أ أو المكان ب."],
+placed2:["{x} is in {s}.","{x} está en el {s}.","{x} est à l'{s}.","{x} nan {s}.","{x} في {s}."],
+pickBody:["Tap Earth or the Moon first.","Primero toca la Tierra o la Luna.","Touche d'abord la Terre ou la Lune.","Touche Latè oswa lalin nan anvan.","المس الأرض أو القمر أولًا."],
+align:["How well do they line up?","¿Qué tan bien se alinean?","Sont-elles bien alignées ?","Èske yo byen aliyen?","ما مدى اصطفافها؟"],
+alignExact:["Exactly in line","Exactamente en línea","Parfaitement alignées","Egzakteman aliyen","على خط واحد تمامًا"],
+alignSlight:["A little off the line","Un poco fuera de la línea","Un peu décalées","Yon ti kras sou kote liy lan","منحرفة قليلًا عن الخط"],
+alignFar:["Far off the line","Muy fuera de la línea","Très décalées","Byen lwen liy lan","بعيدة جدًا عن الخط"],
+p2Cap:["Side view. Sizes and distances are not to scale.","Vista de lado. Los tamaños y las distancias no están a escala.","Vue de côté. Les tailles et les distances ne sont pas à l'échelle.","Nou gade sou kote. Gwosè ak distans yo pa bon mezi.","منظر جانبي. الأحجام والمسافات ليست بمقياس حقيقي."],
+view:["View from Earth","Vista desde la Tierra","Vue depuis la Terre","Sa ou wè sou Latè","المنظر من الأرض"],
+vEmpty:["Place Earth and the Moon to see the view.","Coloca la Tierra y la Luna para ver la vista.","Place la Terre et la Lune pour voir la vue.","Mete Latè ak lalin nan pou w wè sa k ap pase.","ضع الأرض والقمر لترى المنظر."],
+vSunTotal:["The Moon covers the whole Sun. The sky goes dark in the middle of the day.","La Luna tapa todo el Sol. El cielo se oscurece en pleno día.","La Lune cache tout le Soleil. Le ciel devient sombre en plein jour.","Lalin nan kouvri tout Solèy la. Syèl la vin fè nwa nan mitan jounen.","يغطي القمر الشمس كلها. تُظلم السماء في وسط النهار."],
+vSunPartial:["The Moon covers part of the Sun. It looks like a bite is missing.","La Luna tapa parte del Sol. Parece que le falta un mordisco.","La Lune cache une partie du Soleil. On dirait qu'il manque une bouchée.","Lalin nan kouvri yon pati nan Solèy la. Li sanble yon moun mòde l.","يغطي القمر جزءًا من الشمس. يبدو كأن قطعة منها مفقودة."],
+vMoonTotal:["Earth's shadow covers the whole Moon. It turns dark red.","La sombra de la Tierra cubre toda la Luna. Se pone rojo oscuro.","L'ombre de la Terre couvre toute la Lune. Elle devient rouge foncé.","Lonbraj Latè kouvri tout lalin nan. Li vin wouj fonse.","يغطي ظل الأرض القمر كله. يصبح لونه أحمر داكنًا."],
+vMoonPartial:["Earth's shadow covers part of the Moon.","La sombra de la Tierra cubre parte de la Luna.","L'ombre de la Terre couvre une partie de la Lune.","Lonbraj Latè kouvri yon pati nan lalin nan.","يغطي ظل الأرض جزءًا من القمر."],
+vNone:["No eclipse. The shadow misses.","No hay eclipse. La sombra no toca.","Pas d'éclipse. L'ombre passe à côté.","Pa gen eklips. Lonbraj la pa tonbe sou li.","لا يوجد كسوف أو خسوف. الظل لا يصيب."],
+ecNeed:["Place both Earth and the Moon on the line first.","Primero coloca la Tierra y la Luna en la línea.","Place d'abord la Terre et la Lune sur la ligne.","Mete Latè ak lalin nan sou liy lan anvan.","ضع الأرض والقمر على الخط أولًا."],
+ecOrderSolar:["In a solar eclipse, the Moon's shadow falls on Earth. Which body must be in the middle?","En un eclipse solar, la sombra de la Luna cae sobre la Tierra. ¿Qué cuerpo debe estar en medio?","Dans une éclipse solaire, l'ombre de la Lune tombe sur la Terre. Quel astre doit être au milieu ?","Nan yon eklips solè, lonbraj lalin nan tonbe sou Latè. Ki kò ki dwe nan mitan?","في كسوف الشمس يقع ظل القمر على الأرض. أي جرم يجب أن يكون في الوسط؟"],
+ecOrderLunar:["In a lunar eclipse, Earth's shadow falls on the Moon. Which body must be in the middle?","En un eclipse lunar, la sombra de la Tierra cae sobre la Luna. ¿Qué cuerpo debe estar en medio?","Dans une éclipse lunaire, l'ombre de la Terre tombe sur la Lune. Quel astre doit être au milieu ?","Nan yon eklips lalin, lonbraj Latè tonbe sou lalin nan. Ki kò ki dwe nan mitan?","في خسوف القمر يقع ظل الأرض على القمر. أي جرم يجب أن يكون في الوسط؟"],
+ecAlignTotal:["The order is right, but only part of the shadow lands. A total eclipse needs the three bodies exactly in line.","El orden es correcto, pero solo cae parte de la sombra. Un eclipse total necesita los tres cuerpos exactamente en línea.","L'ordre est bon, mais seule une partie de l'ombre tombe. Une éclipse totale demande que les trois astres soient parfaitement alignés.","Lòd la bon, men se yon pati nan lonbraj la sèlman ki tonbe. Yon eklips total bezwen twa kò yo egzakteman aliyen.","الترتيب صحيح، لكن جزءًا من الظل فقط يقع. يحتاج الكسوف الكلي إلى أن تكون الأجرام الثلاثة على خط واحد تمامًا."],
+ecAlignPartial:["The order is right, but the whole shadow lands. A partial eclipse happens when the bodies are a little off the line.","El orden es correcto, pero cae toda la sombra. Un eclipse parcial ocurre cuando los cuerpos están un poco fuera de la línea.","L'ordre est bon, mais toute l'ombre tombe. Une éclipse partielle se produit quand les astres sont un peu décalés.","Lòd la bon, men tout lonbraj la tonbe. Yon eklips pasyèl rive lè kò yo yon ti kras sou kote liy lan.","الترتيب صحيح، لكن الظل كله يقع. يحدث الكسوف الجزئي عندما تكون الأجرام منحرفة قليلًا عن الخط."],
+ecAlignFar:["The order is right, but the shadow misses. The Moon's orbit is tilted about 5°, so most months there is no eclipse. Move them closer to the line.","El orden es correcto, pero la sombra no toca. La órbita de la Luna está inclinada unos 5°, por eso casi todos los meses no hay eclipse. Acércalos a la línea.","L'ordre est bon, mais l'ombre passe à côté. L'orbite de la Lune est inclinée d'environ 5°, donc la plupart des mois il n'y a pas d'éclipse. Rapproche-les de la ligne.","Lòd la bon, men lonbraj la pa tonbe sou li. Òbit lalin nan panche anviwon 5°, se sa k fè pifò mwa pa gen eklips. Mete yo pi pre liy lan.","الترتيب صحيح، لكن الظل لا يصيب. مدار القمر مائل بنحو 5°، لذلك لا يحدث كسوف في معظم الأشهر. قرّبها من الخط."],
+ecGood:["You made a {g}.","Hiciste un {g}.","Tu as fait une {g}.","Ou fè yon {g}.","صنعت {g}."],
+whySolar:["The Moon blocks sunlight from reaching part of Earth.","La Luna impide que la luz del sol llegue a una parte de la Tierra.","La Lune empêche la lumière du Soleil d'atteindre une partie de la Terre.","Lalin nan bloke limyè solèy la pou l pa rive sou yon pati nan Latè.","يحجب القمر ضوء الشمس عن جزء من الأرض."],
+whyLunar:["Earth blocks sunlight from reaching the Moon.","La Tierra impide que la luz del sol llegue a la Luna.","La Terre empêche la lumière du Soleil d'atteindre la Lune.","Latè bloke limyè solèy la pou l pa rive sou lalin nan.","تحجب الأرض ضوء الشمس عن القمر."],
+nextGoal:["Choose another goal.","Elige otra meta.","Choisis un autre objectif.","Chwazi yon lòt objektif.","اختر هدفًا آخر."],
+allGoals:["All 4 goals are done.","Las 4 metas están hechas.","Les 4 objectifs sont faits.","Tout 4 objektif yo fini.","أُنجزت الأهداف الأربعة."],
+mcHead:["Eclipses and Moon phases","Eclipses y fases de la Luna","Éclipses et phases de la Lune","Eklips ak faz lalin","الكسوف والخسوف وأطوار القمر"],
+q1:["1. What Moon phase must it be for a solar eclipse?","1. ¿En qué fase debe estar la Luna para un eclipse solar?","1. Dans quelle phase doit être la Lune pour une éclipse solaire ?","1. Nan ki faz lalin nan dwe ye pou gen yon eklips solè?","1. في أي طور يجب أن يكون القمر ليحدث كسوف الشمس؟"],
+q2:["2. What Moon phase must it be for a lunar eclipse?","2. ¿En qué fase debe estar la Luna para un eclipse lunar?","2. Dans quelle phase doit être la Lune pour une éclipse lunaire ?","2. Nan ki faz lalin nan dwe ye pou gen yon eklips lalin?","2. في أي طور يجب أن يكون القمر ليحدث خسوف القمر؟"],
+checkAnswers:["Check answers","Revisar respuestas","Vérifier les réponses","Verifye repons yo","تحقّق من الإجابات"],
+mcPick:["Choose an answer for both questions.","Elige una respuesta para las dos preguntas.","Choisis une réponse pour les deux questions.","Chwazi yon repons pou de kesyon yo.","اختر إجابة للسؤالين."],
+mcRight:["Question {n}: correct.","Pregunta {n}: correcta.","Question {n} : correcte.","Kesyon {n}: kòrèk.","السؤال {n}: صحيح."],
+mcWrong:["Question {n}: not yet. Look at your eclipse model. Where is the Moon? Find that spot on the Part 1 orbit.","Pregunta {n}: todavía no. Mira tu modelo del eclipse. ¿Dónde está la Luna? Busca ese lugar en la órbita de la Parte 1.","Question {n} : pas encore. Regarde ton modèle d'éclipse. Où est la Lune ? Trouve cet endroit sur l'orbite de la Partie 1.","Kesyon {n}: poko. Gade modèl eklips ou a. Ki kote lalin nan ye? Chèche kote sa a sou òbit Pati 1 an.","السؤال {n}: ليس بعد. انظر إلى نموذج الكسوف. أين القمر؟ ابحث عن هذا المكان في مدار الجزء 1."],
+p2Q:["Why don't we have a solar eclipse every month?","¿Por qué no hay un eclipse solar cada mes?","Pourquoi n'y a-t-il pas une éclipse solaire chaque mois ?","Poukisa nou pa gen yon eklips solè chak mwa?","لماذا لا يحدث كسوف للشمس كل شهر؟"],
+
+/* Part 3 */
+p3Head:["Part 3: The Solar System","Parte 3: El sistema solar","Partie 3 : Le système solaire","Pati 3: Sistèm solè a","الجزء 3: النظام الشمسي"],
+stepA:["A. Order","A. Orden","A. Ordre","A. Lòd","أ. الترتيب"],
+stepB:["B. Compare","B. Comparar","B. Comparer","B. Konpare","ب. المقارنة"],
+p3Steps:["Put the planets in order from the Sun. Pick a planet card. Then tap an orbit. Orbit 1 is closest to the Sun. Use the data table to help you.","Ordena los planetas desde el Sol. Elige una tarjeta de planeta. Luego toca una órbita. La órbita 1 es la más cercana al Sol. Usa la tabla de datos como ayuda.","Range les planètes à partir du Soleil. Choisis une carte de planète. Ensuite, touche une orbite. L'orbite 1 est la plus proche du Soleil. Aide-toi du tableau de données.","Mete planèt yo nan lòd depi Solèy la. Chwazi yon kat planèt. Apre sa, touche yon òbit. Òbit 1 se sa ki pi pre Solèy la. Sèvi ak tablo done a pou ede w.","رتّب الكواكب بدءًا من الشمس. اختر بطاقة كوكب. ثم المس مدارًا. المدار 1 هو الأقرب إلى الشمس. استعن بجدول البيانات."],
+p3Cards:["Planet cards","Tarjetas de planetas","Cartes de planètes","Kat planèt yo","بطاقات الكواكب"],
+orbitN:["Orbit {n}","Órbita {n}","Orbite {n}","Òbit {n}","المدار {n}"],
+placed3:["{x} is in orbit {n}.","{x} está en la órbita {n}.","{x} est sur l'orbite {n}.","{x} nan òbit {n}.","{x} في المدار {n}."],
+p3Cap:["Order from the Sun. Sizes and distances are not to scale.","Orden desde el Sol. Los tamaños y las distancias no están a escala.","Ordre à partir du Soleil. Tailles et distances pas à l'échelle.","Lòd depi Solèy la. Gwosè ak distans yo pa bon mezi.","الترتيب من الشمس. الأحجام والمسافات ليست بمقياس حقيقي."],
+p3Good:["All 8 planets are in the right orbit. The four inner planets are small and rocky. The four outer planets are giants. Now try B. Compare.","Los 8 planetas están en la órbita correcta. Los cuatro planetas interiores son pequeños y rocosos. Los cuatro exteriores son gigantes. Ahora prueba B. Comparar.","Les 8 planètes sont sur la bonne orbite. Les quatre planètes intérieures sont petites et rocheuses. Les quatre extérieures sont des géantes. Essaie maintenant B. Comparer.","Tout 8 planèt yo nan bon òbit yo. Kat planèt enteryè yo piti epi fèt ak wòch. Kat planèt eksteryè yo se jeyan. Kounye a, eseye B. Konpare.","الكواكب الثمانية كلها في المدار الصحيح. الكواكب الداخلية الأربعة صغيرة وصخرية. الكواكب الخارجية الأربعة عملاقة. جرّب الآن ب. المقارنة."],
+hGroup:["Some rocky inner planets are in outer orbits. Use the Distance column. A smaller number means closer to the Sun.","Algunos planetas interiores rocosos están en órbitas exteriores. Usa la columna Distancia. Un número más pequeño significa más cerca del Sol.","Des planètes intérieures rocheuses sont sur des orbites extérieures. Utilise la colonne Distance. Un plus petit nombre veut dire plus près du Soleil.","Kèk planèt enteryè ki fèt ak wòch nan òbit eksteryè. Sèvi ak kolòn Distans lan. Yon pi piti nimewo vle di pi pre Solèy la.","بعض الكواكب الداخلية الصخرية في مدارات خارجية. استخدم عمود المسافة. الرقم الأصغر يعني أقرب إلى الشمس."],
+hOrder:["The inner and outer groups are right, but some planets are out of order inside a group. Use the Distance column.","Los grupos interior y exterior están bien, pero algunos planetas están fuera de orden dentro de un grupo. Usa la columna Distancia.","Les groupes intérieur et extérieur sont bons, mais certaines planètes ne sont pas dans l'ordre dans un groupe. Utilise la colonne Distance.","Gwoup enteryè ak eksteryè yo bon, men kèk planèt pa nan lòd nan yon gwoup. Sèvi ak kolòn Distans lan.","المجموعتان الداخلية والخارجية صحيحتان، لكن بعض الكواكب ليست بالترتيب داخل مجموعة. استخدم عمود المسافة."],
+p3bSteps:["Inner planets: Mercury, Venus, Earth, Mars. Outer planets: Jupiter, Saturn, Uranus, Neptune. Use the data table. Choose one answer in each box.","Planetas interiores: Mercurio, Venus, Tierra, Marte. Planetas exteriores: Júpiter, Saturno, Urano, Neptuno. Usa la tabla de datos. Elige una respuesta en cada casilla.","Planètes intérieures : Mercure, Vénus, Terre, Mars. Planètes extérieures : Jupiter, Saturne, Uranus, Neptune. Utilise le tableau de données. Choisis une réponse dans chaque case.","Planèt enteryè: Mèki, Venis, Latè, Mas. Planèt eksteryè: Jipitè, Satin, Iranis, Neptin. Sèvi ak tablo done a. Chwazi yon repons nan chak bwat.","الكواكب الداخلية: عطارد، الزهرة، الأرض، المريخ. الكواكب الخارجية: المشتري، زحل، أورانوس، نبتون. استخدم جدول البيانات. اختر إجابة واحدة في كل خانة."],
+inner:["Inner planets","Planetas interiores","Planètes intérieures","Planèt enteryè","الكواكب الداخلية"],
+outer:["Outer planets","Planetas exteriores","Planètes extérieures","Planèt eksteryè","الكواكب الخارجية"],
+choose:["Choose…","Elige…","Choisis…","Chwazi…","اختر…"],
+rSize:["Size","Tamaño","Taille","Gwosè","الحجم"],
+rMade:["Made mostly of","Hechos principalmente de","Faites surtout de","Fèt sitou ak","تتكون أساسًا من"],
+rYear:["Year (one orbit around the Sun)","Año (una vuelta alrededor del Sol)","Année (un tour autour du Soleil)","Ane (yon vire konplè toutotou Solèy la)","السنة (دورة واحدة حول الشمس)"],
+rDay:["Day (one spin)","Día (un giro sobre sí mismo)","Jour (un tour sur elle-même)","Jou (yon vire sou tèt li)","اليوم (دورة واحدة حول نفسه)"],
+rMoons:["Moons","Lunas","Lunes","Lalin","الأقمار"],
+cSmall:["Smaller","Más pequeños","Plus petites","Pi piti","أصغر"],
+cLarge:["Larger","Más grandes","Plus grandes","Pi gwo","أكبر"],
+cRock:["Rock and metal","Roca y metal","Roche et métal","Wòch ak metal","صخور ومعادن"],
+cGas:["Gas and ice","Gas y hielo","Gaz et glace","Gaz ak glas","غاز وجليد"],
+cShortY:["Shorter year","Año más corto","Année plus courte","Ane pi kout","سنة أقصر"],
+cLongY:["Longer year","Año más largo","Année plus longue","Ane pi long","سنة أطول"],
+cShortD:["Shorter day","Día más corto","Jour plus court","Jou pi kout","يوم أقصر"],
+cLongD:["Longer day","Día más largo","Jour plus long","Jou pi long","يوم أطول"],
+cFew:["Few or none","Pocas o ninguna","Peu ou aucune","Kèk oswa okenn","قليلة أو لا شيء"],
+cMany:["Many","Muchas","Beaucoup","Anpil","كثيرة"],
+cmpFill:["Choose an answer in every box. Empty boxes: {n}.","Elige una respuesta en cada casilla. Casillas vacías: {n}.","Choisis une réponse dans chaque case. Cases vides : {n}.","Chwazi yon repons nan chak bwat. Bwat ki vid: {n}.","اختر إجابة في كل خانة. الخانات الفارغة: {n}."],
+score10:["{c} of 10 correct.","{c} de 10 correctas.","{c} sur 10 correctes.","{c} sou 10 kòrèk.","{c} من 10 صحيحة."],
+cmpGood:["All 10 are correct. Inner planets are small rocky worlds with short years. Outer planets are giants with long years, short days and many moons.","Las 10 están correctas. Los planetas interiores son mundos pequeños y rocosos con años cortos. Los exteriores son gigantes con años largos, días cortos y muchas lunas.","Les 10 sont correctes. Les planètes intérieures sont petites et rocheuses, avec des années courtes. Les extérieures sont des géantes avec des années longues, des jours courts et beaucoup de lunes.","Tout 10 yo kòrèk. Planèt enteryè yo piti, fèt ak wòch, epi yo gen ane kout. Planèt eksteryè yo se jeyan ki gen ane long, jou kout ak anpil lalin.","الإجابات العشر كلها صحيحة. الكواكب الداخلية صغيرة وصخرية وسنواتها قصيرة. الكواكب الخارجية عملاقة، سنواتها طويلة وأيامها قصيرة وأقمارها كثيرة."],
+hSize:["Size: compare the Diameter column.","Tamaño: compara la columna Diámetro.","Taille : compare la colonne Diamètre.","Gwosè: konpare kolòn Dyamèt la.","الحجم: قارن عمود القطر."],
+hMade:["Made of: read the \"Made mostly of\" column.","Material: lee la columna \"Hechos principalmente de\".","Matière : lis la colonne « Faites surtout de ».","Sa yo fèt ak: li kolòn \"Fèt sitou ak\" la.","المكوّنات: اقرأ عمود «تتكون أساسًا من»."],
+hYear:["Year: read the Year column. Watch the units: 1 year = 365 days.","Año: lee la columna Año. Fíjate en las unidades: 1 año = 365 días.","Année : lis la colonne Année. Attention aux unités : 1 an = 365 jours.","Ane: li kolòn Ane a. Fè atansyon ak inite yo: 1 ane = 365 jou.","السنة: اقرأ عمود السنة. انتبه للوحدات: سنة واحدة = 365 يومًا."],
+hDay:["Day: read the Day column. Watch the units: 10 hours is shorter than 24 hours, and 59 days is much longer.","Día: lee la columna Día. Fíjate en las unidades: 10 horas es menos que 24 horas, y 59 días es mucho más.","Jour : lis la colonne Jour. Attention aux unités : 10 heures, c'est moins que 24 heures, et 59 jours, c'est beaucoup plus.","Jou: li kolòn Jou a. Fè atansyon ak inite yo: 10 èdtan pi kout pase 24 èdtan, e 59 jou pi long anpil.","اليوم: اقرأ عمود اليوم. انتبه للوحدات: 10 ساعات أقصر من 24 ساعة، و59 يومًا أطول بكثير."],
+hMoons:["Moons: read the Moons column.","Lunas: lee la columna Lunas.","Lunes : lis la colonne Lunes.","Lalin: li kolòn Lalin yo.","الأقمار: اقرأ عمود الأقمار."],
+dataHead:["Planet data","Datos de los planetas","Données des planètes","Done sou planèt yo","بيانات الكواكب"],
+dPlanet:["Planet","Planeta","Planète","Planèt","الكوكب"],
+dDist:["Distance from Sun (AU)","Distancia al Sol (UA)","Distance au Soleil (UA)","Distans ak Solèy (UA)","البعد عن الشمس (و.ف.)"],
+dDiam:["Diameter (km)","Diámetro (km)","Diamètre (km)","Dyamèt (km)","القطر (كم)"],
+dYear:["Year","Año","Année","Ane","السنة"],
+dDay:["Day","Día","Jour","Jou","اليوم"],
+dMoons:["Moons","Lunas","Lunes","Lalin","الأقمار"],
+dMade:["Made mostly of","Hechos principalmente de","Faites surtout de","Fèt sitou ak","تتكون أساسًا من"],
+auNote:["1 AU = the distance from Earth to the Sun (about 150 million km). Planets are listed A to Z.","1 UA = la distancia de la Tierra al Sol (unos 150 millones de km). Los planetas están en orden alfabético.","1 UA = la distance de la Terre au Soleil (environ 150 millions de km). Les planètes sont en ordre alphabétique.","1 UA = distans ant Latè ak Solèy la (anviwon 150 milyon km). Planèt yo nan lòd alfabetik.","1 و.ف. = المسافة بين الأرض والشمس (نحو 150 مليون كم). الكواكب مرتبة أبجديًا بالإنجليزية."],
+uDays:["days","días","jours","jou","يومًا"],
+uHours:["hours","horas","heures","èdtan","ساعة"],
+uYears:["years","años","ans","ane","سنة"],
+mRock:["rock and metal","roca y metal","roche et métal","wòch ak metal","صخور ومعادن"],
+mGas:["gas","gas","gaz","gaz","غاز"],
+mIce:["ice and gas","hielo y gas","glace et gaz","glas ak gaz","جليد وغاز"],
+many:["many","muchas","beaucoup","anpil","كثيرة"],
+p3Q:["Why does Neptune take longer than Earth to orbit the Sun?","¿Por qué Neptuno tarda más que la Tierra en dar la vuelta al Sol?","Pourquoi Neptune met-elle plus de temps que la Terre à faire le tour du Soleil ?","Poukisa Neptin pran plis tan pase Latè pou l fè yon vire toutotou Solèy la?","لماذا يستغرق نبتون وقتًا أطول من الأرض ليدور حول الشمس؟"],
+
+/* Part 4 */
+p4Head:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+p4Steps:["Type your name and class hour. Download the PDF or copy your results. Then turn it in on Google Classroom.","Escribe tu nombre y tu hora de clase. Descarga el PDF o copia tus resultados. Luego entrégalo en Google Classroom.","Écris ton nom et ton heure de cours. Télécharge le PDF ou copie tes résultats. Ensuite, remets-le sur Google Classroom.","Ekri non w ak lè klas ou. Telechaje PDF la oswa kopye rezilta ou yo. Apre sa, remèt li sou Google Classroom.","اكتب اسمك وحصة الصف. نزّل ملف PDF أو انسخ نتائجك. ثم سلّمه على Google Classroom."],
+name:["Your name","Tu nombre","Ton nom","Non ou","اسمك"],
+hour:["Class hour","Hora de clase","Heure de cours","Lè klas","حصة الصف"],
+pdf:["Download PDF","Descargar PDF","Télécharger le PDF","Telechaje PDF","تنزيل PDF"],
+copy:["Copy results as text","Copiar resultados como texto","Copier les résultats en texte","Kopye rezilta yo an tèks","نسخ النتائج كنص"],
+copied:["Copied. Paste it into Google Classroom.","Copiado. Pégalo en Google Classroom.","Copié. Colle-le dans Google Classroom.","Kopye. Kole l nan Google Classroom.","تم النسخ. الصقه في Google Classroom."],
+copyFail:["Copy did not work. The text is selected. Press Ctrl+C to copy it.","No se pudo copiar. El texto está seleccionado. Presiona Ctrl+C para copiarlo.","La copie n'a pas marché. Le texte est sélectionné. Appuie sur Ctrl+C pour le copier.","Kopi a pa mache. Tèks la chwazi. Peze Ctrl+C pou kopye l.","لم ينجح النسخ. النص محدد. اضغط Ctrl+C لنسخه."],
+needName:["Type your name first.","Primero escribe tu nombre.","Écris d'abord ton nom.","Ekri non w anvan.","اكتب اسمك أولًا."],
+pdfSaved:["PDF saved. Upload it to Google Classroom.","PDF guardado. Súbelo a Google Classroom.","PDF enregistré. Dépose-le sur Google Classroom.","PDF la anrejistre. Mete l sou Google Classroom.","تم حفظ ملف PDF. ارفعه إلى Google Classroom."],
+pdfFail:["The PDF did not download here. Use Copy results as text instead.","El PDF no se descargó aquí. Usa Copiar resultados como texto.","Le PDF ne s'est pas téléchargé ici. Utilise Copier les résultats en texte.","PDF la pa telechaje isit la. Sèvi ak Kopye rezilta yo an tèks.","لم يُنزَّل ملف PDF هنا. استخدم نسخ النتائج كنص."],
+pdfArabic:["Some answers use letters the PDF can't show. Use Copy results as text.","Algunas respuestas usan letras que el PDF no puede mostrar. Usa Copiar resultados como texto.","Certaines réponses utilisent des lettres que le PDF ne peut pas afficher. Utilise Copier les résultats en texte.","Kèk repons gen lèt PDF la pa ka montre. Sèvi ak Kopye rezilta yo an tèks.","بعض الإجابات تستخدم حروفًا لا يعرضها ملف PDF. استخدم نسخ النتائج كنص."],
+preview:["Your results (in English)","Tus resultados (en inglés)","Tes résultats (en anglais)","Rezilta ou (an angle)","نتائجك (بالإنجليزية)"],
+sumP1:["Moon phases","Fases de la Luna","Phases de la Lune","Faz lalin","أطوار القمر"],
+sumP2:["Eclipse goals","Metas de eclipses","Objectifs d'éclipses","Objektif eklips","أهداف الكسوف والخسوف"],
+sumP2q:["Phase questions","Preguntas de fases","Questions sur les phases","Kesyon sou faz yo","أسئلة الأطوار"],
+sumP3a:["Planet order","Orden de los planetas","Ordre des planètes","Lòd planèt yo","ترتيب الكواكب"],
+sumP3b:["Inner vs. outer","Interiores vs. exteriores","Intérieures ou extérieures","Enteryè ak eksteryè","الداخلية والخارجية"],
+sumAns:["Written answers","Respuestas escritas","Réponses écrites","Repons ekri","الإجابات المكتوبة"],
+credit:["Planet data: NASA Planetary Fact Sheet (rounded). Translations were written by Claude and need review by a native speaker.","Datos de los planetas: NASA (redondeados). Las traducciones las escribió Claude y necesitan revisión.","Données des planètes : NASA (arrondies). Les traductions ont été écrites par Claude et doivent être vérifiées.","Done planèt yo: NASA (awondi). Se Claude ki ekri tradiksyon yo, yo bezwen verifikasyon.","بيانات الكواكب: ناسا (مقرَّبة). كتب Claude الترجمات وتحتاج إلى مراجعة."]
+};
+
+/* Phase names, index 0 = New Moon, going counterclockwise */
+const PH=[
+["New Moon","Luna nueva","Nouvelle lune","Lalin nouvo","المحاق"],
+["Waxing Crescent","Luna creciente","Premier croissant","Kwasan k ap grandi","الهلال المتزايد"],
+["First Quarter","Cuarto creciente","Premier quartier","Premye katye","التربيع الأول"],
+["Waxing Gibbous","Gibosa creciente","Gibbeuse croissante","Jibè k ap grandi","الأحدب المتزايد"],
+["Full Moon","Luna llena","Pleine lune","Lalin plen","البدر"],
+["Waning Gibbous","Gibosa menguante","Gibbeuse décroissante","Jibè k ap diminye","الأحدب المتناقص"],
+["Last Quarter","Cuarto menguante","Dernier quartier","Dènye katye","التربيع الأخير"],
+["Waning Crescent","Luna menguante","Dernier croissant","Kwasan k ap diminye","الهلال المتناقص"]
+];
+PH.forEach((a,i)=>UI['ph'+i]=a);
+
+/* Planets in order from the Sun. Data rounded from NASA Planetary Fact Sheet. */
+const PL=[
+{id:'mer',n:["Mercury","Mercurio","Mercure","Mèki","عطارد"],au:"0.39",km:"4,879",yr:[88,'uDays'],dy:[59,'uDays'],moons:"0",m:'mRock',r:7},
+{id:'ven',n:["Venus","Venus","Vénus","Venis","الزهرة"],au:"0.72",km:"12,104",yr:[225,'uDays'],dy:[243,'uDays'],moons:"0",m:'mRock',r:10},
+{id:'ear',n:["Earth","Tierra","Terre","Latè","الأرض"],au:"1.00",km:"12,756",yr:[365,'uDays'],dy:[24,'uHours'],moons:"1",m:'mRock',r:10},
+{id:'mar',n:["Mars","Marte","Mars","Mas","المريخ"],au:"1.52",km:"6,792",yr:[687,'uDays'],dy:[24.6,'uHours'],moons:"2",m:'mRock',r:8},
+{id:'jup',n:["Jupiter","Júpiter","Jupiter","Jipitè","المشتري"],au:"5.20",km:"142,984",yr:[11.9,'uYears'],dy:[9.9,'uHours'],moons:"many",m:'mGas',r:19},
+{id:'sat',n:["Saturn","Saturno","Saturne","Satin","زحل"],au:"9.54",km:"120,536",yr:[29.5,'uYears'],dy:[10.7,'uHours'],moons:"many",m:'mGas',r:16},
+{id:'ura',n:["Uranus","Urano","Uranus","Iranis","أورانوس"],au:"19.2",km:"51,118",yr:[84,'uYears'],dy:[17.2,'uHours'],moons:"many",m:'mIce',r:13},
+{id:'nep',n:["Neptune","Neptuno","Neptune","Neptin","نبتون"],au:"30.1",km:"49,528",yr:[165,'uYears'],dy:[16.1,'uHours'],moons:"many",m:'mIce',r:13}
+];
+PL.forEach((p,i)=>UI['pl'+i]=p.n);
+
+/* Compare rows: [row label key, choice A, choice B, inner answer, outer answer, hint key] */
+const CMP=[
+['rSize','cSmall','cLarge','cSmall','cLarge','hSize'],
+['rMade','cRock','cGas','cRock','cGas','hMade'],
+['rYear','cShortY','cLongY','cShortY','cLongY','hYear'],
+['rDay','cShortD','cLongD','cLongD','cShortD','hDay'],
+['rMoons','cFew','cMany','cFew','cMany','hMoons']
+];
+
+/* Sentence frames: [English, es, fr, ht, ar] */
+const FRAMES={
+p1:[
+["The Sun always lights half of the Moon.","El Sol siempre ilumina la mitad de la Luna.","Le Soleil éclaire toujours la moitié de la Lune.","Solèy la toujou klere mwatye lalin nan.","الشمس تضيء دائمًا نصف القمر."],
+["As the Moon orbits Earth, we see ___ of the lit half.","Mientras la Luna gira alrededor de la Tierra, vemos ___ de la mitad iluminada.","Pendant que la Lune tourne autour de la Terre, nous voyons ___ de la moitié éclairée.","Pandan lalin nan ap vire toutotou Latè, nou wè ___ nan mwatye ki klere a.","بينما يدور القمر حول الأرض، نرى ___ من النصف المضيء."],
+["The shape changes because ___.","La forma cambia porque ___.","La forme change parce que ___.","Fòm nan chanje paske ___.","يتغير الشكل لأن ___."]
+],
+p2:[
+["The Moon's orbit is tilted, so ___.","La órbita de la Luna está inclinada, así que ___.","L'orbite de la Lune est inclinée, donc ___.","Òbit lalin nan panche, kidonk ___.","مدار القمر مائل، لذلك ___."],
+["Most months, the Moon's shadow ___.","Casi todos los meses, la sombra de la Luna ___.","La plupart des mois, l'ombre de la Lune ___.","Pifò mwa, lonbraj lalin nan ___.","في معظم الأشهر، ظل القمر ___."],
+["A solar eclipse only happens when ___.","Un eclipse solar solo ocurre cuando ___.","Une éclipse solaire se produit seulement quand ___.","Yon eklips solè rive sèlman lè ___.","يحدث كسوف الشمس فقط عندما ___."]
+],
+p3:[
+["Neptune is ___ from the Sun than Earth.","Neptuno está ___ del Sol que la Tierra.","Neptune est ___ du Soleil que la Terre.","Neptin ___ Solèy la pase Latè.","نبتون ___ عن الشمس من الأرض."],
+["A planet that is farther away has a ___ orbit.","Un planeta más lejano tiene una órbita ___.","Une planète plus éloignée a une orbite ___.","Yon planèt ki pi lwen gen yon òbit ki ___.","الكوكب الأبعد له مدار ___."],
+["So Neptune's year is ___.","Por eso, el año de Neptuno es ___.","Donc, l'année de Neptune est ___.","Kidonk, ane Neptin nan ___.","لذلك فإن سنة نبتون ___."]
+]};
+const WORDS={
+p1:[["orbit","órbita","orbite","òbit","مدار"],["lit half","mitad iluminada","moitié éclairée","mwatye ki klere","النصف المضيء"],["more","más","plus","plis","أكثر"],["less","menos","moins","mwens","أقل"],["faces","mira hacia","est tourné vers","bay sou","يواجه"],["position","posición","position","pozisyon","موقع"]],
+p2:[["tilted","inclinada","inclinée","panche","مائل"],["shadow","sombra","ombre","lonbraj","ظل"],["line up","alinearse","s'aligner","aliyen","تصطف"],["misses Earth","no toca la Tierra","passe à côté de la Terre","pa tonbe sou Latè","لا يصيب الأرض"],["New Moon","luna nueva","nouvelle lune","lalin nouvo","المحاق"]],
+p3:[["farther","más lejos","plus loin","pi lwen","أبعد"],["bigger","más grande","plus grande","pi gwo","أكبر"],["longer","más largo","plus longue","pi long","أطول"],["distance","distancia","distance","distans","المسافة"],["revolution","revolución","révolution","revolisyon","الدوران حول الشمس"]]
+};
+
+/* ---------- GLOSSARY (word pictures) ----------  each language: [word, definition] */
+const GL={
+orbit:{en:["orbit","The path an object takes around another object."],es:["órbita","El camino que sigue un objeto alrededor de otro."],fr:["orbite","Le chemin qu'un objet suit autour d'un autre objet."],ht:["òbit","Chemen yon objè fè toutotou yon lòt objè."],ar:["مدار","المسار الذي يسلكه جسم حول جسم آخر."]},
+rotation:{en:["rotation","Spinning on an axis. One rotation is one day."],es:["rotación","Girar sobre un eje. Una rotación es un día."],fr:["rotation","Tourner sur un axe. Une rotation, c'est un jour."],ht:["wotasyon","Vire sou yon aks. Yon wotasyon se yon jou."],ar:["الدوران المحوري","الدوران حول محور. دورة واحدة تساوي يومًا."]},
+revolution:{en:["revolution","Moving once around the Sun. One revolution is one year."],es:["revolución","Dar una vuelta alrededor del Sol. Una revolución es un año."],fr:["révolution","Faire un tour autour du Soleil. Une révolution, c'est une année."],ht:["revolisyon","Fè yon vire toutotou Solèy la. Yon revolisyon se yon ane."],ar:["الدوران المداري","الدوران مرة واحدة حول الشمس. دورة واحدة تساوي سنة."]},
+phase:{en:["phase","The shape of the lit part of the Moon that we see from Earth."],es:["fase","La forma de la parte iluminada de la Luna que vemos desde la Tierra."],fr:["phase","La forme de la partie éclairée de la Lune qu'on voit depuis la Terre."],ht:["faz","Fòm pati lalin nan ki klere, jan nou wè l sou Latè."],ar:["طور","شكل الجزء المضيء من القمر الذي نراه من الأرض."]},
+waxing:{en:["waxing","Growing. The lit part we see gets bigger each night."],es:["creciente","Que crece. La parte iluminada que vemos es más grande cada noche."],fr:["croissant(e)","Qui grandit. La partie éclairée qu'on voit grossit chaque nuit."],ht:["k ap grandi","Pati ki klere nou wè a vin pi gwo chak swa."],ar:["متزايد","يكبر. الجزء المضيء الذي نراه يكبر كل ليلة."]},
+waning:{en:["waning","Shrinking. The lit part we see gets smaller each night."],es:["menguante","Que disminuye. La parte iluminada que vemos es más pequeña cada noche."],fr:["décroissant(e)","Qui diminue. La partie éclairée qu'on voit rapetisse chaque nuit."],ht:["k ap diminye","Pati ki klere nou wè a vin pi piti chak swa."],ar:["متناقص","يصغر. الجزء المضيء الذي نراه يصغر كل ليلة."]},
+crescent:{en:["crescent","Less than half of the Moon looks lit."],es:["hoz (creciente o menguante)","Se ve iluminada menos de la mitad de la Luna."],fr:["croissant","Moins de la moitié de la Lune paraît éclairée."],ht:["kwasan","Mwens pase mwatye lalin nan sanble klere."],ar:["هلال","أقل من نصف القمر يبدو مضيئًا."]},
+gibbous:{en:["gibbous","More than half of the Moon looks lit."],es:["gibosa","Se ve iluminada más de la mitad de la Luna."],fr:["gibbeuse","Plus de la moitié de la Lune paraît éclairée."],ht:["jibè","Plis pase mwatye lalin nan sanble klere."],ar:["أحدب","أكثر من نصف القمر يبدو مضيئًا."]},
+solarEcl:{en:["solar eclipse","The Moon blocks the Sun. The Moon's shadow falls on Earth."],es:["eclipse solar","La Luna tapa el Sol. La sombra de la Luna cae sobre la Tierra."],fr:["éclipse solaire","La Lune cache le Soleil. L'ombre de la Lune tombe sur la Terre."],ht:["eklips solè","Lalin nan kache Solèy la. Lonbraj lalin nan tonbe sou Latè."],ar:["كسوف الشمس","يحجب القمر الشمس. يقع ظل القمر على الأرض."]},
+lunarEcl:{en:["lunar eclipse","Earth blocks sunlight. Earth's shadow falls on the Moon."],es:["eclipse lunar","La Tierra tapa la luz del sol. La sombra de la Tierra cae sobre la Luna."],fr:["éclipse lunaire","La Terre bloque la lumière du Soleil. L'ombre de la Terre tombe sur la Lune."],ht:["eklips lalin","Latè bloke limyè solèy la. Lonbraj Latè tonbe sou lalin nan."],ar:["خسوف القمر","تحجب الأرض ضوء الشمس. يقع ظل الأرض على القمر."]},
+shadow:{en:["shadow","A dark area where light is blocked."],es:["sombra","Una zona oscura donde la luz está bloqueada."],fr:["ombre","Une zone sombre où la lumière est bloquée."],ht:["lonbraj","Yon kote ki fè nwa paske limyè a bloke."],ar:["ظل","منطقة مظلمة لأن الضوء محجوب."]},
+innerP:{en:["inner planet","Small, rocky planets close to the Sun."],es:["planeta interior","Planetas pequeños y rocosos cerca del Sol."],fr:["planète intérieure","Petites planètes rocheuses près du Soleil."],ht:["planèt enteryè","Ti planèt ki fèt ak wòch, ki pre Solèy la."],ar:["كوكب داخلي","كواكب صغيرة صخرية قريبة من الشمس."]},
+outerP:{en:["outer planet","Giant planets of gas and ice, far from the Sun."],es:["planeta exterior","Planetas gigantes de gas y hielo, lejos del Sol."],fr:["planète extérieure","Planètes géantes de gaz et de glace, loin du Soleil."],ht:["planèt eksteryè","Gwo planèt ki fèt ak gaz ak glas, lwen Solèy la."],ar:["كوكب خارجي","كواكب عملاقة من الغاز والجليد، بعيدة عن الشمس."]}
+};
+const VOCAB={phases:['phase','orbit','waxing','waning','crescent','gibbous'],ecl:['solarEcl','lunarEcl','shadow','orbit'],solar:['innerP','outerP','revolution','rotation','orbit']};
+</script>
+<script>
+/* ---------- HELPERS ---------- */
+const LI=l=>Math.max(0,LANGS.indexOf(l));
+function raw(k,l){const e=UI[k];if(e==null)return k;if(typeof e==='string')return e;return e[LI(l)]!=null?e[LI(l)]:e[0];}
+function U(k,vars,l){l=l||S.lang;let s=raw(k,l);if(vars)s=s.replace(/\{(\w+)\}/g,(m,n)=>{const v=vars[n];if(v==null)return m;if(typeof v==='object'&&v.k)return raw(v.k,l);return v;});return s;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function ltr(s){return s.replace(/(\d[\d.,]*\s?(?:°|km|AU|UA)?)/g,'<bdi dir="ltr">$1</bdi>');}
+function l2span(t){if(S.lang==='en')return '';const ar=S.lang==='ar';return `<span class="l2" lang="${S.lang}"${ar?' dir="rtl"':''}>${ar?ltr(esc(t)):esc(t)}</span>`;}
+function B(k,vars){return `<span class="en">${esc(U(k,vars,'en'))}</span>`+l2span(U(k,vars,S.lang));}
+function BI(k,vars){return `<span class="inl">${B(k,vars)}</span>`;}
+function BA(a){return `<span class="en">${esc(a[0])}</span>`+l2span(a[LI(S.lang)]||a[0]);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const range8=[0,1,2,3,4,5,6,7];
+
+/* ---------- READ-ALOUD ---------- */
+const SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+let SAY=new Map(),sid=0;
+function sayBtn(fn){const id='say'+(++sid);SAY.set(id,fn);const lab=esc(U('say',null,'en'));return `<button type="button" class="say" id="${id}" data-say="${id}" aria-label="${lab}" title="${lab}">${SPK}</button>`;}
+function sayK(k,vars){return sayBtn(()=>[U(k,vars,'en'),U(k,vars,S.lang)]);}
+function txt(k,vars,tag){tag=tag||'p';return `<div class="txt"><${tag} class="steps" style="margin:0">${B(k,vars)}</${tag}>${sayK(k,vars)}</div>`;}
+function voiceFor(l){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices();const c=VOICE[l];const m=vs.filter(v=>v.lang&&v.lang.replace('_','-').toLowerCase().startsWith(c));if(l==='en')return m.find(v=>/en-us/i.test(v.lang.replace('_','-')))||m[0]||null;return m[0]||null;}
+function clean(t){return String(t).replace(/_{2,}/g,', blank, ');}
+function speak(en,l2){
+  if(!('speechSynthesis' in window)){toast(U('noSpeech'));return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(clean(en));u.lang='en-US';const ve=voiceFor('en');if(ve)u.voice=ve;u.rate=.95;speechSynthesis.speak(u);
+  if(S.lang!=='en'&&l2){const v=voiceFor(S.lang);if(v){const u2=new SpeechSynthesisUtterance(clean(l2));u2.lang=v.lang;u2.voice=v;u2.rate=.95;speechSynthesis.speak(u2);}else{toast(U('noVoice'));}}
+}
+let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4200);}
+function announce(m){const l=document.getElementById('live');l.textContent='';setTimeout(()=>l.textContent=m,30);}
+
+/* ---------- STATE ---------- */
+const KEY='astronomy-lab-v1';
+function fresh(){return{v:1,lang:'en',tab:'phases',pics:false,
+  ph:{order:shuffle(range8),place:Array(8).fill(null),checks:0,marks:null},
+  ec:{goal:0,slots:{A:null,B:null},align:'exact',done:[false,false,false,false],checks:0,q:[null,null],qMarks:null,qChecks:0},
+  so:{sub:'A',order:shuffle(range8),place:Array(8).fill(null),checks:0,marks:null,cmp:{inner:Array(5).fill(null),outer:Array(5).fill(null)},cmpChecks:0,cmpMarks:null},
+  ans:{p1:'',p2:'',p3:''},name:'',hour:'',fb:{}};}
+let S=fresh();
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&d.v===1){const f=fresh();S=Object.assign(f,d);['ph','ec','so','ans'].forEach(k=>S[k]=Object.assign(f[k],d[k]||{}));}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let sel=null;            // {kind:'ph'|'pl'|'body', id}
+let clearArm=null,clearT=null;
+const openDet=new Set();
+function setFb(part,type,parts){S.fb[part]={type,parts};announce(parts.map(([k,v])=>U(k,v,'en')).join(' '));}
+
+/* ---------- DRAWINGS ---------- */
+function phaseInner(i){
+  let lit='';
+  if(i===4)lit='<circle cx="15" cy="15" r="13" class="f-lit"/>';
+  else if(i!==0){const rx=Math.max(.01,Math.abs(Math.cos(i*Math.PI/4))*13);const right=i<4;const cres=(i===1||i===7);
+    const outer=right?'M15 2 A13 13 0 0 1 15 28':'M15 2 A13 13 0 0 0 15 28';
+    const sw=right?(cres?0:1):(cres?1:0);
+    lit=`<path class="f-lit" d="${outer} A${rx.toFixed(2)} 13 0 0 ${sw} 15 2 Z"/>`;}
+  return `<circle cx="15" cy="15" r="13" class="f-dark"/>${lit}<circle cx="15" cy="15" r="13" fill="none" class="s-line"/>`;
+}
+function phaseSVG(i,s){s=s||28;return `<svg width="${s}" height="${s}" viewBox="0 0 30 30" aria-hidden="true">${phaseInner(i)}</svg>`;}
+function earthG(cx,cy,r,night){const k=r/30;return `<g transform="translate(${cx} ${cy}) scale(${k})"><circle r="30" class="f-earth"/><path class="f-land" d="M-18-14c6-6 16-6 18 0s-6 8-2 14-8 10-12 4-10-12-4-18z M8 6c6-2 14 0 14 6s-8 10-12 8-6-12-2-14z M4-26c6 0 10 4 6 6s-10-2-6-6z"/>${night?'<path class="f-night" d="M0-30A30 30 0 0 0 0 30Z"/>':''}</g>`;}
+function planetG(i,cx,cy,r){const p=PL[i];if(p.id==='ear')return earthG(cx,cy,r,false);
+  let extra='';if(p.id==='sat')extra=`<ellipse cx="${cx}" cy="${cy}" rx="${r*1.8}" ry="${r*.45}" fill="none" class="ps-sat" stroke-width="${Math.max(1.5,r*.18)}" transform="rotate(-18 ${cx} ${cy})"/>`;
+  if(p.id==='jup')extra=`<path d="M${cx-r*.92} ${cy-r*.3}H${cx+r*.92}M${cx-r*.95} ${cy+r*.25}H${cx+r*.95}" class="ps-band" stroke-width="${r*.14}"/>`;
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" class="pf-${p.id}"/>${extra}`;}
+function planetSVG(i,s){s=s||30;const r=Math.min(13,PL[i].r*.62+3);const w=PL[i].id==='sat'?s*1.5:s;return `<svg width="${w}" height="${s}" viewBox="${PL[i].id==='sat'?-7.5:0} 0 ${PL[i].id==='sat'?45:30} 30" aria-hidden="true">${planetG(i,15,15,r)}</svg>`;}
+function stars(w,h,n,seed){let x=seed||7,o='';const rnd=()=>{x=(x*9301+49297)%233280;return x/233280;};for(let i=0;i<n;i++)o+=`<circle cx="${(rnd()*w).toFixed(1)}" cy="${(rnd()*h).toFixed(1)}" r="${(rnd()*1.2+.4).toFixed(2)}" class="f-lit" opacity="${(rnd()*.5+.25).toFixed(2)}"/>`;return o;}
+
+/* vocab icons (56x56, drawn on the dark space tile) */
+function mini(i,x,y,s){return `<g transform="translate(${x} ${y}) scale(${s/30})">${phaseInner(i)}</g>`;}
+function vIcon(k){let g='';
+  switch(k){
+  case 'orbit':g=`<ellipse cx="28" cy="28" rx="22" ry="13" fill="none" class="s-muted" stroke-dasharray="3 3"/><circle cx="28" cy="28" r="6" class="f-sun"/><circle cx="50" cy="28" r="4" class="f-earth"/>`;break;
+  case 'rotation':g=`${earthG(28,28,13,true)}<path d="M28 6V50" class="s-ink" stroke-width="1.5"/><path d="M10 34a18 7 0 0 0 36 0" fill="none" class="s-acc" stroke-width="2"/><path d="M46 34l-5-1 3 5z" class="f-glow"/>`;break;
+  case 'revolution':g=`<circle cx="28" cy="28" r="20" fill="none" class="s-muted" stroke-dasharray="3 3"/><circle cx="28" cy="28" r="6" class="f-sun"/>${earthG(48,28,5,false)}<path d="M40 11a20 20 0 0 1 8 10" fill="none" class="s-acc" stroke-width="2"/><path d="M49 22l-5-1 3-4z" class="f-glow"/>`;break;
+  case 'phase':g=mini(1,3,18,16)+mini(2,20,18,16)+mini(4,37,18,16);break;
+  case 'waxing':g=mini(1,2,19,15)+mini(2,20,19,15)+mini(3,38,19,15)+`<path d="M8 44H48" class="s-acc" stroke-width="2"/><path d="M50 44l-5-3v6z" class="f-glow"/>`;break;
+  case 'waning':g=mini(5,2,19,15)+mini(6,20,19,15)+mini(7,38,19,15)+`<path d="M8 44H48" class="s-acc" stroke-width="2"/><path d="M50 44l-5-3v6z" class="f-glow"/>`;break;
+  case 'crescent':g=mini(1,10,10,36);break;
+  case 'gibbous':g=mini(3,10,10,36);break;
+  case 'solarEcl':g=`<circle cx="4" cy="28" r="14" class="f-sun"/><path d="M28 24L46 28 28 32z" class="f-umbra"/><circle cx="28" cy="28" r="4" class="f-dark"/>${earthG(46,28,8,false)}`;break;
+  case 'lunarEcl':g=`<circle cx="4" cy="28" r="14" class="f-sun"/><path d="M24 20L54 24V32L24 36z" class="f-umbra"/>${earthG(24,28,8,false)}<circle cx="48" cy="28" r="4" class="f-blood"/>`;break;
+  case 'shadow':g=`<path d="M4 16H18M4 28H18M4 40H18" class="s-sun" stroke-width="2"/><path d="M28 18L54 22V34L28 38z" class="f-umbra"/><circle cx="28" cy="28" r="10" class="f-lit"/>`;break;
+  case 'innerP':g=`<circle cx="-4" cy="28" r="14" class="f-sun"/><circle cx="16" cy="28" r="2.5" class="pf-mer"/><circle cx="23" cy="28" r="3.2" class="pf-ven"/><circle cx="31" cy="28" r="3.2" class="pf-ear"/><circle cx="38" cy="28" r="2.8" class="pf-mar"/><path d="M12 38H42" class="s-acc" stroke-width="1.5"/>`;break;
+  case 'outerP':g=`<circle cx="-4" cy="28" r="14" class="f-sun"/><circle cx="14" cy="28" r="1.5" class="pf-ear"/><circle cx="24" cy="18" r="6" class="pf-jup"/><circle cx="40" cy="20" r="5" class="pf-sat"/><circle cx="28" cy="40" r="4" class="pf-ura"/><circle cx="46" cy="38" r="4" class="pf-nep"/>`;break;
+  }
+  return `<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">${g}</svg>`;}
+
+/* ---------- SHARED PIECES ---------- */
+function fbHtml(part,fallbackKey){
+  const f=S.fb[part];
+  if(!f){if(!fallbackKey)return `<div class="fb"></div>`;return `<div class="fb"><div>${B(fallbackKey)}</div>${sayK(fallbackKey)}</div>`;}
+  const en=f.parts.map(([k,v])=>U(k,v,'en')).join(' '),l2=f.parts.map(([k,v])=>U(k,v,S.lang)).join(' ');
+  return `<div class="fb ${f.type}"><div><span class="en">${esc(en)}</span>${l2span(l2)}</div>${sayBtn(()=>[en,l2])}</div>`;}
+function actions(part,fallbackKey,checks){
+  const armed=clearArm===S.tab;
+  return `<div class="actions">${fbHtml(part,fallbackKey)}<div class="act-btns"><span class="count">${esc(U('checks',{n:checks},'en'))}</span>
+  <button type="button" class="btn primary" id="checkBtn" data-act="check">${BI('check')}</button>
+  <button type="button" class="btn ${armed?'warn':''}" id="clearBtn" data-act="clear">${BI(armed?'clearSure':'clear')}</button></div></div>`;}
+function question(qk,ak){
+  const fr=FRAMES[ak].map((f,i)=>`<button type="button" class="frame" id="fr-${ak}-${i}" data-act="ins" data-ans="${ak}" data-txt="${esc(f[0])}" data-line="1">${BA(f)}</button>`).join('');
+  const wd=WORDS[ak].map((w,i)=>`<button type="button" class="word" id="wd-${ak}-${i}" data-act="ins" data-ans="${ak}" data-txt="${esc(w[0])}"><span class="inl">${BA(w)}</span></button>`).join('');
+  return `<div class="panel q"><div class="txt"><h3 style="font-size:1.05rem;flex:1">${B(qk)}</h3>${sayK(qk)}</div>
+  <label for="ans-${ak}" class="note" style="display:block;margin:8px 0 4px">${BI('answer')}</label>
+  <textarea id="ans-${ak}" data-ans="${ak}" spellcheck="true">${esc(S.ans[ak])}</textarea>
+  <details class="sup" id="det-${ak}"${openDet.has('det-'+ak)?' open':''}><summary>${BI('frames')}</summary>
+  <p class="note" style="margin:4px 0">${BI('framesTip')}</p><div class="frames">${fr}</div>
+  <p class="eyebrow" style="margin-top:10px">${BI('wordBank')}</p><div class="words">${wd}</div></details></div>`;}
+function vocabBlock(list){
+  if(!S.pics)return '';
+  const cards=list.map(k=>{const g=GL[k];const en=g.en,l=g[S.lang]||g.en;
+    return `<div class="vcard"><div class="pic">${vIcon(k)}</div><div style="flex:1;min-width:0"><b>${esc(en[0])}</b>${S.lang!=='en'?l2span(l[0]):''}<p>${esc(en[1])}</p>${S.lang!=='en'?l2span(l[1]):''}</div>${sayBtn(()=>[en[0]+'. '+en[1],l[0]+'. '+l[1]])}</div>`;}).join('');
+  return `<div class="panel"><p class="eyebrow">${BI('picsHead')}</p><div class="vocab">${cards}</div></div>`;}
+
+/* ---------- HEADER + TABS ---------- */
+const TABS=[['phases','tab1'],['ecl','tab2'],['solar','tab3'],['turnin','tab4']];
+function tabChip(t){
+  if(t==='phases')return S.ph.marks?S.ph.marks.filter(Boolean).length+'/8':'–';
+  if(t==='ecl')return S.ec.done.filter(Boolean).length+'/4';
+  if(t==='solar')return S.so.marks?S.so.marks.filter(Boolean).length+'/8':'–';
+  return '';}
+function header(){
+  const opts=LANGS.map(l=>`<option value="${l}"${S.lang===l?' selected':''}>${esc(LANG_NAMES[l])}</option>`).join('');
+  return `<header class="top"><div class="brand"><svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" style="fill:var(--space)"/><circle cx="20" cy="20" r="13" fill="none" class="s-muted" stroke-dasharray="2 3"/>${earthG(20,20,6,true)}<g transform="translate(29 8) scale(.3)">${phaseInner(2)}</g></svg>
+  <div><h1>${B('title')}</h1><p>${BI('sub')}</p></div></div>
+  <div class="tools"><label for="lang">${BI('lang')}</label><select id="lang" data-act="lang">${opts}</select>
+  <button type="button" class="btn" id="picsBtn" data-act="pics" aria-pressed="${S.pics}">${BI('pics')}</button>
+  <button type="button" class="btn" id="themeBtn" data-act="theme">${BI('theme')}</button></div></header>
+  <nav class="tabs" role="tablist" aria-label="Lab parts">${TABS.map(([id,k])=>`<button type="button" role="tab" class="tab" id="tab-${id}" data-act="tab" data-arg="${id}" aria-selected="${S.tab===id}"><span>${B(k)}</span>${tabChip(id)?`<span class="chip">${tabChip(id)}</span>`:''}</button>`).join('')}</nav>`;}
+
+/* ---------- PART 1: MOON PHASES ---------- */
+function renderPhases(){
+  const P=S.ph;
+  const cards=P.order.map(id=>{const at=P.place.indexOf(id);const on=sel&&sel.kind==='ph'&&sel.id===id;
+    return `<button type="button" class="card" id="card-ph-${id}" data-act="card" data-kind="ph" data-arg="${id}" aria-pressed="${!!on}">${phaseSVG(id,30)}<span class="nm">${B('ph'+id)}</span>${at>-1?`<span class="where">${esc(U('inSpot',{n:at+1},'en'))}</span>`:''}</button>`;}).join('');
+  let svg=`<svg class="bg" viewBox="0 0 600 600" aria-hidden="true">${stars(600,600,70,11)}
+  <circle cx="300" cy="300" r="150" fill="none" class="s-line" stroke-width="2" stroke-dasharray="4 6"/>`;
+  [215,385,560].forEach(y=>{svg+=`<path d="M598 ${y}H552" class="s-sun" stroke-width="3"/><path d="M548 ${y}l10-6v12z" class="f-sun"/>`;});
+  const a1=12*Math.PI/180,a2=33*Math.PI/180,R=192;
+  const p1=[300+R*Math.cos(a1),300-R*Math.sin(a1)],p2=[300+R*Math.cos(a2),300-R*Math.sin(a2)];
+  svg+=`<path d="M${p1[0].toFixed(1)} ${p1[1].toFixed(1)}A${R} ${R} 0 0 0 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}" fill="none" class="s-acc" stroke-width="3"/>`;
+  svg+=`<g transform="translate(${p2[0].toFixed(1)} ${p2[1].toFixed(1)}) rotate(${-(33+90)})"><path d="M0 -9 L7 5 L-7 5Z" transform="rotate(180)" class="f-glow"/></g>`;
+  for(let i=0;i<8;i++){const a=i*Math.PI/4,x=300+150*Math.cos(a),y=300-150*Math.sin(a);
+    svg+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="14" class="f-dark"/><path d="M${x.toFixed(1)} ${(y-14).toFixed(1)}A14 14 0 0 1 ${x.toFixed(1)} ${(y+14).toFixed(1)}Z" class="f-lit"/>`;}
+  svg+=earthG(300,300,30,true)+'</svg>';
+  let slots='';
+  for(let i=0;i<8;i++){const a=i*Math.PI/4,x=(300+236*Math.cos(a))/6,y=(300-236*Math.sin(a))/6;const v=P.place[i];
+    const mk=P.marks&&v!=null?`<span class="mark ${P.marks[i]?'ok':'no'}">${P.marks[i]?'OK':'X'}</span>`:'';
+    const lab=`Spot ${i+1}: ${v==null?'empty':PH[v][0]}${P.marks&&v!=null?(P.marks[i]?', OK':', X'):''}`;
+    slots+=`<button type="button" class="slot${v!=null?' filled':''}${sel&&sel.kind==='ph'?' pulse':''}" id="slot-ph-${i}" data-act="slot" data-kind="ph" data-arg="${i}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%" aria-label="${esc(lab)}"><span class="num">${i+1}</span>${v!=null?phaseSVG(v,38):''}${mk}</button>`;}
+  const stage=`<div class="stage"><div class="orbit">${svg}${slots}
+    <div class="lbl" style="left:auto;right:2%;top:3%;transform:none;text-align:right">${B('sunlight')} <span aria-hidden="true">←</span></div>
+    <div class="lbl" style="left:50%;top:58.5%">${B('earth')}</div></div></div>
+    <p class="stage-cap">${BI('p1Cap')}</p>`;
+  return `<section class="part" aria-labelledby="h-p1"><div class="grid"><div class="side"><div class="panel side">
+    <h2 id="h-p1">${B('p1Head')}</h2>${txt('p1Steps')}
+    <p class="eyebrow" style="margin-top:4px">${BI('p1Cards')}</p><div class="bank">${cards}</div></div></div>
+    <div>${stage}</div></div>
+    ${actions('ph','pickFirst',P.checks)}
+    ${question('p1Q','p1')}${vocabBlock(VOCAB.phases)}</section>`;}
+function checkPhases(){
+  const P=S.ph;const empty=P.place.filter(v=>v==null).length;
+  if(empty){setFb('ph','bad',[['notYet'],['fillAll',{n:empty}]]);return;}
+  P.checks++;P.marks=P.place.map((v,i)=>v===i);const c=P.marks.filter(Boolean).length;
+  if(c===8){setFb('ph','good',[['correct'],['p1Good']]);return;}
+  const h=new Set();
+  P.place.forEach((v,i)=>{if(v===i)return;
+    if(v===(8-i)%8)h.add('hDir');
+    else if((i<4&&v<4&&i>0&&v>0)||(i>4&&v>4)) h.add(Math.abs(v-i)===2&&[1,3,5,7].includes(v)?'hShape':'hFar');
+    else h.add('hFar');});
+  setFb('ph','bad',[['score8',{c}],['xMarked'],...[...h].map(k=>[k])]);}
+
+/* ---------- PART 2: ECLIPSES ---------- */
+const DY={exact:0,slight:-26,far:-80};
+function eOutcome(){const{A,B:Bb}=S.ec.slots;if(!A||!Bb)return null;return{type:A==='moon'?'solar':'lunar',lvl:{exact:'total',slight:'partial',far:'none'}[S.ec.align]};}
+function renderEcl(){
+  const E=S.ec,o=eOutcome(),dy=DY[E.align];
+  const goals=[0,1,2,3].map(g=>`<button type="button" class="btn goal" id="goal-${g}" data-act="goal" data-arg="${g}" aria-pressed="${E.goal===g}">${B('g'+g)}${E.done[g]?`<span class="done">✓ ${esc(U('done',null,'en'))}</span>`:''}</button>`).join('');
+  const where=b=>E.slots.A===b?'A':E.slots.B===b?'B':null;
+  const bodies=['earth','moon'].map(b=>{const w=where(b);const on=sel&&sel.kind==='body'&&sel.id===b;
+    const ic=b==='earth'?`<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">${earthG(15,15,13,false)}</svg>`:`<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="8" class="f-lit"/></svg>`;
+    return `<button type="button" class="card" id="body-${b}" data-act="body" data-arg="${b}" aria-pressed="${!!on}">${ic}<span class="nm">${B(b)}</span>${w?`<span class="where">${esc(U('spot'+w,null,'en'))}</span>`:''}</button>`;}).join('');
+  const aligns=['exact','slight','far'].map(a=>`<button type="button" class="btn" id="align-${a}" data-act="align" data-arg="${a}" aria-pressed="${E.align===a}">${B('align'+a[0].toUpperCase()+a.slice(1))}</button>`).join('');
+  /* model drawing */
+  const X={A:330,B:585};let sh='',bd='';
+  const yOf=b=>b==='moon'?125+dy:125;
+  if(E.slots.A){const m=E.slots.A,ym=yOf(m);
+    if(m==='earth'){sh=`<path d="M330 91L700 60V190L330 159Z" class="f-pen"/><path d="M330 91L700 103V147L330 159Z" class="f-umbra"/>`;}
+    else{sh=`<path d="M330 ${ym-13}L700 ${ym-60}V${ym+60}L330 ${ym+13}Z" class="f-pen"/><path d="M330 ${ym-13}L556 ${ym}L330 ${ym+13}Z" class="f-umbra"/>`;}}
+  ['B','A'].forEach(s=>{const b=E.slots[s];if(!b)return;const y=yOf(b);
+    if(b==='earth')bd+=earthG(X[s],y,34,s==='B'&&E.slots.A==='moon'?false:true);
+    else{const blood=s==='B'&&o&&o.type==='lunar'&&o.lvl==='total';bd+=`<circle cx="${X[s]}" cy="${y}" r="13" class="${blood?'f-blood':'f-lit'}"/>`;
+      if(s==='B'&&o&&o.type==='lunar'&&o.lvl==='partial')bd+=`<clipPath id="mclip"><circle cx="${X[s]}" cy="${y}" r="13"/></clipPath><rect x="${X[s]-14}" y="${y+2}" width="28" height="14" class="f-umbra" clip-path="url(#mclip)"/>`;
+      if(s==='A')bd+=`<path d="M${X[s]} ${y-13}A13 13 0 0 0 ${X[s]} ${y+13}Z" class="f-lit"/><path d="M${X[s]} ${y-13}A13 13 0 0 1 ${X[s]} ${y+13}Z" class="f-dark"/>`;}});
+  const svg=`<svg viewBox="0 0 700 250" aria-hidden="true">${stars(700,250,40,5)}<circle cx="-20" cy="125" r="122" class="f-glow" opacity=".25"/><circle cx="-20" cy="125" r="105" class="f-sun"/>
+    <path d="M100 125H690" class="s-line" stroke-width="2" stroke-dasharray="6 6"/>${sh}${bd}</svg>`;
+  const eslot=s=>{const b=E.slots[s];const lab=`${U('spot'+s,null,'en')}: ${b?U(b,null,'en'):'empty'}`;
+    return `<button type="button" class="eslot${sel&&sel.kind==='body'?' pulse':''}" id="eslot-${s}" data-act="eslot" data-arg="${s}" style="left:${X[s]/7}%;top:50%" aria-label="${esc(lab)}"><span class="sl">${esc(U('spot'+s,null,'en'))}</span></button>`;};
+  /* view from Earth */
+  let sky='',capK='vEmpty';
+  if(o){if(o.type==='solar'){
+      if(o.lvl==='total'){capK='vSunTotal';sky=`<rect width="110" height="110" class="f-sky"/><circle cx="55" cy="55" r="36" class="f-glow" opacity=".5"/><circle cx="55" cy="55" r="30" class="f-sun"/><circle cx="55" cy="55" r="30.5" class="f-dark"/>`;}
+      else if(o.lvl==='partial'){capK='vSunPartial';sky=`<rect width="110" height="110" class="f-day"/><circle cx="55" cy="55" r="30" class="f-sun"/><circle cx="72" cy="42" r="30" class="f-dark"/>`;}
+      else{capK='vNone';sky=`<rect width="110" height="110" class="f-day"/><circle cx="55" cy="55" r="30" class="f-sun"/>`;}}
+    else{
+      if(o.lvl==='total'){capK='vMoonTotal';sky=`<rect width="110" height="110" class="f-sky"/><circle cx="55" cy="55" r="30" class="f-blood"/>`;}
+      else if(o.lvl==='partial'){capK='vMoonPartial';sky=`<rect width="110" height="110" class="f-sky"/><clipPath id="vclip"><circle cx="55" cy="55" r="30"/></clipPath><circle cx="55" cy="55" r="30" class="f-lit"/><circle cx="40" cy="80" r="42" class="f-umbra" clip-path="url(#vclip)"/>`;}
+      else{capK='vNone';sky=`<rect width="110" height="110" class="f-sky"/><circle cx="55" cy="55" r="30" class="f-lit"/>`;}}}
+  else sky=`<rect width="110" height="110" class="f-sky"/>`;
+  const view=`<div class="eview"><svg class="sky" viewBox="0 0 110 110" role="img" aria-label="${esc(U(capK,null,'en'))}">${stars(110,110,8,3)}${sky}</svg>
+    <div class="cap"><p class="eyebrow" style="color:var(--space-muted)">${BI('view')}</p><div class="txt"><div>${B(capK)}</div>${sayK(capK)}</div></div></div>`;
+  /* multiple choice */
+  const mcOpts=[0,2,4,6];
+  const mcq=[0,1].map(q=>{const mk=E.qMarks?`<span class="res ${E.qMarks[q]?'ok':'no'}">${E.qMarks[q]?'OK':'X'}</span>`:'';
+    return `<div class="qrow"><div class="txt"><div style="font-weight:700">${B('q'+(q+1))}</div>${sayK('q'+(q+1))}</div>
+    <div class="mc" role="group">${mcOpts.map(v=>`<button type="button" class="card" id="mc-${q}-${v}" data-act="mc" data-q="${q}" data-arg="${v}" aria-pressed="${E.q[q]===v}">${phaseSVG(v,26)}<span class="nm">${B('ph'+v)}</span></button>`).join('')}</div>${mk}</div>`;}).join('');
+  return `<section class="part" aria-labelledby="h-p2"><div class="grid"><div class="side"><div class="panel side">
+    <h2 id="h-p2">${B('p2Head')}</h2>${txt('p2Steps')}
+    <p class="eyebrow" style="margin-top:4px">${BI('goal')} · <span class="count">${esc(U('goalsDone',{n:E.done.filter(Boolean).length},'en'))}</span></p><div class="goals">${goals}</div>
+    <p class="eyebrow" style="margin-top:4px">${BI('bodies')}</p><div class="bank">${bodies}</div>
+    <p class="eyebrow" style="margin-top:4px">${BI('align')}</p><div class="seg">${aligns}</div></div></div>
+    <div><div class="stage estage"><div class="ecl-wrap"><div class="ecl">${svg}${eslot('A')}${eslot('B')}
+      <div class="lbl" style="left:9%;top:50%;color:var(--space)">${esc(U('sun',null,'en'))}</div></div></div>${view}</div>
+      <p class="stage-cap">${BI('p2Cap')}</p></div></div>
+    ${actions('ec','pickBody',E.checks)}
+    <div class="panel"><h3 style="font-size:1.05rem">${B('mcHead')}</h3>${mcq}
+      <div class="act-btns" style="margin-top:8px"><button type="button" class="btn primary" id="mcCheck" data-act="mcCheck">${BI('checkAnswers')}</button><span class="count">${esc(U('checks',{n:E.qChecks},'en'))}</span></div>
+      <div style="margin-top:8px">${S.fb.mc?fbHtml('mc'):''}</div></div>
+    ${question('p2Q','p2')}${vocabBlock(VOCAB.ecl)}</section>`;}
+function checkEcl(){
+  const E=S.ec,o=eOutcome();
+  if(!o){setFb('ec','bad',[['notYet'],['ecNeed']]);return;}
+  E.checks++;const g=E.goal,needT=g<2?'solar':'lunar',needA=g%2===0?'exact':'slight';
+  if(o.type!==needT){setFb('ec','bad',[['notYet'],[needT==='solar'?'ecOrderSolar':'ecOrderLunar']]);return;}
+  if(E.align!==needA){setFb('ec','bad',[['notYet'],[E.align==='far'?'ecAlignFar':needA==='exact'?'ecAlignTotal':'ecAlignPartial']]);return;}
+  E.done[g]=true;const all=E.done.every(Boolean);
+  setFb('ec','good',[['correct'],['ecGood',{g:{k:'g'+g}}],[needT==='solar'?'whySolar':'whyLunar'],[all?'allGoals':'nextGoal']]);}
+function checkMC(){const E=S.ec;if(E.q[0]==null||E.q[1]==null){setFb('mc','bad',[['mcPick']]);return;}
+  E.qChecks++;E.qMarks=[E.q[0]===0,E.q[1]===4];
+  const parts=E.qMarks.map((ok,i)=>[ok?'mcRight':'mcWrong',{n:i+1}]);
+  setFb('mc',E.qMarks.every(Boolean)?'good':'bad',parts);}
+
+/* ---------- PART 3: SOLAR SYSTEM ---------- */
+function unitVal(v){return [v[0]+' '+U(v[1],null,'en'),v[0]+' '+U(v[1],null,S.lang)];}
+function dataTable(){
+  const idx=range8.slice().sort((a,b)=>PL[a].n[0].localeCompare(PL[b].n[0]));
+  const th=k=>`<th scope="col">${B(k)}</th>`;
+  const two=a=>`<span class="en">${esc(a[0])}</span>${l2span(a[1])}`;
+  const rows=idx.map(i=>{const p=PL[i];const yr=unitVal(p.yr),dy=unitVal(p.dy);const mo=p.moons==='many'?[U('many',null,'en'),U('many',null,S.lang)]:[p.moons,p.moons];
+    return `<tr><th scope="row" style="color:var(--ink)"><span style="display:flex;gap:6px;align-items:center">${planetSVG(i,22)}<span>${BA(p.n)}</span></span></th><td class="n">${p.au}</td><td class="n">${p.km}</td><td class="n">${two(yr)}</td><td class="n">${two(dy)}</td><td class="n">${p.moons==='many'?two(mo):mo[0]}</td><td>${B(p.m)}</td></tr>`;}).join('');
+  return `<div class="panel"><div class="head"><h3 style="font-size:1.05rem">${B('dataHead')}</h3></div>
+  <div class="scroll"><table class="data"><thead><tr>${th('dPlanet')}${th('dDist')}${th('dDiam')}${th('dYear')}${th('dDay')}${th('dMoons')}${th('dMade')}</tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="txt" style="margin-top:6px"><p class="note" style="margin:0">${B('auNote')}</p>${sayK('auNote')}</div></div>`;}
+function renderSolar(){
+  const O=S.so,sub=O.sub;
+  const subs=`<div class="subtabs">${['A','B'].map(s=>`<button type="button" class="btn" id="sub-${s}" data-act="sub" data-arg="${s}" aria-pressed="${sub===s}">${B('step'+s)}</button>`).join('')}</div>`;
+  let side,stage;
+  if(sub==='A'){
+    const cards=O.order.map(id=>{const at=O.place.indexOf(id);const on=sel&&sel.kind==='pl'&&sel.id===id;
+      return `<button type="button" class="card" id="card-pl-${id}" data-act="card" data-kind="pl" data-arg="${id}" aria-pressed="${!!on}">${planetSVG(id,28)}<span class="nm">${B('pl'+id)}</span>${at>-1?`<span class="where">${esc(U('orbitN',{n:at+1},'en'))}</span>`:''}</button>`;}).join('');
+    side=`${txt('p3Steps')}<p class="eyebrow" style="margin-top:4px">${BI('p3Cards')}</p><div class="bank">${cards}</div>`;
+    const slots=range8.map(i=>{const v=O.place[i];const mk=O.marks&&v!=null?`<span class="mark ${O.marks[i]?'ok':'no'}">${O.marks[i]?'OK':'X'}</span>`:'';
+      const lab=`Orbit ${i+1}: ${v==null?'empty':PL[v].n[0]}${O.marks&&v!=null?(O.marks[i]?', OK':', X'):''}`;
+      return `<button type="button" class="pslot${v!=null?' filled':''}${sel&&sel.kind==='pl'?' pulse':''}" id="slot-pl-${i}" data-act="slot" data-kind="pl" data-arg="${i}" aria-label="${esc(lab)}"><span class="num">${i+1}</span>${v!=null?planetSVG(v,34)+`<span>${B('pl'+v)}</span>`:''}${mk}</button>`;}).join('');
+    stage=`<div class="stage"><div class="sys"><div class="sunbar" aria-hidden="true"></div><div class="sunlbl">${esc(U('sun',null,'en'))}</div>${slots}</div></div><p class="stage-cap">${BI('p3Cap')}</p>${dataTable()}`;
+  }else{
+    const C=O.cmp;
+    const sel2=(grp,r)=>{const row=CMP[r];const v=C[grp][r];const cls=O.cmpMarks&&v?(O.cmpMarks[grp][r]?'okb':'nob'):'';
+      const mk=O.cmpMarks&&v?(O.cmpMarks[grp][r]?' (OK)':' (X)'):'';
+      return `<select id="cmp-${grp}-${r}" data-cmp="${grp}:${r}" class="${cls}" aria-label="${esc(U(grp,null,'en')+', '+U(row[0],null,'en')+mk)}"><option value="">${esc(U('choose',null,'en'))}</option>${[row[1],row[2]].map(c=>`<option value="${c}"${v===c?' selected':''}>${esc(U(c,null,'en'))}${S.lang!=='en'?' / '+esc(U(c,null,S.lang)):''}</option>`).join('')}</select>`;};
+    const rows=CMP.map((row,r)=>`<div class="rl">${B(row[0])}</div>${sel2('inner',r)}${sel2('outer',r)}`).join('');
+    side=`${txt('p3bSteps')}<div class="cmp"><span></span><span class="ch">${B('inner')}</span><span class="ch">${B('outer')}</span>${rows}</div>`;
+    stage=dataTable();
+  }
+  const fbKey=sub==='A'?'soA':'soB';
+  return `<section class="part" aria-labelledby="h-p3"><div class="grid"><div class="side"><div class="panel side">
+    <h2 id="h-p3">${B('p3Head')}</h2>${subs}${side}</div></div><div>${stage}</div></div>
+    ${actions(fbKey,sub==='A'?'pickFirst':null,sub==='A'?O.checks:O.cmpChecks)}
+    ${question('p3Q','p3')}${vocabBlock(VOCAB.solar)}</section>`;}
+function checkOrder(){
+  const O=S.so;const empty=O.place.filter(v=>v==null).length;
+  if(empty){setFb('soA','bad',[['notYet'],['fillAll',{n:empty}]]);return;}
+  O.checks++;O.marks=O.place.map((v,i)=>v===i);const c=O.marks.filter(Boolean).length;
+  if(c===8){setFb('soA','good',[['correct'],['p3Good']]);return;}
+  const grp=O.place.some((v,i)=>(v<4)!==(i<4));
+  setFb('soA','bad',[['score8',{c}],['xMarked'],[grp?'hGroup':'hOrder']]);}
+function checkCmp(){
+  const O=S.so,C=O.cmp;const empty=C.inner.filter(v=>!v).length+C.outer.filter(v=>!v).length;
+  if(empty){setFb('soB','bad',[['notYet'],['cmpFill',{n:empty}]]);return;}
+  O.cmpChecks++;O.cmpMarks={inner:CMP.map((r,i)=>C.inner[i]===r[3]),outer:CMP.map((r,i)=>C.outer[i]===r[4])};
+  const c=O.cmpMarks.inner.filter(Boolean).length+O.cmpMarks.outer.filter(Boolean).length;
+  if(c===10){setFb('soB','good',[['correct'],['cmpGood']]);return;}
+  const hints=CMP.filter((r,i)=>!O.cmpMarks.inner[i]||!O.cmpMarks.outer[i]).map(r=>[r[5]]);
+  setFb('soB','bad',[['score10',{c}],...hints]);}
+
+/* ---------- PART 4: TURN IN ---------- */
+function scores(){const P=S.ph,O=S.so,E=S.ec;
+  return{ph:P.place.filter((v,i)=>v===i).length,goals:E.done.filter(Boolean).length,mc:(E.q[0]===0?1:0)+(E.q[1]===4?1:0),
+    ord:O.place.filter((v,i)=>v===i).length,cmp:CMP.reduce((n,r,i)=>n+(O.cmp.inner[i]===r[3]?1:0)+(O.cmp.outer[i]===r[4]?1:0),0),
+    ans:['p1','p2','p3'].filter(k=>S.ans[k].trim()).length};}
+function recordText(){
+  const s=scores(),P=S.ph,E=S.ec,O=S.so,L=[];
+  L.push('ASTRONOMY LAB - RESULTS');L.push('Name: '+(S.name.trim()||'(not entered)'));L.push('Class hour: '+(S.hour.trim()||'-'));
+  L.push('Date: '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}));L.push('');
+  L.push(`PART 1: MOON PHASES - ${s.ph}/8 correct (checks: ${P.checks})`);
+  P.place.forEach((v,i)=>L.push(`  Spot ${i+1}: ${v==null?'(empty)':PH[v][0]} - ${v===i?'OK':'X'}`));
+  L.push('  Q: '+U('p1Q',null,'en'));L.push('  A: '+(S.ans.p1.trim()||'(blank)'));L.push('');
+  L.push(`PART 2: ECLIPSES - ${s.goals}/4 goals done (checks: ${E.checks})`);
+  [0,1,2,3].forEach(g=>L.push(`  ${U('g'+g,null,'en')}: ${E.done[g]?'done - OK':'not done - X'}`));
+  [0,1].forEach(q=>{const v=E.q[q];const ok=q===0?v===0:v===4;L.push(`  ${U('q'+(q+1),null,'en')} ${v==null?'(blank)':PH[v][0]} - ${ok?'OK':'X'}`);});
+  L.push(`  (answer checks: ${E.qChecks})`);
+  L.push('  Q: '+U('p2Q',null,'en'));L.push('  A: '+(S.ans.p2.trim()||'(blank)'));L.push('');
+  L.push(`PART 3: SOLAR SYSTEM`);
+  L.push(`  A. Order - ${s.ord}/8 correct (checks: ${O.checks})`);
+  O.place.forEach((v,i)=>L.push(`    Orbit ${i+1}: ${v==null?'(empty)':PL[v].n[0]} - ${v===i?'OK':'X'}`));
+  L.push(`  B. Compare - ${s.cmp}/10 correct (checks: ${O.cmpChecks})`);
+  CMP.forEach((r,i)=>{const a=O.cmp.inner[i],b=O.cmp.outer[i];
+    L.push(`    ${U(r[0],null,'en')}: inner ${a?U(a,null,'en'):'(blank)'} ${a===r[3]?'OK':'X'} | outer ${b?U(b,null,'en'):'(blank)'} ${b===r[4]?'OK':'X'}`);});
+  L.push('  Q: '+U('p3Q',null,'en'));L.push('  A: '+(S.ans.p3.trim()||'(blank)'));
+  return L.join('\n');}
+function renderTurnIn(){
+  const s=scores();
+  const sum=(k,v)=>`<div class="sum"><b>${v}</b><div>${B(k)}</div></div>`;
+  return `<section class="part" aria-labelledby="h-p4"><div class="panel side">
+    <h2 id="h-p4">${B('p4Head')}</h2>${txt('p4Steps')}
+    <div class="form"><label for="stuName">${BI('name')} *<input type="text" id="stuName" data-f="name" autocomplete="name" value="${esc(S.name)}"></label>
+    <label for="stuHour">${BI('hour')}<input type="text" id="stuHour" data-f="hour" value="${esc(S.hour)}"></label></div>
+    <div class="sumgrid">${sum('sumP1',s.ph+'/8')}${sum('sumP2',s.goals+'/4')}${sum('sumP2q',s.mc+'/2')}${sum('sumP3a',s.ord+'/8')}${sum('sumP3b',s.cmp+'/10')}${sum('sumAns',s.ans+'/3')}</div>
+    <div class="act-btns"><button type="button" class="btn primary" id="pdfBtn" data-act="pdf">${BI('pdf')}</button><button type="button" class="btn" id="copyBtn" data-act="copy">${BI('copy')}</button></div>
+    <div id="tiMsg">${S.fb.ti?fbHtml('ti'):''}</div>
+    <label for="rec" class="eyebrow">${BI('preview')}</label>
+    <textarea id="rec" class="rec" readonly>${esc(recordText())}</textarea></div></section>`;}
+let dlP=null;
+async function makePdf(){
+  if(!S.name.trim()){setFb('ti','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  if(!window.jspdf){setFb('ti','bad',[['pdfFail']]);render();return;}
+  const txtR=recordText();const warn=/[^\x00-\xFF]/.test(S.ans.p1+S.ans.p2+S.ans.p3+S.name);
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
+  let y=56;doc.setFontSize(10.5);
+  txtR.split('\n').forEach(line=>{const bold=/^(ASTRONOMY|PART)/.test(line);doc.setFont('helvetica',bold?'bold':'normal');
+    doc.splitTextToSize(line.replace(/[^\x00-\xFF]/g,'?')||' ',520).forEach(l=>{if(y>740){doc.addPage();y=56;}doc.text(l,46,y);y+=14;});});
+  const fname='astronomy-lab-'+(S.name.trim().replace(/[^a-z0-9]+/gi,'-').toLowerCase()||'student')+'.pdf';
+  const blob=doc.output('blob');let dl=null;try{if(dlP)dl=await dlP;}catch(e){}
+  const extra=warn?[['pdfArabic']]:[];
+  if(dl){try{await dl.save({filename:fname,data:blob});setFb('ti','good',[['pdfSaved'],...extra]);}catch(err){if(!(err&&err.code==='declined'))setFb('ti','bad',[['pdfFail']]);}}
+  else{try{doc.save(fname);setFb('ti','good',[['pdfSaved'],...extra]);}catch(e){setFb('ti','bad',[['pdfFail']]);}}
+  save();render();}
+function copyRec(){
+  if(!S.name.trim()){setFb('ti','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  const t=recordText();const fail=()=>{setFb('ti','bad',[['copyFail']]);render();const r=document.getElementById('rec');r.focus();r.select();};
+  try{navigator.clipboard.writeText(t).then(()=>{setFb('ti','good',[['copied']]);render();},fail);}catch(e){fail();}}
+
+/* ---------- RENDER ---------- */
+const app=document.getElementById('app');
+function render(){
+  const fid=document.activeElement&&document.activeElement.id;
+  SAY.clear();sid=0;
+  const part={phases:renderPhases,ecl:renderEcl,solar:renderSolar,turnin:renderTurnIn}[S.tab]();
+  app.innerHTML=header()+`<main>${part}</main><p class="foot">${BI('credit')}</p>`;
+  if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true});}
+}
+
+/* ---------- EVENTS ---------- */
+function tapCard(kind,id){
+  if(sel&&sel.kind===kind&&sel.id===id){sel=null;}else{sel={kind,id};
+    const fk=kind==='ph'?'ph':'soA';setFb(fk,'',[['picked',{x:{k:(kind==='ph'?'ph':'pl')+id}}]]);}}
+function tapSlot(kind,i){
+  const st=kind==='ph'?S.ph:S.so,fk=kind==='ph'?'ph':'soA',nk=kind==='ph'?'ph':'pl';
+  if(sel&&sel.kind===kind){const prev=st.place.indexOf(sel.id);if(prev>-1)st.place[prev]=st.place[i];st.place[i]=sel.id;
+    setFb(fk,'',[[kind==='ph'?'placed':'placed3',{x:{k:nk+sel.id},n:i+1}]]);sel=null;st.marks=null;}
+  else if(st.place[i]!=null){const id=st.place[i];st.place[i]=null;st.marks=null;setFb(fk,'',[['back',{x:{k:nk+id}}]]);}
+  else setFb(fk,'',[['pickFirst']]);}
+function tapESlot(s){const E=S.ec,o=s==='A'?'B':'A';
+  if(sel&&sel.kind==='body'){if(E.slots[o]===sel.id)E.slots[o]=E.slots[s];E.slots[s]=sel.id;setFb('ec','',[['placed2',{x:{k:sel.id},s:{k:'spot'+s}}]]);sel=null;}
+  else if(E.slots[s]){const b=E.slots[s];E.slots[s]=null;setFb('ec','',[['back',{x:{k:b}}]]);}
+  else setFb('ec','',[['pickBody']]);}
+function doClear(){
+  if(clearArm!==S.tab){clearArm=S.tab;clearTimeout(clearT);clearT=setTimeout(()=>{clearArm=null;render();},3500);return;}
+  clearArm=null;clearTimeout(clearT);const f=fresh();sel=null;
+  if(S.tab==='phases'){S.ph=f.ph;S.ans.p1='';S.fb.ph={type:'',parts:[['cleared']]};}
+  if(S.tab==='ecl'){S.ec=f.ec;S.ans.p2='';S.fb.ec={type:'',parts:[['cleared']]};delete S.fb.mc;}
+  if(S.tab==='solar'){const sub=S.so.sub;S.so=f.so;S.so.sub=sub;S.ans.p3='';S.fb.soA=S.fb.soB={type:'',parts:[['cleared']]};}
+  announce(U('cleared',null,'en'));}
+app.addEventListener('click',e=>{
+  const sb=e.target.closest('[data-say]');if(sb){const f=SAY.get(sb.dataset.say);if(f){const[a,b]=f();speak(a,b);}return;}
+  const t=e.target.closest('[data-act]');if(!t||t.tagName==='SELECT')return;
+  const a=t.dataset.act,arg=t.dataset.arg;
+  switch(a){
+    case 'tab':S.tab=arg;sel=null;clearArm=null;break;
+    case 'pics':S.pics=!S.pics;break;
+    case 'theme':{const r=document.documentElement;const cur=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const nx=cur==='dark'?'light':'dark';r.dataset.theme=nx;try{localStorage.setItem(KEY+'-theme',nx);}catch(err){}return;}
+    case 'card':tapCard(t.dataset.kind,+arg);break;
+    case 'slot':tapSlot(t.dataset.kind,+arg);break;
+    case 'body':if(sel&&sel.kind==='body'&&sel.id===arg)sel=null;else{sel={kind:'body',id:arg};setFb('ec','',[['picked2',{x:{k:arg}}]]);}break;
+    case 'eslot':tapESlot(arg);break;
+    case 'goal':S.ec.goal=+arg;delete S.fb.ec;break;
+    case 'align':S.ec.align=arg;break;
+    case 'mc':S.ec.q[+t.dataset.q]=+arg;S.ec.qMarks=null;break;
+    case 'mcCheck':checkMC();break;
+    case 'sub':S.so.sub=arg;sel=null;break;
+    case 'check':if(S.tab==='phases')checkPhases();else if(S.tab==='ecl')checkEcl();else if(S.tab==='solar'){S.so.sub==='A'?checkOrder():checkCmp();}break;
+    case 'clear':doClear();break;
+    case 'pdf':makePdf();return;
+    case 'copy':copyRec();return;
+    case 'ins':{const k=t.dataset.ans,ta=document.getElementById('ans-'+k);let add=t.dataset.txt;const v=ta.value;
+      const pos=ta.selectionStart!=null&&document.activeElement===ta?ta.selectionStart:v.length;
+      const before=v.slice(0,pos),after=v.slice(pos);
+      if(t.dataset.line&&before.trim())add=(/[.!?]\s*$/.test(before)?' ':'. ')+add;else if(before&&!/\s$/.test(before))add=' '+add;
+      ta.value=before+add+after;S.ans[k]=ta.value;save();ta.focus();const np=(before+add).length;ta.setSelectionRange(np,np);return;}
+    default:return;}
+  save();render();});
+app.addEventListener('change',e=>{const t=e.target;
+  if(t.id==='lang'){S.lang=t.value;save();render();return;}
+  if(t.dataset.cmp){const[g,r]=t.dataset.cmp.split(':');S.so.cmp[g][+r]=t.value||null;S.so.cmpMarks=null;save();render();}});
+app.addEventListener('input',e=>{const t=e.target;
+  if(t.dataset.ans&&t.tagName==='TEXTAREA'){S.ans[t.dataset.ans]=t.value;save();}
+  if(t.dataset.f){S[t.dataset.f]=t.value;save();const r=document.getElementById('rec');if(r)r.value=recordText();}});
+app.addEventListener('toggle',e=>{const t=e.target;if(t.tagName==='DETAILS'&&t.id){t.open?openDet.add(t.id):openDet.delete(t.id);}},true);
+
+/* ---------- BOOT ---------- */
+load();
+try{const th=localStorage.getItem(KEY+'-theme');if(th)document.documentElement.dataset.theme=th;}catch(e){}
+try{if(window.claude&&typeof window.claude.use==='function')dlP=window.claude.use('downloads');}catch(e){}
+if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}
+render();
+</script>
+
+</body>
+</html>

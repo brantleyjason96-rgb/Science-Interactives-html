@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Flashcard Bridge Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+:root{
+  --desk:#EEF0EA; --card:#FFFDF6; --panel:#F6F7F2; --line:#D9DDD3; --line2:#BFC5BA;
+  --ink:#1D2429; --muted:#5A646B;
+  --teach:#2E5BD8; --teach-soft:#E4EBFC; --teach-ink:#FFFFFF;
+  --stud:#0F7C74; --stud-soft:#DFF1EE; --stud-ink:#FFFFFF;
+  --ext:#8A5A12; --ext-soft:#FFF1D6;
+  --rule:#CFE0EE; --margin:#E7A1A1;
+  --shadow:0 1px 0 rgba(29,36,41,.05), 0 10px 26px -16px rgba(29,36,41,.35);
+  --display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --desk:#15191A; --card:#1F2527; --panel:#1A2022; --line:#313A3D; --line2:#46514F;
+    --ink:#E8ECEE; --muted:#9AA5AC;
+    --teach:#7FA2FF; --teach-soft:#1F2A45; --teach-ink:#0E1630;
+    --stud:#5CC8BD; --stud-soft:#143330; --stud-ink:#0C2320;
+    --ext:#F0C173; --ext-soft:#3A2E17;
+    --rule:#2C3A44; --margin:#7A4545;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 28px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --desk:#15191A; --card:#1F2527; --panel:#1A2022; --line:#313A3D; --line2:#46514F;
+  --ink:#E8ECEE; --muted:#9AA5AC;
+  --teach:#7FA2FF; --teach-soft:#1F2A45; --teach-ink:#0E1630;
+  --stud:#5CC8BD; --stud-soft:#143330; --stud-ink:#0C2320;
+  --ext:#F0C173; --ext-soft:#3A2E17;
+  --rule:#2C3A44; --margin:#7A4545;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 12px 28px -16px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--desk);color:var(--ink);font:16px/1.5 var(--body)}
+a{color:var(--teach);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--teach);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:flex;flex-direction:column;gap:40px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:end}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(32px,5vw,48px);line-height:1.02;letter-spacing:-.015em;margin:6px 0 10px;text-wrap:balance}
+.lede{font-size:18px;max-width:58ch;margin:0;color:var(--ink)}
+.legend{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.legend div{display:flex;gap:10px;align-items:center;font-size:15px}
+.sw{width:18px;height:18px;border-radius:5px;flex:none}
+.sw.t{background:var(--teach)} .sw.s{background:var(--stud)} .sw.x{background:var(--ext-soft);border:2px dashed var(--ext)}
+.legend .links{border-top:1px dashed var(--line2);padding-top:8px;margin-top:2px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+
+/* overview flow */
+h2{font-family:var(--display);font-weight:800;font-size:clamp(24px,3vw,30px);line-height:1.1;margin:0 0 4px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 16px;max-width:70ch}
+.flow{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px clamp(14px,2.5vw,26px);display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.lane{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:stretch}
+.lane-name{display:flex;flex-direction:column;justify-content:center;gap:2px;border-radius:12px;padding:10px 12px;font-weight:700}
+.lane-name small{font-weight:400;font-size:13px;opacity:.9}
+.lane.t .lane-name{background:var(--teach);color:var(--teach-ink)}
+.lane.s .lane-name{background:var(--stud);color:var(--stud-ink)}
+.nodes{display:flex;align-items:stretch;gap:0;min-width:0}
+.node{flex:1;min-width:0;border-radius:12px;padding:10px 12px;border:2px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:3px;position:relative}
+.node b{font-size:15px;line-height:1.2}
+.node span{font-size:13px;color:var(--muted);line-height:1.35}
+.node .where{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.lane.t .node{border-color:color-mix(in srgb,var(--teach) 45%,var(--line));background:var(--teach-soft)}
+.lane.t .node .where{color:var(--teach)}
+.lane.s .node{border-color:color-mix(in srgb,var(--stud) 45%,var(--line));background:var(--stud-soft)}
+.lane.s .node .where{color:var(--stud)}
+.node.ext{border:2px dashed var(--ext)!important;background:var(--ext-soft)!important}
+.node.ext .where{color:var(--ext)!important}
+.arr{flex:none;width:26px;display:grid;place-items:center;color:var(--muted)}
+.arr svg{width:18px;height:18px}
+.handoff{display:grid;grid-template-columns:120px 1fr;gap:14px}
+.handoff .hbox{display:flex;justify-content:space-between;gap:12px;padding:2px 0;font-size:13px;color:var(--muted);font-weight:700}
+.handoff .hbox span{display:flex;align-items:center;gap:6px}
+.handoff svg{width:16px;height:16px}
+.loopnote{margin-top:10px;border-top:1.5px dashed var(--line2);padding-top:10px;font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:flex-start}
+.loopnote svg{width:18px;height:18px;flex:none;margin-top:2px;color:var(--teach)}
+
+/* detailed steps */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.col-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.col-head .badge{border-radius:99px;padding:3px 12px;font-weight:700;font-size:14px}
+.col-head.t .badge{background:var(--teach);color:var(--teach-ink)}
+.col-head.s .badge{background:var(--stud);color:var(--stud-ink)}
+.col-head .time{font-size:14px;color:var(--muted)}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:40px 1fr;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px 12px 12px;box-shadow:var(--shadow);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px);background-position:0 44px;background-size:100% calc(100% - 44px);background-repeat:no-repeat}
+ol.steps>li::before{content:counter(s);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:17px}
+.t-steps>li::before{background:var(--teach);color:var(--teach-ink)}
+.s-steps>li::before{background:var(--stud);color:var(--stud-ink)}
+.st h3{margin:3px 0 4px;font-size:17px;line-height:1.25}
+.st p{margin:0;font-size:15px}
+.st .where{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;padding:1px 7px;margin-bottom:2px}
+.t-steps .where{color:var(--teach);background:var(--teach-soft)}
+.s-steps .where{color:var(--stud);background:var(--stud-soft)}
+.where.ext{color:var(--ext)!important;background:var(--ext-soft)!important}
+.tip{margin-top:6px;font-size:14px;color:var(--muted)}
+.tip b{color:var(--ink)}
+kbd{font:700 12px/1.4 var(--body);border:1.5px solid var(--line2);border-bottom-width:3px;border-radius:5px;padding:0 5px;background:var(--panel)}
+
+/* loops */
+.loops{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.loop{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+.loop h3{margin:0;font-size:17px}
+.loop .trig{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.loop p{margin:0;font-size:15px}
+.chain{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-size:14px;margin-top:2px}
+.chain i{font-style:normal;color:var(--muted)}
+.chip{border-radius:7px;padding:1px 8px;font-weight:700;font-size:13px}
+.chip.t{background:var(--teach-soft);color:var(--teach)} .chip.s{background:var(--stud-soft);color:var(--stud)} .chip.x{background:var(--ext-soft);color:var(--ext)}
+
+/* support table */
+.tbl{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;min-width:620px}
+th,td{text-align:start;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;font-size:15px}
+th{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--panel)}
+tr:last-child td{border-bottom:none}
+td b{font-size:16px}
+
+/* facts */
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 22px;margin:0;padding:0;list-style:none}
+.facts li{display:flex;gap:10px;align-items:flex-start;font-size:15px;border-bottom:1px dashed var(--line2);padding-bottom:10px}
+.facts li b{display:block}
+.facts .mk{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:14px;background:var(--panel);border:1.5px solid var(--line2);color:var(--muted)}
+
+footer{font-size:14px;color:var(--muted);border-top:1.5px solid var(--line);padding-top:14px}
+
+@media (max-width:900px){
+  .hero,.cols{grid-template-columns:1fr}
+  .loops{grid-template-columns:1fr}
+  .facts{grid-template-columns:1fr}
+  .lane,.handoff{grid-template-columns:1fr}
+  .handoff .hbox{justify-content:center}
+  .nodes{flex-direction:column}
+  .arr{width:100%;height:22px}
+  .arr svg{transform:rotate(90deg)}
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Flashcard Bridge · How it works</div>
+      <h1>From a Quizlet set to a flashcard page every student can read</h1>
+      <p class="lede">You build each set once in the Teacher Studio. Students study it on your Google Site in their own language and turn in an English record through Google Classroom.</p>
+    </div>
+    <aside class="legend" aria-label="Legend">
+      <div><span class="sw t"></span><span><b>Teacher</b> · you, in the Teacher Studio</span></div>
+      <div><span class="sw s"></span><span><b>Student</b> · on the Flashcard Bridge page</span></div>
+      <div><span class="sw x"></span><span><b>Other tools</b> · Quizlet, Google Sites, Google Classroom</span></div>
+      <div class="links"><a href="https://claude.ai/artifact/ErVuE7H8GzQ2PWsF3Kg58A" target="_blank" rel="noopener">Open the Teacher Studio</a><a href="https://claude.ai/artifact/JznES7SkNszNNDN2xt3PYe" target="_blank" rel="noopener">Open the sample student page</a></div>
+    </aside>
+  </header>
+
+  <section aria-labelledby="ovH">
+    <h2 id="ovH">The whole flow at a glance</h2>
+    <p class="sub">The top row is what you do once per set. The bottom row is what each student does in class. The record comes back to you in Google Classroom.</p>
+    <div class="flow">
+      <div class="lane t">
+        <div class="lane-name">Teacher<small>once per set</small></div>
+        <div class="nodes">
+          <div class="node ext"><span class="where">Quizlet</span><b>Export the set</b><span>⋯ → Export → Copy text</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node"><span class="where">Studio</span><b>Import &amp; translate</b><span>Paste, read cards, Claude translates</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node"><span class="where">Studio</span><b>Review &amp; pictures</b><span>Check each language, fix icons</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node"><span class="where">Studio</span><b>Export</b><span>Set the test, copy page HTML</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node ext"><span class="where">Google Sites</span><b>Embed &amp; share</b><span>Embed code, about 680 px tall, link in Classroom</span></div>
+        </div>
+      </div>
+      <div class="handoff" aria-hidden="true"><span></span><div class="hbox">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 13l6 6 6-6"/></svg>Students open the Sites link</span>
+        <span>Record comes back in Classroom<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 11l6-6 6 6"/></svg></span>
+      </div></div>
+      <div class="lane s">
+        <div class="lane-name">Student<small>every class</small></div>
+        <div class="nodes">
+          <div class="node"><span class="where">Settings</span><b>Set up</b><span>Name, hour, language, support level</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node"><span class="where">Flashcards</span><b>Meet the words</b><span>Flip, Got it / Still learning</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node"><span class="where">Learn · Match</span><b>Practice</b><span>Multiple choice, then timed pairs</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node"><span class="where">Test</span><b>Show what I know</b><span>Score at the end, study missed cards</span></div>
+          <div class="arr" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="node ext"><span class="where">Google Classroom</span><b>Turn in</b><span>Paste the English record or upload the PDF</span></div>
+        </div>
+      </div>
+      <p class="loopnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg><span>Found a wrong translation? Open the set from <b>My sets</b> in the Studio, fix it, export again, and replace the embed code on your site. Translations you've checked are saved and reused in your next sets automatically.</span></p>
+    </div>
+  </section>
+
+  <section class="cols" aria-label="Step by step">
+    <div>
+      <div class="col-head t"><span class="badge">Teacher</span><h2 style="margin:0">Build a set</h2></div>
+      <p class="sub" style="margin-top:-4px">Once per Quizlet set. About 15–20 minutes the first time, less once your checked words start being reused.</p>
+      <ol class="steps t-steps">
+        <li><div class="st"><span class="where ext">Quizlet website</span><h3>Copy the export</h3><p>Open your set, choose <b>⋯ → Export</b>, keep the default settings, and press <b>Copy text</b>.</p><p class="tip"><b>Only sets you created</b> can be exported. For a set you copied from someone else, make your own version first.</p></div></li>
+        <li><div class="st"><span class="where">Studio · Import</span><h3>Paste and read the cards</h3><p>Press <b>New set</b>, paste into <b>Export text</b>, and press <b>Read cards</b>. Add a title (students see it) and the unit. Fix any row marked yellow.</p><p class="tip">A .csv file or a saved deck file works too, through <b>Open a file…</b>.</p></div></li>
+        <li><div class="st"><span class="where">Studio · Translate</span><h3>Let Claude translate</h3><p>Tick the languages your students need, keep <b>plain-English definitions</b> on, and press <b>Translate all</b>. Allow Claude the first time it asks.</p><p class="tip">About 1–3 minutes for 20 cards. If it won't run, use <b>Translate in a Claude chat</b> on the same step.</p></div></li>
+        <li><div class="st"><span class="where">Studio · Review</span><h3>Check each language</h3><p>Pick a language, fix anything that's wrong, and tick <b>Check</b> on each card. Read the yellow notes Claude leaves about tricky words.</p><p class="tip">Press <b>Copy … list for EL staff</b> to send a language to a colleague, especially <b>Kreyòl</b>. Checked words are reused in future sets.</p></div></li>
+        <li><div class="st"><span class="where">Studio · Pictures</span><h3>Fix the pictures</h3><p>Press <b>Change</b> on any card whose icon doesn't fit, or <b>Upload</b> your own image. Quizlet images don't come across.</p></div></li>
+        <li><div class="st"><span class="where">Studio · Test &amp; export</span><h3>Set the test and preview</h3><p>Choose the number of questions and question types. Look over the checklist, then press <b>Preview student page</b> and try it as a student.</p></div></li>
+        <li><div class="st"><span class="where ext">Google Sites</span><h3>Put it on your site</h3><p>Press <b>Copy page HTML</b>. In Sites choose <b>Insert → Embed → Embed code</b>, paste, then <b>Next → Insert</b>. Stretch the box full width and about <b>680 px</b> tall. Publish.</p><p class="tip">Also press <b>Download deck file</b> to keep a backup copy you can edit later.</p></div></li>
+        <li><div class="st"><span class="where ext">Google Classroom</span><h3>Post the assignment</h3><p>Share the Sites link and ask students to <b>paste their Flashcard Bridge record</b> as their answer, or attach the PDF.</p></div></li>
+      </ol>
+    </div>
+    <div>
+      <div class="col-head s"><span class="badge">Student</span><h2 style="margin:0">Study a set</h2></div>
+      <p class="sub" style="margin-top:-4px">In class or at home on a Chromebook or phone. Every button shows English first with the student's language underneath.</p>
+      <ol class="steps s-steps">
+        <li><div class="st"><span class="where ext">Google Classroom</span><h3>Open the link</h3><p>The Settings panel opens by itself the first time.</p></div></li>
+        <li><div class="st"><span class="where">Settings</span><h3>Choose name, language and support</h3><p>Type your name and class hour. Pick <b>English only, Español, Français, Kreyòl or العربية</b>, then a support level (see the table below). The page remembers these on that computer.</p></div></li>
+        <li><div class="st"><span class="where">Flashcards</span><h3>Meet the words</h3><p>Tap the card or press <kbd>Space</kbd> to flip. Then choose <b>Got it</b> or <b>Still learning</b>. The 🔊 button reads English, then your language.</p><p class="tip">At the end, press <b>Study my Still learning cards</b> to go again with just those.</p></div></li>
+        <li><div class="st"><span class="where">Learn</span><h3>Practice with choices</h3><p>Pick an answer, then press <b>Check</b>. A wrong answer shows which card you picked and comes back later. Get a card right 2 times in a row to master it.</p></div></li>
+        <li><div class="st"><span class="where">Match</span><h3>Play Match</h3><p>Tap a card, then tap its partner. Newcomers can match <b>English ↔ my language</b>. Try to beat your best time.</p></div></li>
+        <li><div class="st"><span class="where">Test</span><h3>Take the practice test</h3><p>Answer every question, write the short answer in English using the sentence starters, and press <b>Finish test</b>. Right answers show at the end.</p><p class="tip">Press <b>Study the cards I missed</b> to go straight back to Flashcards.</p></div></li>
+        <li><div class="st"><span class="where ext">Google Classroom</span><h3>Turn it in</h3><p>Press <b>Copy record</b> and paste it into the Classroom assignment. Or press <b>Download PDF</b> and attach the file.</p><p class="tip">If copying doesn't work, the record is highlighted. Press <kbd>Ctrl</kbd> + <kbd>C</kbd>.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="loopH">
+    <h2 id="loopH">When things change</h2>
+    <p class="sub">Three situations you'll run into after the first set, and what to do.</p>
+    <div class="loops">
+      <div class="loop"><span class="trig">A translation is wrong</span><h3>Fix and re-export</h3><p>The fix is saved for next time too.</p>
+        <div class="chain"><span class="chip t">My sets</span><i>→</i><span class="chip t">Open</span><i>→</i><span class="chip t">Review</span><i>→</i><span class="chip t">Copy page HTML</span><i>→</i><span class="chip x">Edit embed in Sites</span></div></div>
+      <div class="loop"><span class="trig">You add terms in Quizlet</span><h3>Add them in the Studio</h3><p>Open the set, press <b>+ Add a card</b> on Import, then <b>Translate the cards that still need it</b>. Nothing else is redone.</p>
+        <div class="chain"><span class="chip t">Import</span><i>→</i><span class="chip t">Translate</span><i>→</i><span class="chip t">Review new cards</span><i>→</i><span class="chip t">Export</span></div></div>
+      <div class="loop"><span class="trig">A student scores low</span><h3>Send them back to study</h3><p>The record lists every missed term. Students can press <b>Study the cards I missed</b> and retake a new test.</p>
+        <div class="chain"><span class="chip x">Record</span><i>→</i><span class="chip s">Flashcards</span><i>→</i><span class="chip s">Learn</span><i>→</i><span class="chip s">New test</span></div></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="supH">
+    <h2 id="supH">Which support level?</h2>
+    <p class="sub">Students choose in Settings and can change it anytime. A starting point you can suggest:</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Level</th><th>Good starting point for</th><th>What the student sees</th></tr></thead>
+      <tbody>
+        <tr><td><b>Full support</b></td><td>Newcomers, WIDA 1–2</td><td>Their language always on the card, the plain-English definition first, 3 answer choices, and Match set to English ↔ my language</td></tr>
+        <tr><td><b>Some support</b></td><td>WIDA 3–4</td><td>English on the card, with a <b>Show my language</b> button when they need it, and 4 answer choices</td></tr>
+        <tr><td><b>No support</b></td><td>Gen-ed students, WIDA 5–6</td><td>A clean English-only page that works like Quizlet</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="factH">
+    <h2 id="factH">Good to know</h2>
+    <ul class="facts">
+      <li><span class="mk">1</span><span><b>Progress stays on the device.</b>Each student's progress is saved in that Chromebook's browser. The turn-in record is what counts.</span></li>
+      <li><span class="mk">2</span><span><b>Kreyòl read-aloud.</b>Most Chromebooks have no Kreyòl voice, so the speaker reads English only and says so. Arabic voices are sometimes missing too.</span></li>
+      <li><span class="mk">3</span><span><b>Keep the Studio private.</b>Anyone you share it with could see your saved sets. Share the Google Site with students, never the Studio.</span></li>
+      <li><span class="mk">4</span><span><b>“Machine translated” note.</b>Students see it for any language you haven't fully checked. It goes away once every card in that language is checked.</span></li>
+      <li><span class="mk">5</span><span><b>Nothing to log in to.</b>Students need no accounts, and no student data leaves their device except the record they choose to paste.</span></li>
+      <li><span class="mk">6</span><span><b>Translation uses your Claude account.</b>Checked words are reused, so each new set costs less than the one before.</span></li>
+    </ul>
+  </section>
+
+  <footer>Flashcard Bridge · Jason Brantley, 8th grade Earth Science · Updated September 25, 2026. The links above only open for you until you share them.</footer>
+</div>
+
+</body>
+</html>

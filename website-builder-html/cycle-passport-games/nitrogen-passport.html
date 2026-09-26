@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nitrogen Passport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+Arabic:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#F1F4EC; --card:#FBFCF8; --ink:#1C2B2A; --muted:#56655F; --line:#D3DACD;
+  --sky1:#CFE2F1; --sky2:#EAF2F1; --land:#D8E6BD; --under:#D9C4A6; --sea:#8EC3DE; --lake:#A7D2E6;
+  --air:#4F8FC9; --water:#1F7BAE; --earth:#8B5E3C; --life:#3A8A46; --human:#B97C0C;
+  --n:#2F4FE0; --n-ink:#FFFFFF; --amber:#E7A51C; --amber-ink:#2E2100; --hl:#FFF3CF;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --arabic:"Noto Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0F1716; --card:#162120; --ink:#E5ECE4; --muted:#9DAEA6; --line:#2A3835;
+    --sky1:#1A2C3B; --sky2:#15222A; --land:#1E2D1B; --under:#2D2318; --sea:#1B4761; --lake:#21506A;
+    --air:#7DB3E6; --water:#57AEE0; --earth:#C99A74; --life:#6CC47A; --human:#E6AE45;
+    --n:#7C93FF; --n-ink:#0B1030; --amber:#F2B73E; --amber-ink:#241A00; --hl:#3A3016;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0F1716; --card:#162120; --ink:#E5ECE4; --muted:#9DAEA6; --line:#2A3835;
+  --sky1:#1A2C3B; --sky2:#15222A; --land:#1E2D1B; --under:#2D2318; --sea:#1B4761; --lake:#21506A;
+  --air:#7DB3E6; --water:#57AEE0; --earth:#C99A74; --life:#6CC47A; --human:#E6AE45;
+  --n:#7C93FF; --n-ink:#0B1030; --amber:#F2B73E; --amber-ink:#241A00; --hl:#3A3016;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;padding:0 16px;}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.1}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--n);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 20px}
+.brand h1{font-size:clamp(28px,4.4vw,44px);font-weight:800;letter-spacing:-.01em}
+.brand h1 .atom{display:inline-grid;place-items:center;width:1.05em;height:1.05em;border-radius:50%;background:var(--n);color:var(--n-ink);font-size:.8em;vertical-align:.06em;margin-right:.18em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:15px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.controls label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;flex-direction:column;gap:2px}
+select,input[type=text]{background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;min-height:40px}
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:999px;padding:8px 16px;font-weight:700;min-height:42px}
+.btn:hover{background:var(--card)}
+
+/* main grid */
+.game{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.game{grid-template-columns:1fr}}
+.mapbox{background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.mapbox svg{display:block;width:100%;height:auto}
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 14px;border-top:1.5px solid var(--line);font-size:13px;color:var(--muted)}
+.maplegend span{display:inline-flex;align-items:center;gap:6px}
+.maplegend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+.node .ring{fill:var(--card);stroke-width:3}
+#map.choosing .node{cursor:pointer}
+#map.choosing .node:hover .ring,#map.choosing .node:focus-visible .ring{stroke-width:6;fill:var(--hl)}
+.node:focus{outline:none}
+.pickhint{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--hl);border:1.5px dashed var(--amber);font-size:15px}
+.node .ico{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.node text{font-family:var(--body);font-weight:700;font-size:17px;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+.node.here .ring{stroke-width:6}
+.node.dest .ring{stroke-dasharray:5 4}
+.node.pick .ring{stroke:var(--amber);stroke-width:6;stroke-dasharray:none}
+.zonelabel{font-family:var(--body);font-size:13px;letter-spacing:.14em;fill:var(--muted);font-weight:700}
+.route{fill:none;stroke:var(--muted);stroke-width:2.5;stroke-dasharray:3 7;stroke-linecap:round;opacity:.8}
+.route.pick{stroke:var(--amber);stroke-width:5;stroke-dasharray:none;opacity:1}
+.trail{fill:none;stroke:var(--n);stroke-width:2;opacity:.18}
+#token circle{fill:var(--n);stroke:var(--card);stroke-width:3}
+#token text{fill:var(--n-ink);font-family:var(--display);font-weight:800;font-size:16px;text-anchor:middle;dominant-baseline:central}
+
+/* panel */
+.panel{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:18px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 6px}
+.station{display:flex;gap:14px;align-items:center}
+.station svg{flex:none;width:64px;height:64px}
+.station h2{font-size:28px;font-weight:800}
+.fact{margin:12px 0 0}
+.tr{margin:6px 0 0;padding:6px 10px;border-inline-start:3px solid var(--n);background:color-mix(in srgb,var(--n) 7%,transparent);border-radius:0 6px 6px 0;color:var(--ink);font-size:16px}
+.tr[dir=rtl]{font-family:var(--arabic);border-radius:6px 0 0 6px;font-size:17px;line-height:1.7}
+h2 + .tr, .trname{display:block;font-family:var(--body);font-size:15px;font-weight:400;color:var(--muted);margin:2px 0 0;background:none;border:0;padding:0}
+.trname[dir=rtl]{font-family:var(--arabic)}
+
+.odds{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:6px}
+.odds li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;border:1.5px solid transparent}
+.odds li.pick{background:var(--hl);border-color:var(--amber)}
+.faces{display:flex;gap:3px}
+.mini{width:22px;height:22px;border-radius:5px;border:1.5px solid var(--ink);display:grid;place-items:center;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.odds .to{font-weight:700}
+.odds .via{color:var(--muted);font-size:14px}
+
+.rollrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.die{width:84px;height:84px;border-radius:16px;background:var(--amber);box-shadow:inset 0 -5px 0 rgba(0,0,0,.18);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:12px;flex:none}
+.die span{width:14px;height:14px;border-radius:50%;background:var(--amber-ink);place-self:center;visibility:hidden}
+.die span.on{visibility:visible}
+.die.tumble{animation:tumble .12s linear infinite}
+@keyframes tumble{0%{transform:rotate(0) scale(1)}50%{transform:rotate(12deg) scale(.94)}100%{transform:rotate(-8deg) scale(1)}}
+.rollbtn{background:var(--amber);color:var(--amber-ink);border:0;border-radius:14px;padding:14px 26px;font-family:var(--display);font-weight:800;font-size:22px;min-height:56px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)}
+.rollbtn:disabled{opacity:.45;cursor:not-allowed}
+.travelbtn{background:var(--n);color:var(--n-ink);border:0;border-radius:14px;padding:12px 20px;font-weight:700;font-size:18px;min-height:52px;width:100%}
+.left{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.left b{color:var(--ink);font-size:20px}
+
+.result h3{font-size:22px;font-weight:800;margin-bottom:6px}
+.story{font-size:18px;margin:0}
+.process{margin-top:12px;padding:12px;border-radius:10px;background:var(--paper);border:1.5px solid var(--line)}
+.chip{display:inline-block;font-weight:700;font-size:14px;padding:3px 10px;border-radius:999px;background:var(--n);color:var(--n-ink)}
+.process p{margin:8px 0 0}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* passport */
+.passport{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.passport{grid-template-columns:1fr}}
+.pphead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pphead h2{font-size:24px}
+.stamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.stamp{border:2px dashed var(--line);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font-size:13px;line-height:1.2;color:var(--muted);min-height:108px;position:relative}
+.stamp svg{width:40px;height:40px;opacity:.28}
+.stamp.got{border-style:solid;color:var(--ink);transform:rotate(-2deg)}
+.stamp.got:nth-child(even){transform:rotate(2deg)}
+.stamp.got svg{opacity:1}
+.stamp .ct{position:absolute;top:4px;right:6px;font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}
+.stamp.pop{animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(1.35) rotate(-8deg)}100%{transform:scale(1) rotate(-2deg)}}
+.log{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}
+.log li{display:grid;grid-template-columns:28px 1fr;gap:8px;font-size:15px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.log .num{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700}
+.log .via{color:var(--muted);font-size:13px}
+.empty{color:var(--muted);font-size:15px;margin:0}
+
+/* summary */
+.frames{margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 18px;margin:8px 0 0;font-size:15px}
+.stats b{font-size:22px;font-family:var(--display);display:block}
+.copyrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+textarea{width:100%;min-height:120px;margin-top:10px;background:var(--paper);border:1.5px solid var(--line);border-radius:8px;padding:8px;font:14px/1.4 ui-monospace,Menlo,monospace;color:var(--ink)}
+
+/* setup overlay */
+.overlay{position:fixed;inset:0;background:rgba(10,20,20,.55);display:grid;place-items:center;padding:16px;z-index:10}
+.dialog{background:var(--card);border-radius:16px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:14px;max-height:100%;overflow:auto}
+.dialog h2{font-size:26px}
+.dialog label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:15px}
+.dialog .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.primary{background:var(--n);color:var(--n-ink);border:0;border-radius:999px;padding:10px 22px;font-weight:700;min-height:44px}
+
+details.bank{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 18px}
+details.bank summary{font-family:var(--display);font-weight:800;font-size:20px;cursor:pointer}
+.terms{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:12px}
+.terms div{border-top:1.5px solid var(--line);padding-top:8px}
+.terms h4{margin:0;font-size:16px}
+.terms p{margin:4px 0 0;font-size:15px}
+footer{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1><span class="atom">N</span>Nitrogen Passport</h1>
+      <p>Roll the die to move one nitrogen atom through the nitrogen cycle. Stamp your passport at every stop.</p>
+    </div>
+    <div class="controls">
+      <label for="lang">Home language
+        <select id="lang">
+          <option value="en">English only</option>
+          <option value="es">Español</option>
+          <option value="ar">العربية (Arabic)</option>
+          <option value="ht">Kreyòl ayisyen</option>
+        </select>
+      </label>
+      <button class="btn" id="newTrip" type="button">New trip</button>
+    </div>
+  </header>
+
+  <section class="game">
+    <div class="mapbox">
+      <svg id="map" viewBox="0 0 800 520" role="img" aria-label="Map of the nitrogen cycle showing eleven places a nitrogen atom can travel"></svg>
+      <div class="maplegend">
+        <span><i style="background:var(--air)"></i>Air</span>
+        <span><i style="background:var(--water)"></i>Water</span>
+        <span><i style="background:var(--earth)"></i>Earth</span>
+        <span><i style="background:var(--life)"></i>Living things</span>
+        <span><i style="background:var(--human)"></i>People</span>
+        <span>Dashed lines show where you could go next.</span>
+      </div>
+    </div>
+    <div class="panel" id="panel" aria-live="polite"></div>
+  </section>
+
+  <section class="passport">
+    <div class="card">
+      <div class="pphead"><h2 id="ppTitle">Passport</h2><span class="left" id="ppCount"></span></div>
+      <div class="stamps" id="stamps"></div>
+    </div>
+    <div class="card">
+      <div class="pphead"><h2>Trip log</h2></div>
+      <ol class="log" id="log"></ol>
+    </div>
+  </section>
+
+  <details class="bank">
+    <summary>Word bank: how nitrogen moves</summary>
+    <div class="terms" id="terms"></div>
+  </details>
+
+  <footer>Adapted from <em>The Nitrogen Cycle Game</em>, © 2021 UCAR Center for Science Education (scied.ucar.edu). Die rules follow the original location cards.</footer>
+</div>
+
+<div class="overlay" id="setup" hidden>
+  <form class="dialog" id="setupForm">
+    <h2>Start a new trip</h2>
+    <label for="sName">Your name
+      <input type="text" id="sName" autocomplete="off" placeholder="First name and class period">
+    </label>
+    <label for="sRolls">Number of rolls
+      <select id="sRolls"><option>8</option><option selected>12</option><option>16</option><option>20</option></select>
+    </label>
+    <label for="sStart">Starting place
+      <select id="sStart"></select>
+    </label>
+    <label for="sLang">Home language
+      <select id="sLang">
+        <option value="en">English only</option>
+        <option value="es">Español</option>
+        <option value="ar">العربية (Arabic)</option>
+        <option value="ht">Kreyòl ayisyen</option>
+      </select>
+    </label>
+    <div class="row">
+      <button type="button" class="btn" id="cancelSetup">Cancel</button>
+      <button type="submit" class="primary">Start trip</button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* ---------- DATA ---------- */
+const ZONE = {air:'--air', water:'--water', earth:'--earth', life:'--life', human:'--human'};
+
+const ST = {
+  atmosphere:{x:230,y:80,zone:'air',
+    en:["Atmosphere","Air is about 78% nitrogen gas (N₂). The two nitrogen atoms are locked together very tightly, so most living things can't use it."],
+    es:["Atmósfera","El aire tiene alrededor de 78% de gas nitrógeno (N₂). Los dos átomos de nitrógeno están unidos muy fuerte, así que la mayoría de los seres vivos no lo pueden usar."],
+    ar:["الغلاف الجوي","يتكون الهواء من حوالي 78% من غاز النيتروجين (N₂). ترتبط ذرتا النيتروجين ببعضهما بقوة كبيرة، لذلك لا تستطيع معظم الكائنات الحية استخدامه."],
+    ht:["Atmosfè","Lè a gen anviwon 78% gaz nitwojèn (N₂). De atòm nitwojèn yo kole ansanm byen fò, kidonk pifò bagay vivan pa ka sèvi ak li."]},
+  rain:{x:545,y:82,zone:'water',
+    en:["Rain Water","Nitrogen dissolved in cloud droplets falls back to Earth in rain and snow."],
+    es:["Agua de lluvia","El nitrógeno disuelto en las gotas de las nubes cae de nuevo a la Tierra con la lluvia y la nieve."],
+    ar:["مياه الأمطار","يعود النيتروجين المذاب في قطرات السحب إلى الأرض مع المطر والثلج."],
+    ht:["Dlo lapli","Nitwojèn ki fonn nan ti gout dlo nwaj yo tonbe tounen sou Latè ak lapli ak lanèj."]},
+  surface:{x:595,y:262,zone:'water',
+    en:["Surface Water","Lakes, rivers, and streams hold dissolved nitrogen, mostly as nitrate (NO₃⁻)."],
+    es:["Agua superficial","Los lagos, ríos y arroyos tienen nitrógeno disuelto, casi siempre como nitrato (NO₃⁻)."],
+    ar:["المياه السطحية","تحتوي البحيرات والأنهار والجداول على نيتروجين مذاب، معظمه على شكل نترات (NO₃⁻)."],
+    ht:["Dlo sifas","Lak, rivyè ak ti kouran dlo gen nitwojèn ki fonn ladan yo, sitou tankou nitrat (NO₃⁻)."]},
+  groundwater:{x:490,y:452,zone:'water',
+    en:["Groundwater","Water that soaks into the ground fills the spaces between rocks and soil. It carries dissolved nitrate with it."],
+    es:["Agua subterránea","El agua que se filtra en el suelo llena los espacios entre las rocas y la tierra. Lleva nitrato disuelto."],
+    ar:["المياه الجوفية","الماء الذي يتسرب إلى باطن الأرض يملأ الفراغات بين الصخور والتربة، ويحمل معه النترات المذابة."],
+    ht:["Dlo anba tè","Dlo ki antre anba tè a ranpli espas ant wòch ak tè yo. Li pote nitrat ki fonn avè l."]},
+  ocean:{x:740,y:385,zone:'water',
+    en:["Ocean","The ocean holds huge amounts of dissolved nitrogen. Tiny ocean plants called phytoplankton use it to grow."],
+    es:["Océano","El océano tiene enormes cantidades de nitrógeno disuelto. Unas plantas marinas diminutas llamadas fitoplancton lo usan para crecer."],
+    ar:["المحيط","يحتوي المحيط على كميات هائلة من النيتروجين المذاب. تستخدمه نباتات بحرية صغيرة جدًا تُسمى العوالق النباتية لكي تنمو."],
+    ht:["Oseyan","Oseyan an gen yon pakèt nitwojèn ki fonn ladan l. Ti plant lanmè piti piti yo rele fitoplankton sèvi avè l pou yo grandi."]},
+  soil:{x:410,y:330,zone:'earth',
+    en:["Soil","Bacteria in soil change nitrogen into ammonium (NH₄⁺) and nitrate (NO₃⁻). These are forms plants can absorb."],
+    es:["Suelo","Las bacterias del suelo transforman el nitrógeno en amonio (NH₄⁺) y nitrato (NO₃⁻). Las plantas pueden absorber estas formas."],
+    ar:["التربة","تحوّل البكتيريا في التربة النيتروجين إلى أمونيوم (NH₄⁺) ونترات (NO₃⁻). هذه أشكال تستطيع النباتات امتصاصها."],
+    ht:["Tè","Bakteri nan tè a chanje nitwojèn an amonyòm (NH₄⁺) ak nitrat (NO₃⁻). Plant yo ka absòbe fòm sa yo."]},
+  fertilizers:{x:410,y:212,zone:'human',
+    en:["Fertilizers","People make fertilizer in factories and collect it from manure. Farmers spread it on fields to help crops grow."],
+    es:["Fertilizantes","Las personas fabrican fertilizantes en fábricas y también los obtienen del estiércol. Los agricultores los esparcen en los campos para que crezcan los cultivos."],
+    ar:["الأسمدة","يصنع الناس الأسمدة في المصانع ويجمعونها أيضًا من روث الحيوانات. ينثرها المزارعون في الحقول لمساعدة المحاصيل على النمو."],
+    ht:["Angrè","Moun fè angrè nan faktori, epi yo ranmase l nan fimye bèt tou. Kiltivatè yo simen l nan jaden pou rekòt yo grandi."]},
+  plants:{x:95,y:212,zone:'life',
+    en:["Live Plants","Plants use nitrogen to build proteins, DNA, and chlorophyll, the green pigment that captures sunlight."],
+    es:["Plantas vivas","Las plantas usan el nitrógeno para formar proteínas, ADN y clorofila, el pigmento verde que capta la luz del sol."],
+    ar:["النباتات الحية","تستخدم النباتات النيتروجين لبناء البروتينات والحمض النووي (DNA) والكلوروفيل، وهو الصبغة الخضراء التي تلتقط ضوء الشمس."],
+    ht:["Plant vivan","Plant yo sèvi ak nitwojèn pou fè pwoteyin, ADN ak klowofil, pigman vèt ki kenbe limyè solèy la."]},
+  animals:{x:250,y:212,zone:'life',
+    en:["Live Animals","Animals can't take nitrogen from the air. They get it by eating plants or other animals, then use it to build muscles and DNA."],
+    es:["Animales vivos","Los animales no pueden tomar nitrógeno del aire. Lo obtienen al comer plantas u otros animales, y lo usan para formar músculos y ADN."],
+    ar:["الحيوانات الحية","لا تستطيع الحيوانات أخذ النيتروجين من الهواء. تحصل عليه بأكل النباتات أو الحيوانات الأخرى، ثم تستخدمه لبناء العضلات والحمض النووي."],
+    ht:["Bèt vivan","Bèt pa ka pran nitwojèn nan lè a. Yo jwenn li lè yo manje plant oswa lòt bèt, epi yo sèvi avè l pou fè misk ak ADN."]},
+  waste:{x:250,y:312,zone:'life',
+    en:["Animal Waste","Animal waste (poop and urine) contains nitrogen as urea and ammonia. It's a big source of nitrogen for soil."],
+    es:["Desechos animales","Los desechos de los animales (heces y orina) tienen nitrógeno en forma de urea y amoníaco. Son una gran fuente de nitrógeno para el suelo."],
+    ar:["فضلات الحيوانات","تحتوي فضلات الحيوانات (البراز والبول) على النيتروجين على شكل يوريا وأمونيا، وهي مصدر مهم للنيتروجين في التربة."],
+    ht:["Fatra bèt","Fatra bèt (poupou ak pipi) gen nitwojèn ladan l tankou ure ak amonyak. Se yon gwo sous nitwojèn pou tè a."]},
+  dead:{x:95,y:312,zone:'life',
+    en:["Dead Plants & Animals","When living things die, the nitrogen in their proteins stays locked up until decomposers break it down."],
+    es:["Plantas y animales muertos","Cuando los seres vivos mueren, el nitrógeno de sus proteínas queda atrapado hasta que los descomponedores lo descomponen."],
+    ar:["النباتات والحيوانات الميتة","عندما تموت الكائنات الحية، يبقى النيتروجين محبوسًا في بروتيناتها حتى تقوم المُحلِّلات بتفكيكها."],
+    ht:["Plant ak bèt ki mouri","Lè bagay vivan mouri, nitwojèn ki nan pwoteyin yo rete bloke jiskaske dekonpozè yo kraze yo."]}
+};
+const ORDER = ['atmosphere','rain','surface','groundwater','ocean','soil','fertilizers','plants','animals','waste','dead'];
+
+const PR = {
+  lightning:{en:["Lightning fixation","Lightning's energy breaks apart N₂ gas. The nitrogen joins with oxygen and falls to the ground in rain."],
+    es:["Fijación por rayos","La energía de un rayo separa el gas N₂. El nitrógeno se une con el oxígeno y cae al suelo con la lluvia."],
+    ar:["التثبيت بالبرق","تكسر طاقة البرق غاز N₂. يتحد النيتروجين مع الأكسجين ويسقط إلى الأرض مع المطر."],
+    ht:["Fiksasyon pa zèklè","Enèji zèklè a kraze gaz N₂. Nitwojèn nan mare ak oksijèn epi li tonbe atè ak lapli."]},
+  fixation:{en:["Nitrogen fixation","Special bacteria change N₂ gas from the air into ammonia (NH₃), a form living things can use."],
+    es:["Fijación de nitrógeno","Bacterias especiales transforman el gas N₂ del aire en amoníaco (NH₃), una forma que los seres vivos pueden usar."],
+    ar:["تثبيت النيتروجين","تحوّل بكتيريا خاصة غاز N₂ الموجود في الهواء إلى أمونيا (NH₃)، وهو شكل تستطيع الكائنات الحية استخدامه."],
+    ht:["Fiksasyon nitwojèn","Kèk bakteri espesyal chanje gaz N₂ ki nan lè a an amonyak (NH₃), yon fòm bagay vivan ka itilize."]},
+  precipitation:{en:["Precipitation","Water falls from clouds as rain, snow, sleet, or hail, carrying dissolved nitrogen with it."],
+    es:["Precipitación","El agua cae de las nubes como lluvia, nieve, aguanieve o granizo, y lleva nitrógeno disuelto."],
+    ar:["الهطول","يسقط الماء من السحب على شكل مطر أو ثلج أو صقيع أو بَرَد، حاملًا معه النيتروجين المذاب."],
+    ht:["Presipitasyon","Dlo tonbe soti nan nwaj yo kòm lapli, lanèj oswa grèl, epi li pote nitwojèn ki fonn avè l."]},
+  uptake:{en:["Uptake","Plant roots (or phytoplankton in water) absorb nitrate and ammonium and use them to build proteins."],
+    es:["Absorción","Las raíces de las plantas (o el fitoplancton en el agua) absorben nitrato y amonio y los usan para formar proteínas."],
+    ar:["الامتصاص","تمتص جذور النباتات (أو العوالق النباتية في الماء) النترات والأمونيوم وتستخدمها لبناء البروتينات."],
+    ht:["Absòpsyon","Rasin plant yo (oswa fitoplankton nan dlo) absòbe nitrat ak amonyòm epi yo sèvi ak yo pou fè pwoteyin."]},
+  runoff:{en:["Runoff","Water flowing over the land picks up nitrogen and carries it into lakes, rivers, and the ocean."],
+    es:["Escorrentía","El agua que corre sobre la tierra recoge nitrógeno y lo lleva a lagos, ríos y al océano."],
+    ar:["الجريان السطحي","يلتقط الماء الذي يجري فوق سطح الأرض النيتروجين وينقله إلى البحيرات والأنهار والمحيط."],
+    ht:["Dlo k ap koule sou tè","Dlo k ap koule sou tè a ranmase nitwojèn epi pote l nan lak, rivyè ak oseyan."]},
+  leaching:{en:["Leaching","Water soaks down through soil and carries dissolved nitrate into the groundwater."],
+    es:["Lixiviación","El agua se filtra por el suelo y lleva el nitrato disuelto hasta el agua subterránea."],
+    ar:["الترشيح","يتسرب الماء عبر التربة وينقل النترات المذابة إلى المياه الجوفية."],
+    ht:["Lesivaj","Dlo a desann nan tè a epi li pote nitrat ki fonn nan dlo anba tè a."]},
+  groundflow:{en:["Groundwater flow","Groundwater moves slowly underground and comes out in springs, streams, and the ocean."],
+    es:["Flujo de agua subterránea","El agua subterránea se mueve lentamente bajo tierra y sale en manantiales, arroyos y el océano."],
+    ar:["جريان المياه الجوفية","تتحرك المياه الجوفية ببطء تحت الأرض وتخرج في الينابيع والجداول والمحيط."],
+    ht:["Koule dlo anba tè","Dlo anba tè a deplase dousman anba tè epi li soti nan sous, ti rivyè ak oseyan."]},
+  watermove:{en:["Water movement","Moving water carries dissolved nitrogen from one place to another."],
+    es:["Movimiento del agua","El agua en movimiento lleva el nitrógeno disuelto de un lugar a otro."],
+    ar:["حركة المياه","تنقل المياه المتحركة النيتروجين المذاب من مكان إلى آخر."],
+    ht:["Mouvman dlo","Dlo k ap deplase pote nitwojèn ki fonn soti yon kote al nan yon lòt."]},
+  denitrification:{en:["Denitrification","Bacteria change nitrate back into N₂ gas, which returns to the atmosphere. This closes the cycle."],
+    es:["Desnitrificación","Las bacterias convierten el nitrato de nuevo en gas N₂, que regresa a la atmósfera. Así se cierra el ciclo."],
+    ar:["نزع النيتروجين","تحوّل البكتيريا النترات مرة أخرى إلى غاز N₂ الذي يعود إلى الغلاف الجوي، وبذلك تكتمل الدورة."],
+    ht:["Denitrifikasyon","Bakteri chanje nitrat tounen gaz N₂, ki retounen nan atmosfè a. Se konsa sik la fèmen."]},
+  consumption:{en:["Eating (consumption)","When an animal eats a plant, the nitrogen in the plant's proteins becomes part of the animal."],
+    es:["Alimentación (consumo)","Cuando un animal come una planta, el nitrógeno de las proteínas de la planta pasa a formar parte del animal."],
+    ar:["التغذّي (الاستهلاك)","عندما يأكل الحيوان نباتًا، يصبح النيتروجين الموجود في بروتينات النبات جزءًا من جسم الحيوان."],
+    ht:["Manje (konsomasyon)","Lè yon bèt manje yon plant, nitwojèn ki nan pwoteyin plant lan vin fè pati bèt la."]},
+  death:{en:["Death","When a plant or animal dies, the nitrogen stays in its body until it is decomposed."],
+    es:["Muerte","Cuando una planta o un animal muere, el nitrógeno se queda en su cuerpo hasta que se descompone."],
+    ar:["الموت","عندما يموت نبات أو حيوان، يبقى النيتروجين في جسمه حتى يتحلل."],
+    ht:["Lanmò","Lè yon plant oswa yon bèt mouri, nitwojèn nan rete nan kò l jiskaske li dekonpoze."]},
+  excretion:{en:["Excretion","Animals get rid of extra nitrogen in their waste as urea and ammonia."],
+    es:["Excreción","Los animales eliminan el nitrógeno que les sobra en sus desechos, como urea y amoníaco."],
+    ar:["الإخراج","تتخلص الحيوانات من النيتروجين الزائد في فضلاتها على شكل يوريا وأمونيا."],
+    ht:["Ekskresyon","Bèt yo mete nitwojèn ki twòp deyò nan fatra yo, tankou ure ak amonyak."]},
+  decomposition:{en:["Decomposition","Bacteria and fungi break down dead things and waste. They release nitrogen into the soil or water as ammonium."],
+    es:["Descomposición","Las bacterias y los hongos descomponen los seres muertos y los desechos. Liberan nitrógeno al suelo o al agua como amonio."],
+    ar:["التحلّل","تفكك البكتيريا والفطريات الكائنات الميتة والفضلات، وتطلق النيتروجين في التربة أو الماء على شكل أمونيوم."],
+    ht:["Dekonpozisyon","Bakteri ak dyondyon kraze bagay ki mouri ak fatra. Yo lage nitwojèn nan tè a oswa nan dlo a tankou amonyòm."]},
+  human:{en:["Human activity","People move nitrogen when they make fertilizer, collect manure, and spread it on farm fields."],
+    es:["Actividad humana","Las personas mueven el nitrógeno cuando fabrican fertilizantes, recogen estiércol y lo esparcen en los campos de cultivo."],
+    ar:["النشاط البشري","ينقل الناس النيتروجين عندما يصنعون الأسمدة ويجمعون الروث وينثرونه في الحقول الزراعية."],
+    ht:["Aktivite moun","Moun deplase nitwojèn lè yo fè angrè, lè yo ranmase fimye, epi lè yo simen l nan jaden."]},
+  combustion:{en:["Burning (combustion)","Fire releases nitrogen stored in wood and plants back into the air as gas."],
+    es:["Quema (combustión)","El fuego libera de nuevo al aire, en forma de gas, el nitrógeno guardado en la madera y las plantas."],
+    ar:["الاحتراق","يطلق الحريق النيتروجين المخزّن في الخشب والنباتات إلى الهواء مرة أخرى على شكل غاز."],
+    ht:["Boule (konbisyon)","Dife lage nitwojèn ki te estoke nan bwa ak plant yo tounen nan lè a tankou gaz."]}
+};
+
+/* Moves: faces, destination, process, story text */
+const MV = {
+  atmosphere:[
+    {f:[1,2],to:'soil',p:'lightning',
+     en:"Lightning strikes! Its energy turns you from nitrogen gas into a solid, and rain carries you down to the soil.",
+     es:"¡Cae un rayo! Su energía te convierte de gas nitrógeno en un sólido, y la lluvia te lleva hasta el suelo.",
+     ar:"ضربة برق! تحوّلك طاقته من غاز النيتروجين إلى مادة صلبة، ويحملك المطر إلى التربة.",
+     ht:"Zèklè frape! Enèji li chanje w soti gaz nitwojèn an yon solid, epi lapli pote w desann nan tè a."},
+    {f:[3],to:'soil',p:'fixation',
+     en:"Blue-green algae and bacteria grab you from the air and change you into a solid. Now you're in the soil!",
+     es:"Las algas verdeazuladas y las bacterias te atrapan del aire y te convierten en un sólido. ¡Ahora estás en el suelo!",
+     ar:"تلتقطك الطحالب الخضراء المزرقة والبكتيريا من الهواء وتحوّلك إلى مادة صلبة. أنت الآن في التربة!",
+     ht:"Alg ble-vèt ak bakteri pran w nan lè a epi chanje w an yon solid. Kounye a ou nan tè a!"},
+    {f:[4],to:'soil',p:'fixation',
+     en:"Bacteria living in the roots of bean plants pull you out of the air and bring you into the soil!",
+     es:"Las bacterias que viven en las raíces de las plantas de frijol te sacan del aire y te llevan al suelo.",
+     ar:"تسحبك البكتيريا التي تعيش في جذور نباتات الفاصوليا من الهواء وتنقلك إلى التربة!",
+     ht:"Bakteri ki viv nan rasin plant pwa yo rale w soti nan lè a epi mennen w nan tè a!"},
+    {f:[5,6],to:'rain',p:'precipitation',
+     en:"You dissolve into water droplets in a cloud. Then you fall as rain!",
+     es:"Te disuelves en las gotitas de agua de una nube. ¡Luego caes como lluvia!",
+     ar:"تذوب في قطرات الماء داخل سحابة، ثم تسقط مع المطر!",
+     ht:"Ou fonn nan ti gout dlo ki nan yon nwaj. Apre sa, ou tonbe tankou lapli!"}],
+  surface:[
+    {f:[1,2],to:'plants',p:'uptake',
+     en:"You're just the kind of nitrogen plants need. A water plant's roots absorb you, and now you're inside a live plant!",
+     es:"Eres justo el tipo de nitrógeno que las plantas necesitan. Las raíces de una planta acuática te absorben, ¡y ahora estás dentro de una planta viva!",
+     ar:"أنت نوع النيتروجين الذي تحتاجه النباتات تمامًا. تمتصك جذور نبات مائي، وأنت الآن داخل نبات حي!",
+     ht:"Ou se egzakteman kalite nitwojèn plant yo bezwen. Rasin yon plant dlo absòbe w, epi kounye a ou anndan yon plant vivan!"},
+    {f:[3,4],to:'ocean',p:'watermove',
+     en:"You travel down rivers and streams all the way to the ocean!",
+     es:"¡Viajas por ríos y arroyos hasta llegar al océano!",
+     ar:"تسافر عبر الأنهار والجداول حتى تصل إلى المحيط!",
+     ht:"Ou vwayaje nan rivyè ak ti kouran dlo jouk ou rive nan oseyan an!"},
+    {f:[5,6],to:'groundwater',p:'leaching',
+     en:"You soak down through the bottom of the lake, deep underground into the groundwater!",
+     es:"Te filtras por el fondo del lago y bajas hasta el agua subterránea.",
+     ar:"تتسرب عبر قاع البحيرة إلى أعماق الأرض حتى تصل إلى المياه الجوفية!",
+     ht:"Ou antre nan fon lak la epi ou desann byen fon anba tè nan dlo anba tè a!"}],
+  rain:[
+    {f:[1],to:'surface',p:'precipitation',
+     en:"You fall into a lake or stream. Now you're part of the surface water.",
+     es:"Caes en un lago o un arroyo. Ahora eres parte del agua superficial.",
+     ar:"تسقط في بحيرة أو جدول. أنت الآن جزء من المياه السطحية.",
+     ht:"Ou tonbe nan yon lak oswa yon ti rivyè. Kounye a ou fè pati dlo sifas la."},
+    {f:[2,3],to:'soil',p:'precipitation',
+     en:"You fall on the land and soak into the soil!",
+     es:"¡Caes sobre la tierra y te metes en el suelo!",
+     ar:"تسقط على اليابسة وتتسرب إلى التربة!",
+     ht:"Ou tonbe sou tè a epi ou antre nan tè a!"},
+    {f:[4],to:'groundwater',p:'leaching',
+     en:"You land on the ground and soak deep down into the groundwater!",
+     es:"Caes al suelo y te filtras muy abajo, hasta el agua subterránea.",
+     ar:"تسقط على الأرض وتتسرب إلى الأعماق حتى المياه الجوفية!",
+     ht:"Ou tonbe atè epi ou desann byen fon nan dlo anba tè a!"},
+    {f:[5,6],to:'ocean',p:'precipitation',
+     en:"You rain down right into the ocean!",
+     es:"¡Caes como lluvia directamente en el océano!",
+     ar:"تسقط مع المطر مباشرة في المحيط!",
+     ht:"Ou tonbe ak lapli dirèkteman nan oseyan an!"}],
+  groundwater:[
+    {f:[1,3,5],to:'surface',p:'groundflow',
+     en:"The groundwater you're dissolved in slowly flows and comes out in a spring or stream. Now you're surface water!",
+     es:"El agua subterránea en la que estás disuelto fluye lentamente y sale en un manantial o arroyo. ¡Ahora eres agua superficial!",
+     ar:"تتدفق المياه الجوفية التي أنت مذاب فيها ببطء وتخرج في نبع أو جدول. أنت الآن مياه سطحية!",
+     ht:"Dlo anba tè kote ou fonn nan koule dousman epi li soti nan yon sous oswa yon ti rivyè. Kounye a ou se dlo sifas!"},
+    {f:[2,4,6],to:'ocean',p:'groundflow',
+     en:"The groundwater you're dissolved in flows underground all the way to the ocean!",
+     es:"El agua subterránea en la que estás disuelto fluye bajo tierra hasta el océano.",
+     ar:"تتدفق المياه الجوفية التي أنت مذاب فيها تحت الأرض حتى تصل إلى المحيط!",
+     ht:"Dlo anba tè kote ou fonn nan koule anba tè jouk li rive nan oseyan an!"}],
+  fertilizers:[
+    {f:[1,2],to:'surface',p:'runoff',
+     en:"Rain washes you off a farm field. You dissolve and flow into the surface water!",
+     es:"La lluvia te arrastra de un campo de cultivo. Te disuelves y fluyes hacia el agua superficial.",
+     ar:"يجرفك المطر من حقل زراعي، فتذوب وتجري إلى المياه السطحية!",
+     ht:"Lapli bale w soti nan yon jaden. Ou fonn epi ou koule nan dlo sifas la!"},
+    {f:[3,4],to:'soil',p:'human',
+     en:"A farmer spreads you on a field. You become part of the soil!",
+     es:"Un agricultor te esparce en un campo. ¡Ahora eres parte del suelo!",
+     ar:"ينثرك مزارع في حقل، فتصبح جزءًا من التربة!",
+     ht:"Yon kiltivatè simen w nan yon jaden. Ou vin fè pati tè a!"},
+    {f:[5,6],to:'plants',p:'uptake',
+     en:"You're just the kind of nitrogen plants need. A crop's roots absorb you, and now you're inside a live plant!",
+     es:"Eres justo el tipo de nitrógeno que las plantas necesitan. Las raíces de un cultivo te absorben, ¡y ahora estás dentro de una planta viva!",
+     ar:"أنت نوع النيتروجين الذي تحتاجه النباتات تمامًا. تمتصك جذور محصول زراعي، وأنت الآن داخل نبات حي!",
+     ht:"Ou se egzakteman kalite nitwojèn plant yo bezwen. Rasin yon rekòt absòbe w, epi kounye a ou anndan yon plant vivan!"}],
+  soil:[
+    {f:[1],to:'groundwater',p:'leaching',
+     en:"Rain soaks through the soil and carries you down into the groundwater!",
+     es:"La lluvia se filtra por el suelo y te lleva hacia abajo, hasta el agua subterránea.",
+     ar:"يتسرب المطر عبر التربة ويحملك إلى أسفل حتى المياه الجوفية!",
+     ht:"Lapli antre nan tè a epi li pote w desann nan dlo anba tè a!"},
+    {f:[2],to:'surface',p:'runoff',
+     en:"Rain washes over the ground and carries you into the surface water!",
+     es:"La lluvia corre sobre el suelo y te lleva al agua superficial.",
+     ar:"يجري المطر فوق الأرض ويحملك إلى المياه السطحية!",
+     ht:"Lapli koule sou tè a epi li pote w nan dlo sifas la!"},
+    {f:[3,4],to:'plants',p:'uptake',
+     en:"You're just the kind of nitrogen plants need. A plant's roots absorb you, and now you're inside a live plant!",
+     es:"Eres justo el tipo de nitrógeno que las plantas necesitan. Las raíces de una planta te absorben, ¡y ahora estás dentro de una planta viva!",
+     ar:"أنت نوع النيتروجين الذي تحتاجه النباتات تمامًا. تمتصك جذور نبات، وأنت الآن داخل نبات حي!",
+     ht:"Ou se egzakteman kalite nitwojèn plant yo bezwen. Rasin yon plant absòbe w, epi kounye a ou anndan yon plant vivan!"},
+    {f:[5,6],to:'atmosphere',p:'denitrification',
+     en:"Soil bacteria transform you back into nitrogen gas. You float up into the atmosphere!",
+     es:"Las bacterias del suelo te transforman de nuevo en gas nitrógeno. ¡Subes flotando a la atmósfera!",
+     ar:"تحوّلك بكتيريا التربة مرة أخرى إلى غاز النيتروجين، فتطفو صاعدًا إلى الغلاف الجوي!",
+     ht:"Bakteri nan tè a chanje w tounen gaz nitwojèn. Ou monte flote nan atmosfè a!"}],
+  ocean:[
+    {f:[1],to:'groundwater',p:'watermove',
+     en:"Look out! Water is on the move. Seawater pushes into the land, and you wash into the groundwater!",
+     es:"¡Cuidado! El agua está en movimiento. El agua del mar entra en la tierra y te arrastra hasta el agua subterránea.",
+     ar:"انتبه! الماء يتحرك. تندفع مياه البحر نحو اليابسة، فتنجرف إلى المياه الجوفية!",
+     ht:"Atansyon! Dlo a ap deplase. Dlo lanmè a antre nan tè a, epi li pote w nan dlo anba tè a!"},
+    {f:[2,3],to:'plants',p:'uptake',
+     en:"Phytoplankton and seaweed absorb you. Now you're inside a live plant!",
+     es:"El fitoplancton y las algas marinas te absorben. ¡Ahora estás dentro de una planta viva!",
+     ar:"تمتصك العوالق النباتية والأعشاب البحرية. أنت الآن داخل نبات حي!",
+     ht:"Fitoplankton ak zèb lanmè absòbe w. Kounye a ou anndan yon plant vivan!"},
+    {f:[4,5,6],to:'atmosphere',p:'denitrification',
+     en:"Ocean bacteria transform you into nitrogen gas. You bubble up into the atmosphere!",
+     es:"Las bacterias del océano te transforman en gas nitrógeno. ¡Subes en burbujas a la atmósfera!",
+     ar:"تحوّلك بكتيريا المحيط إلى غاز النيتروجين، فتصعد في فقاعات إلى الغلاف الجوي!",
+     ht:"Bakteri oseyan an chanje w an gaz nitwojèn. Ou monte tankou ti boul nan atmosfè a!"}],
+  animals:[
+    {f:[1,3,5],to:'dead',p:'death',
+     en:"The animal you're in has died. Go to dead plants and animals.",
+     es:"El animal en el que estás ha muerto. Ve a plantas y animales muertos.",
+     ar:"مات الحيوان الذي أنت بداخله. انتقل إلى النباتات والحيوانات الميتة.",
+     ht:"Bèt ou te ladan an mouri. Ale nan plant ak bèt ki mouri."},
+    {f:[2,4,6],to:'waste',p:'excretion',
+     en:"The animal you're in went to the bathroom, and now you're in its waste. Go to animal waste!",
+     es:"El animal en el que estás hizo sus necesidades, y ahora estás en sus desechos. ¡Ve a desechos animales!",
+     ar:"قضى الحيوان الذي أنت بداخله حاجته، وأنت الآن في فضلاته. انتقل إلى فضلات الحيوانات!",
+     ht:"Bèt ou te ladan an al twalèt, epi kounye a ou nan fatra li. Ale nan fatra bèt!"}],
+  waste:[
+    {f:[1,2],to:'soil',p:'decomposition',
+     en:"Watch your step! Bacteria and fungi break down the waste, and you're decomposing into the soil.",
+     es:"¡Cuidado dónde pisas! Las bacterias y los hongos descomponen los desechos, y tú te descompones en el suelo.",
+     ar:"انتبه أين تخطو! تفكك البكتيريا والفطريات الفضلات، وأنت تتحلل في التربة.",
+     ht:"Gade kote w mache! Bakteri ak dyondyon kraze fatra a, epi ou ap dekonpoze nan tè a."},
+    {f:[3,4],to:'fertilizers',p:'human',
+     en:"A farm supply company picks you up and turns you into fertilizer!",
+     es:"Una empresa de suministros agrícolas te recoge y te convierte en fertilizante.",
+     ar:"تجمعك شركة لمستلزمات المزارع وتحوّلك إلى سماد!",
+     ht:"Yon konpayi pwodwi agrikòl ranmase w epi fè w tounen angrè!"},
+    {f:[5,6],to:'surface',p:'runoff',
+     en:"What's that in the water? Rain washes you into a stream, and you dissolve into the surface water!",
+     es:"¿Qué es eso en el agua? La lluvia te arrastra a un arroyo y te disuelves en el agua superficial.",
+     ar:"ما هذا في الماء؟ يجرفك المطر إلى جدول، فتذوب في المياه السطحية!",
+     ht:"Kisa sa ye nan dlo a? Lapli bale w nan yon ti rivyè, epi ou fonn nan dlo sifas la!"}],
+  dead:[
+    {f:[1,2],to:'soil',p:'decomposition',
+     en:"Decomposers break down the dead body, and you become part of the soil!",
+     es:"Los descomponedores descomponen el cuerpo muerto, ¡y tú pasas a formar parte del suelo!",
+     ar:"تفكك المُحلِّلات الجسم الميت، فتصبح جزءًا من التربة!",
+     ht:"Dekonpozè yo kraze kò ki mouri a, epi ou vin fè pati tè a!"},
+    {f:[3],to:'surface',p:'decomposition',
+     en:"You're decomposed and dissolve into a nearby lake or stream. Now you're surface water!",
+     es:"Te descompones y te disuelves en un lago o arroyo cercano. ¡Ahora eres agua superficial!",
+     ar:"تتحلل وتذوب في بحيرة أو جدول قريب. أنت الآن مياه سطحية!",
+     ht:"Ou dekonpoze epi ou fonn nan yon lak oswa yon ti rivyè ki toupre. Kounye a ou se dlo sifas!"},
+    {f:[4],to:'ocean',p:'decomposition',
+     en:"You're decomposed and dissolve into the ocean!",
+     es:"¡Te descompones y te disuelves en el océano!",
+     ar:"تتحلل وتذوب في المحيط!",
+     ht:"Ou dekonpoze epi ou fonn nan oseyan an!"},
+    {f:[5,6],to:'atmosphere',p:'combustion',
+     en:"Forest fire! The wood you were in burns, and you're released into the atmosphere.",
+     es:"¡Incendio forestal! La madera en la que estabas se quema y quedas libre en la atmósfera.",
+     ar:"حريق غابة! يحترق الخشب الذي كنت بداخله، فتنطلق إلى الغلاف الجوي.",
+     ht:"Dife nan forè! Bwa ou te ladan an boule, epi ou lage nan atmosfè a."}],
+  plants:[
+    {f:[1,3,5],to:'dead',p:'death',
+     en:"The plant you're in has died. Go to dead plants and animals.",
+     es:"La planta en la que estás ha muerto. Ve a plantas y animales muertos.",
+     ar:"مات النبات الذي أنت بداخله. انتقل إلى النباتات والحيوانات الميتة.",
+     ht:"Plant ou te ladan an mouri. Ale nan plant ak bèt ki mouri."},
+    {f:[2,4,6],to:'animals',p:'consumption',
+     en:"An animal eats the plant you're in! Go to live animals.",
+     es:"¡Un animal se come la planta en la que estás! Ve a animales vivos.",
+     ar:"يأكل حيوان النبات الذي أنت بداخله! انتقل إلى الحيوانات الحية.",
+     ht:"Yon bèt manje plant ou te ladan an! Ale nan bèt vivan."}]
+};
+
+const FRAMES = [
+  {en:"My nitrogen atom traveled from ___ to ___ by ___.",
+   es:"Mi átomo de nitrógeno viajó de ___ a ___ por ___.",
+   ar:"انتقلت ذرة النيتروجين الخاصة بي من ___ إلى ___ عن طريق ___.",
+   ht:"Atòm nitwojèn mwen an te vwayaje soti nan ___ rive nan ___ pa mwayen ___."},
+  {en:"My atom spent the most time in ___. I think this happened because ___.",
+   es:"Mi átomo pasó más tiempo en ___. Creo que pasó esto porque ___.",
+   ar:"قضت ذرتي أطول وقت في ___. أعتقد أن هذا حدث لأن ___.",
+   ht:"Atòm mwen an te pase plis tan nan ___. Mwen panse sa te rive paske ___."},
+  {en:"Living things need nitrogen to ___. Bacteria help by ___.",
+   es:"Los seres vivos necesitan nitrógeno para ___. Las bacterias ayudan porque ___.",
+   ar:"تحتاج الكائنات الحية إلى النيتروجين لكي ___. تساعد البكتيريا عن طريق ___.",
+   ht:"Bagay vivan bezwen nitwojèn pou ___. Bakteri ede lè yo ___."}
+];
+
+/* ---------- ICONS ---------- */
+function icon(id){
+  switch(id){
+    case 'atmosphere': return '<path d="M-15 -7 h17 a5 5 0 1 0 -5 -5"/><path d="M-17 1 h25 a5 5 0 1 1 -5 5"/><path d="M-13 9 h9"/>';
+    case 'rain': return '<g class="fillc"><circle cx="-6" cy="-5" r="6"/><circle cx="3" cy="-8" r="8"/><circle cx="10" cy="-3" r="5"/><rect x="-12" y="-4" width="26" height="6" rx="3"/></g><path d="M-7 7 l-3 7 M1 7 l-3 7 M9 7 l-3 7"/>';
+    case 'surface': return '<path d="M-16 -3 q4 -5 8 0 t8 0 t8 0 t8 0"/><path d="M-16 6 q4 -5 8 0 t8 0 t8 0 t8 0"/>';
+    case 'groundwater': return '<path d="M-16 -11 h32 M-16 -4 h32"/><path class="fillc" d="M0 1 c4 5 6 8 6 10 a6 6 0 0 1 -12 0 c0 -2 2 -5 6 -10z"/>';
+    case 'ocean': return '<circle cx="8" cy="-9" r="4.5"/><path d="M-16 2 q4 -5 8 0 t8 0 t8 0 t8 0"/><path d="M-16 10 q4 -5 8 0 t8 0 t8 0 t8 0"/>';
+    case 'soil': return '<path class="fillc" d="M-15 9 q15 -22 30 0 z"/><path d="M-17 9 h34"/><path d="M4 -6 l8 -9"/>';
+    case 'fertilizers': return '<path d="M-10 -11 l3 4 h14 l3 -4"/><path d="M-7 -7 q-5 10 -2 19 h18 q3 -9 -2 -19 z"/><path d="M0 8 v-7 M0 2 q-5 -1 -5 -5 q5 0 5 5 M0 1 q5 -1 5 -5 q-5 0 -5 5"/>';
+    case 'plants': return '<path d="M0 14 V-4"/><path d="M0 5 q-11 0 -12 -10 q11 0 12 10"/><path d="M0 -2 q11 0 12 -10 q-11 0 -12 10"/><path d="M-13 14 h26"/>';
+    case 'animals': return '<path d="M-14 0 q10 -11 21 0 q-11 11 -21 0 z"/><path d="M7 0 l8 -7 v14 z"/><circle class="fillc" cx="-8" cy="-1.5" r="1.6"/>';
+    case 'waste': return '<path class="fillc" d="M-12 11 h24 q3 -6 -4 -7 q3 -6 -5 -7 q2 -6 -4 -6 q-6 1 -4 6 q-7 1 -5 7 q-6 1 -2 7z"/><path d="M-9 -10 q-2 -3 0 -6 M9 -8 q-2 -3 0 -6"/>';
+    case 'dead': return '<path d="M0 13 V-13 M0 -2 l-9 -8 M0 5 l8 -8 M0 -8 l5 -5 M-6 -6 l-3 2"/><path d="M-13 13 h26"/>';
+  }
+  return '';
+}
+function iconSvg(id,size){
+  const c = `var(${ZONE[ST[id].zone]})`;
+  return `<svg viewBox="-24 -24 48 48" width="${size}" height="${size}" aria-hidden="true"><circle r="22" fill="var(--card)" stroke="${c}" stroke-width="2.5"/><g fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${icon(id).replace(/class="fillc"/g,`fill="${c}" fill-opacity=".35"`)}</g></svg>`;
+}
+
+/* ---------- STATE ---------- */
+const KEY='nitrogen-passport-v1';
+let S;
+function freshState(o={}){
+  const start = o.start && o.start!=='random' ? o.start : (o.start==='random' ? ORDER[Math.floor(Math.random()*ORDER.length)] : 'atmosphere');
+  const st = {name:o.name||'', total:o.total||12, left:o.total||12, loc:start, lang:o.lang||(S&&S.lang)||'en',
+    phase:'ready', roll:null, mi:null, log:[], stamps:{}};
+  st.stamps[start]=1;
+  return st;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const r=localStorage.getItem(KEY); if(r){ const o=JSON.parse(r); if(o && ST[o.loc]) return o; } }catch(e){} return null; }
+
+/* ---------- HELPERS ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nm=id=>ST[id].en[0];
+function tr(text, cls='tr'){
+  if(S.lang==='en' || !text) return '';
+  const rtl = S.lang==='ar';
+  let t=esc(text);
+  if(rtl) t=t.replace(/[A-Z][A-Za-z₀-₉⁺⁻]*[₀-₉⁺⁻][A-Za-z₀-₉⁺⁻]*|DNA/g,m=>`<bdi dir="ltr">${m}</bdi>`);
+  return `<p class="${cls}" lang="${S.lang}"${rtl?' dir="rtl"':''}>${t}</p>`;
+}
+function trSpan(text){
+  if(S.lang==='en') return '';
+  return `<span class="trname" lang="${S.lang}"${S.lang==='ar'?' dir="rtl"':''}>${esc(text)}</span>`;
+}
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function dieHtml(n){ return Array.from({length:9},(_,i)=>`<span class="${n&&PIPS[n].includes(i)?'on':''}"></span>`).join(''); }
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- MAP ---------- */
+const svgNS='http://www.w3.org/2000/svg';
+function buildMap(){
+  const m=$('#map');
+  let h=`<defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky1)"/><stop offset="1" stop-color="var(--sky2)"/></linearGradient></defs>
+  <rect x="0" y="0" width="800" height="172" fill="url(#skyg)"/>
+  <rect x="0" y="170" width="800" height="192" fill="var(--land)"/>
+  <rect x="0" y="360" width="800" height="160" fill="var(--under)"/>
+  <path d="M672 520 V290 q10 -38 40 -44 q30 -6 88 -8 V520 z" fill="var(--sea)"/>
+  <ellipse cx="595" cy="266" rx="74" ry="26" fill="var(--lake)"/>
+  <path d="M0 360 H676" stroke="var(--line)" stroke-width="2"/>
+  <g fill="var(--card)" opacity=".75"><circle cx="505" cy="44" r="16"/><circle cx="530" cy="36" r="22"/><circle cx="560" cy="46" r="16"/><circle cx="660" cy="60" r="12"/><circle cx="680" cy="54" r="16"/></g>
+  <text class="zonelabel" x="16" y="26">AIR</text>
+  <text class="zonelabel" x="16" y="192">LAND</text>
+  <text class="zonelabel" x="16" y="398">UNDERGROUND</text>
+  <text class="zonelabel" x="690" y="505">SEA</text>
+  <g id="trails"></g><g id="routes"></g><g id="nodes"></g>
+  <g id="token"><circle r="14"/><text>N</text></g>`;
+  m.innerHTML=h;
+  const g=m.querySelector('#nodes');
+  ORDER.forEach(id=>{
+    const s=ST[id], c=`var(${ZONE[s.zone]})`;
+    const el=document.createElementNS(svgNS,'g');
+    el.setAttribute('class','node'); el.setAttribute('data-id',id); el.setAttribute('tabindex','0'); el.setAttribute('role','button'); el.setAttribute('aria-label','Start at '+nm(id));
+    el.setAttribute('transform',`translate(${s.x} ${s.y})`);
+    el.innerHTML=`<title>${nm(id)}</title><circle class="ring" r="30" stroke="${c}"/><g class="ico" stroke="${c}" transform="scale(1.15)">${icon(id).replace(/class="fillc"/g,`fill="${c}" fill-opacity=".35"`)}</g><text y="${id==='dead'?52:50}">${id==='dead'?'Dead Plants &amp; Animals':nm(id)}</text>`;
+    g.appendChild(el);
+  });
+  // shorter labels for tight spots
+  g.querySelector('[data-id="dead"] text').textContent='Dead Things';
+}
+function tokenPos(id){ const s=ST[id]; return [s.x+24, s.y-24]; }
+function placeToken(id){ const [x,y]=tokenPos(id); $('#token').setAttribute('transform',`translate(${x} ${y})`); }
+function curve(a,b){
+  const A=ST[a],B=ST[b]; const dx=B.x-A.x, dy=B.y-A.y, L=Math.hypot(dx,dy)||1;
+  const ux=dx/L, uy=dy/L, r=36;
+  const x1=A.x+ux*r, y1=A.y+uy*r, x2=B.x-ux*r, y2=B.y-uy*r;
+  const mx=(x1+x2)/2 - uy*L*0.12, my=(y1+y2)/2 + ux*L*0.12;
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)} Q${mx.toFixed(1)} ${my.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+function choosing(){ return S.phase==='ready' && S.log.length===0; }
+function startAt(id){
+  if(!choosing() || busy || id===S.loc) return;
+  S.loc=id; S.stamps={}; S.stamps[id]=1; S.roll=null; S.mi=null;
+  save(); placeToken(id); renderAll(id);
+}
+function renderMap(){
+  $('#map').classList.toggle('choosing', choosing());
+  const moves=MV[S.loc]; const pick = S.mi!=null ? moves[S.mi].to : null;
+  const dests=[...new Set(moves.map(m=>m.to))];
+  $('#routes').innerHTML = S.phase==='done' ? '' : dests.map(d=>`<path class="route${d===pick?' pick':''}" d="${curve(S.loc,d)}"/>`).join('');
+  $('#trails').innerHTML = S.log.map(l=>`<path class="trail" d="${curve(l.from,l.to)}"/>`).join('');
+  document.querySelectorAll('#nodes .node').forEach(n=>{
+    const id=n.dataset.id;
+    n.classList.toggle('here', id===S.loc);
+    n.classList.toggle('dest', S.phase!=='done' && dests.includes(id) && id!==S.loc);
+    n.classList.toggle('pick', id===pick);
+  });
+  document.querySelectorAll('#nodes .node').forEach(n=>{ if(choosing()) n.setAttribute('tabindex','0'); else n.removeAttribute('tabindex'); });
+  // keep current node on top
+  const here=document.querySelector(`#nodes [data-id="${S.loc}"]`); here.parentNode.appendChild(here);
+}
+function animateToken(from,to,done){
+  const [x1,y1]=tokenPos(from), [x2,y2]=tokenPos(to);
+  if(reduce){ placeToken(to); done(); return; }
+  const mx=(x1+x2)/2, my=Math.min(y1,y2)-60, t0=performance.now(), D=900;
+  const tok=$('#token');
+  (function step(t){
+    let k=Math.min(1,(t-t0)/D); k=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    const x=(1-k)*(1-k)*x1+2*(1-k)*k*mx+k*k*x2, y=(1-k)*(1-k)*y1+2*(1-k)*k*my+k*k*y2;
+    tok.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+    if(k<1) requestAnimationFrame(step); else done();
+  })(t0);
+}
+
+/* ---------- PANEL ---------- */
+function oddsHtml(){
+  return `<ul class="odds">${MV[S.loc].map((m,i)=>`<li class="${S.mi===i?'pick':''}">
+    <span class="faces">${m.f.map(f=>`<span class="mini">${f}</span>`).join('')}</span>
+    <span><span class="to">${nm(m.to)}</span> <span class="via">by ${PR[m.p].en[0].toLowerCase()}</span></span></li>`).join('')}</ul>`;
+}
+function renderPanel(){
+  const p=$('#panel');
+  if(S.phase==='done'){ p.innerHTML=summaryHtml(); wireSummary(); return; }
+  const s=ST[S.loc], L=S.lang;
+  let h=`<div class="card">
+    <p class="eyebrow">${choosing()?'Your starting place':'You are here'}</p>
+    <div class="station">${iconSvg(S.loc,64)}<div><h2>${esc(s.en[0])}</h2>${trSpan(L!=='en'?s[L][0]:'')}</div></div>
+    <p class="fact">${esc(s.en[1])}</p>${tr(L!=='en'?s[L][1]:'')}
+  </div>
+  <div class="card">
+    ${choosing()?'<p class="pickhint"><b>Pick your start:</b> tap any place on the map to start there, or roll to start here.</p>':''}
+    <p class="eyebrow"${choosing()?' style="margin-top:10px"':''}>Where can you go?</p>
+    <div class="rollrow">
+      <div class="die" id="die" aria-hidden="true">${dieHtml(S.roll||1)}</div>
+      <button class="rollbtn" id="rollBtn" type="button" ${S.phase!=='ready'?'disabled':''}>Roll the die</button>
+      <span class="left"><b>${S.left}</b> ${S.left===1?'roll':'rolls'} left</span>
+    </div>
+    ${oddsHtml()}
+  </div>`;
+  if(S.phase==='rolled'){
+    const m=MV[S.loc][S.mi], pr=PR[m.p];
+    h+=`<div class="card result">
+      <p class="eyebrow">You rolled a ${S.roll}</p>
+      <h3>To ${esc(nm(m.to))}</h3>
+      <p class="story">${esc(m.en)}</p>${tr(L!=='en'?m[L]:'')}
+      <div class="process"><span class="chip">${esc(pr.en[0])}</span>${trSpan(L!=='en'?pr[L][0]:'')}
+        <p>${esc(pr.en[1])}</p>${tr(L!=='en'?pr[L][1]:'')}</div>
+      <div style="margin-top:14px"><button class="travelbtn" id="travelBtn" type="button">Travel to ${esc(nm(m.to))} and get a stamp</button></div>
+    </div>`;
+  }
+  p.innerHTML=h;
+  const rb=$('#rollBtn'); if(rb) rb.onclick=roll;
+  const tb=$('#travelBtn'); if(tb) tb.onclick=travel;
+}
+
+/* ---------- ACTIONS ---------- */
+let busy=false;
+function roll(){
+  if(busy||S.phase!=='ready') return;
+  busy=true;
+  const r = 1 + (window.crypto ? crypto.getRandomValues(new Uint32Array(1))[0]%6 : Math.floor(Math.random()*6));
+  const die=$('#die'); $('#rollBtn').disabled=true;
+  const finish=()=>{
+    die.classList.remove('tumble'); die.innerHTML=dieHtml(r);
+    S.roll=r; S.mi=MV[S.loc].findIndex(m=>m.f.includes(r)); S.phase='rolled';
+    save(); renderPanel(); renderMap(); busy=false;
+    const tb=$('#travelBtn'); if(tb) tb.focus({preventScroll:true});
+  };
+  if(reduce){ finish(); return; }
+  die.classList.add('tumble');
+  let n=0; const iv=setInterval(()=>{ die.innerHTML=dieHtml(1+Math.floor(Math.random()*6)); if(++n>9){ clearInterval(iv); finish(); } },70);
+}
+function travel(){
+  if(busy||S.phase!=='rolled') return;
+  busy=true;
+  const m=MV[S.loc][S.mi], from=S.loc;
+  $('#travelBtn').disabled=true;
+  $('#routes').innerHTML=`<path class="route pick" d="${curve(from,m.to)}"/>`;
+  animateToken(from,m.to,()=>{
+    S.log.push({from, to:m.to, roll:S.roll, p:m.p});
+    S.loc=m.to; S.stamps[m.to]=(S.stamps[m.to]||0)+1; S.left--;
+    S.roll=null; S.mi=null; S.phase = S.left<=0 ? 'done' : 'ready';
+    save(); renderAll(m.to); busy=false;
+    const rb=$('#rollBtn'); if(rb) rb.focus({preventScroll:true});
+  });
+}
+
+/* ---------- PASSPORT + LOG ---------- */
+function renderPassport(popId){
+  $('#ppTitle').textContent = S.name ? `${S.name}'s passport` : 'Passport';
+  const got=ORDER.filter(id=>S.stamps[id]).length;
+  $('#ppCount').innerHTML=`<b>${got}</b> of 11 places stamped`;
+  $('#stamps').innerHTML=ORDER.map(id=>{
+    const c=S.stamps[id]||0;
+    return `<div class="stamp${c?' got':''}${id===popId?' pop':''}" style="${c?`border-color:var(${ZONE[ST[id].zone]})`:''}">
+      ${c?`<span class="ct">×${c}</span>`:''}${iconSvg(id,40)}<span>${esc(nm(id))}</span></div>`;
+  }).join('');
+  const log=$('#log');
+  if(!S.log.length){ log.innerHTML=`<li style="display:block;border:0"><p class="empty">Your moves will show up here. Start in the ${esc(nm(S.loc).toLowerCase())} and roll!</p></li>`; return; }
+  log.innerHTML=S.log.map((l,i)=>`<li><span class="num">${i+1}.</span><span>${esc(nm(l.from))} → <b>${esc(nm(l.to))}</b><br><span class="via">Rolled ${l.roll} · ${esc(PR[l.p].en[0])}</span></span></li>`).join('');
+  log.scrollTop=log.scrollHeight;
+}
+function renderTerms(){
+  $('#terms').innerHTML=Object.keys(PR).map(k=>{
+    const p=PR[k];
+    return `<div><h4>${esc(p.en[0])}</h4>${trSpan(S.lang!=='en'?p[S.lang][0]:'')}<p>${esc(p.en[1])}</p>${tr(S.lang!=='en'?p[S.lang][1]:'')}</div>`;
+  }).join('');
+}
+
+/* ---------- SUMMARY ---------- */
+function tripText(){
+  const most=ORDER.filter(id=>S.stamps[id]).sort((a,b)=>S.stamps[b]-S.stamps[a])[0];
+  const lines=[`Nitrogen Passport${S.name?' - '+S.name:''}`, `Rolls: ${S.log.length}`, `Started in: ${nm(S.log.length?S.log[0].from:S.loc)}`, ''];
+  S.log.forEach((l,i)=>lines.push(`${i+1}. ${nm(l.from)} -> ${nm(l.to)} (rolled ${l.roll}, ${PR[l.p].en[0]})`));
+  lines.push('', `Places stamped: ${ORDER.filter(id=>S.stamps[id]).length} of 11`, `Most stamps: ${nm(most)} (${S.stamps[most]})`);
+  return lines.join('\n');
+}
+function summaryHtml(){
+  const places=ORDER.filter(id=>S.stamps[id]);
+  const most=[...places].sort((a,b)=>S.stamps[b]-S.stamps[a])[0];
+  const pc={}; S.log.forEach(l=>pc[l.p]=(pc[l.p]||0)+1);
+  const procs=Object.keys(pc).sort((a,b)=>pc[b]-pc[a]);
+  const L=S.lang;
+  return `<div class="card">
+    <p class="eyebrow">Trip complete</p>
+    <h2 style="font-size:28px">Your atom made ${S.log.length} moves</h2>
+    <div class="stats">
+      <span><b>${places.length}/11</b>places stamped</span>
+      <span><b>${esc(nm(most))}</b>most stamps (${S.stamps[most]})</span>
+      <span><b>${procs.length}</b>different processes</span>
+    </div>
+    <p style="margin:12px 0 0"><b>Processes you used:</b> ${procs.map(k=>`${esc(PR[k].en[0])} (${pc[k]})`).join(', ')}</p>
+  </div>
+  <div class="card">
+    <p class="eyebrow">Think about your trip</p>
+    <ol class="frames">${FRAMES.map(f=>`<li>${esc(f.en)}${tr(L!=='en'?f[L]:'')}</li>`).join('')}</ol>
+  </div>
+  <div class="card">
+    <p class="eyebrow">Turn in your trip</p>
+    <p style="margin:0">Copy your trip log and paste it where your teacher asks, along with your answers above.</p>
+    <textarea id="tripText" readonly>${esc(tripText())}</textarea>
+    <div class="copyrow">
+      <button class="primary" id="copyBtn" type="button">Copy trip log</button>
+      <button class="btn" id="againBtn" type="button">Start a new trip</button>
+    </div>
+  </div>`;
+}
+function wireSummary(){
+  $('#copyBtn').onclick=()=>{
+    const ta=$('#tripText'), b=$('#copyBtn');
+    const ok=()=>{ b.textContent='Copied'; setTimeout(()=>b.textContent='Copy trip log',1800); };
+    const fallback=()=>{ ta.focus(); ta.select(); b.textContent='Text selected. Press Ctrl+C or ⌘+C'; };
+    try{ navigator.clipboard.writeText(ta.value).then(ok,fallback); }catch(e){ fallback(); }
+  };
+  $('#againBtn').onclick=openSetup;
+}
+
+/* ---------- SETUP ---------- */
+function openSetup(){
+  $('#sName').value=S.name||''; $('#sLang').value=S.lang; $('#sRolls').value=String(S.total);
+  $('#setup').hidden=false; setTimeout(()=>$('#sName').focus(),30);
+}
+$('#sStart').innerHTML=`<option value="random">Surprise me (random)</option>`+ORDER.map(id=>`<option value="${id}"${id==='atmosphere'?' selected':''}>${nm(id)}</option>`).join('');
+$('#newTrip').onclick=openSetup;
+$('#cancelSetup').onclick=()=>{$('#setup').hidden=true;};
+$('#setupForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  S=freshState({name:$('#sName').value.trim(), total:+$('#sRolls').value, start:$('#sStart').value, lang:$('#sLang').value});
+  $('#lang').value=S.lang; $('#setup').hidden=true; save(); renderAll(S.loc); placeToken(S.loc);
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('#setup').hidden=true; });
+$('#lang').onchange=e=>{ S.lang=e.target.value; save(); renderPanel(); renderTerms(); };
+
+$('#map').addEventListener('click',e=>{ const n=e.target.closest('.node'); if(n) startAt(n.dataset.id); });
+$('#map').addEventListener('keydown',e=>{ const n=e.target.closest('.node'); if(n && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); startAt(n.dataset.id); } });
+/* ---------- BOOT ---------- */
+function renderAll(popId){ renderPanel(); renderMap(); renderPassport(popId); renderTerms(); }
+S = load() || freshState({});
+buildMap(); $('#lang').value=S.lang; placeToken(S.loc); renderAll();
+</script>
+
+</body>
+</html>

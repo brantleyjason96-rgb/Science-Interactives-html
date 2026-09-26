@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Highs and Lows</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+<style>
+/* Weather unit kit: same tokens as the Lake Effect lab so every weather page looks like one set */
+:root{
+  --bg:#EDF1F5; --surface:#FFFFFF; --surface-2:#F4F7FA; --ink:#14202D; --muted:#4F5F70; --line:#C9D3DE;
+  --accent:#4A3BC4; --accent-ink:#FFFFFF; --accent-soft:#E7E4FA;
+  --l2c:#7A4A12;
+  --good:#1D7A4B; --good-soft:#E2F2E9; --bad:#B0301F; --bad-soft:#FBE6E2;
+  --focus:#2563EB;
+  --land:#E3E8E0; --land-edge:#8E9C94;
+  --sky:#DCE8F3; --cloud:#C3CCD5; --cloud-2:#8F9BA8;
+  --cold:#2F74C0; --warm:#D0561F; --sun:#E0A21B; --hi:#1F5AA6; --lo:#9A2E6E; --halo:#FFFFFF; --map-ink:#1C2A38; --map-muted:#5E6C7A;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --arabic:"Noto Sans Arabic","Geeza Pro","Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0B1219; --surface:#121C27; --surface-2:#182432; --ink:#E6EDF5; --muted:#9EAFC1; --line:#2B3A4B;
+    --accent:#AAB4FF; --accent-ink:#12173A; --accent-soft:#252B5E;
+    --l2c:#E8C07A;
+    --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+    --focus:#6FB2F2;
+    --land:#26303A; --land-edge:#56657A;
+    --sky:#15212E; --cloud:#56626F; --cloud-2:#8995A2;
+    --cold:#7DB6F0; --warm:#F29058; --sun:#F2C14E; --hi:#8DB8F2; --lo:#E58CC0; --halo:#0B1219; --map-ink:#E6EDF5; --map-muted:#A7B5C3;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0B1219; --surface:#121C27; --surface-2:#182432; --ink:#E6EDF5; --muted:#9EAFC1; --line:#2B3A4B;
+  --accent:#AAB4FF; --accent-ink:#12173A; --accent-soft:#252B5E;
+  --l2c:#E8C07A;
+  --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+  --focus:#6FB2F2;
+  --land:#26303A; --land-edge:#56657A;
+  --sky:#15212E; --cloud:#56626F; --cloud-2:#8995A2;
+  --cold:#7DB6F0; --warm:#F29058; --sun:#F2C14E; --hi:#8DB8F2; --lo:#E58CC0; --halo:#0B1219; --map-ink:#E6EDF5; --map-muted:#A7B5C3;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:10px 24px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+figure{margin:0}
+.en{display:block}
+.l2{display:block;color:var(--l2c);font-size:.8em;line-height:1.35;margin-top:1px}
+.l2[dir="rtl"]{font-family:var(--arabic);text-align:right}
+.inl .en,.inl .l2{display:inline}
+.inl .l2::before{content:" / ";color:var(--muted)}
+.inl .l2[dir="rtl"]{unicode-bidi:isolate}
+.inl .l2[dir="rtl"]::before{content:none}
+.inl .l2[dir="rtl"]::after{content:" / ";color:var(--muted)}
+bdi{unicode-bidi:isolate}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:6px 10px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brand svg{flex:none}
+.brand h1{font-size:1.45rem;font-weight:800;letter-spacing:-.01em}
+.brand p{color:var(--muted);font-size:.9rem}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+select,input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:38px;padding:4px 10px}
+.btn{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:6px 14px;cursor:pointer;font-weight:700;text-align:left}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary .l2{color:inherit;opacity:.85}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border:2px solid var(--accent);padding:5px 13px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn[aria-pressed="true"]:disabled{opacity:.9}
+.say{flex:none;width:32px;height:32px;min-width:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);display:inline-grid;place-items:center;cursor:pointer;padding:0;color:var(--ink)}
+.say:hover{border-color:var(--accent)}
+.txt{display:flex;gap:8px;align-items:flex-start}
+.txt>div,.txt>p{flex:1;min-width:0}
+.tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab{border:0;background:none;padding:8px 14px 9px;border-bottom:3px solid transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;min-height:44px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.chip{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted);font-variant-numeric:tabular-nums}
+.part{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.kicker{font-size:14px;color:var(--muted);font-weight:700;margin:0 0 6px}
+.note{font-size:.9rem;color:var(--muted)}
+.cap{font-size:13px;color:var(--muted);margin-top:6px}
+.hero{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:18px;align-items:start}
+.hero h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.hero .lead{font-size:1.02rem;max-width:62ch}
+.seg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.figs{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:10px}
+.fig{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--line)}
+.explain{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.rule{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.rule .ico{height:64px;border-radius:10px;background:var(--sky);display:grid;place-items:center}
+.rule h3{font-size:1.05rem}
+.rule p{font-size:.93rem}
+.both{margin-top:12px;padding:10px 12px;border-left:4px solid var(--map-ink);background:var(--surface-2);border-radius:0 10px 10px 0}
+@media (max-width:980px){.hero{grid-template-columns:minmax(0,1fr)}.rules{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.rules,.figs{grid-template-columns:minmax(0,1fr)}}
+.dots{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dot{min-width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:var(--surface);font:500 14px var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:0 8px;color:var(--ink)}
+.dot:hover{border-color:var(--accent)}
+.dot[aria-current="step"]{border:2px solid var(--accent);background:var(--accent-soft)}
+.dot.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.dot.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.dot[aria-current="step"].ok,.dot[aria-current="step"].no{outline:2px solid var(--accent);outline-offset:1px}
+.pgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (min-width:901px){.stage{position:sticky;top:8px}}
+@media (max-width:900px){.pgrid{grid-template-columns:minmax(0,1fr)}}
+.mapbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px}
+.map{display:block;width:100%;height:auto;max-height:calc(100vh - 270px);min-height:220px;border-radius:10px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);padding:6px 4px 2px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.side{display:flex;flex-direction:column;gap:12px}
+.maphead h2{font-size:1.35rem}
+.qt{font-weight:700}
+.oq{display:flex;flex-direction:column;gap:6px}
+.oq+.oq{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts .btn{min-height:46px}
+.pts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:1180px) and (min-width:901px){.pts{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.pts{grid-template-columns:minmax(0,1fr)}}
+.pcard{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2);display:flex;flex-direction:column;gap:8px;min-width:0}
+.phead{display:flex;align-items:center;gap:8px}
+.pbadge{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 15px var(--display);border:2px solid var(--map-ink);background:var(--surface);flex:none}
+.phead h3{font-size:1.1rem}
+.arow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.agrid{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:4px;flex:none}
+.abtn{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:0;color:var(--ink)}
+.abtn:hover{border-color:var(--accent)}
+.abtn[aria-pressed="true"]{background:var(--accent-soft);border:2px solid var(--accent)}
+.abtn:disabled{cursor:not-allowed;opacity:.55}
+.abtn[aria-pressed="true"]:disabled{opacity:.9}
+.acenter{display:grid;place-items:center;font:800 16px var(--display);border-radius:50%;border:2px solid var(--map-ink);margin:6px;background:var(--surface)}
+.chosen{flex:1;min-width:120px;font-size:.93rem}
+.chosen.none{color:var(--muted)}
+.tag{font-size:.88rem;font-weight:700;padding:3px 10px;border-radius:99px;align-self:flex-start;border:1px solid}
+.tag.ok{color:var(--good);background:var(--good-soft);border-color:var(--good)}
+.tag.no{color:var(--bad);background:var(--bad-soft);border-color:var(--bad)}
+.ev textarea{width:100%;min-height:84px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:8px 10px;resize:vertical}
+.ev textarea:disabled{opacity:.75}
+details.sup summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center;gap:6px}
+.frames{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.frame{text-align:left;border:1px dashed var(--accent);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:38px}
+.words{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.word{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 12px;cursor:pointer;min-height:38px}
+.word:hover,.frame:hover{border-color:var(--accent);border-style:solid}
+.hintbtn{background:none;border:0;padding:4px 0;min-height:38px;color:var(--accent);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.hint{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;background:var(--surface-2);font-size:.95rem}
+.actions{position:sticky;bottom:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:0 -6px 18px rgba(12,20,30,.12)}
+.fb{flex:1 1 320px;min-width:0;max-height:24vh;overflow:auto;display:flex;gap:8px;align-items:flex-start;font-size:.95rem;border-radius:10px;padding:6px 8px;border:1px solid transparent}
+.fb.good{background:var(--good-soft);border-color:var(--good)}
+.fb.bad{background:var(--bad-soft);border-color:var(--bad)}
+.act-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vocab{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.vcard{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.vcard .pic{flex:none;width:64px;height:64px;border-radius:10px;background:var(--sky);display:grid;place-items:center}
+.vcard b{font-size:1rem}
+.vcard p{font-size:.9rem}
+.tgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.tgrid{grid-template-columns:minmax(0,1fr)}}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.9rem}
+.refl textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:8px 10px;resize:vertical}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.sum{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.sum b{font-family:var(--mono);font-size:1.2rem;font-variant-numeric:tabular-nums}
+.rec{width:100%;min-height:240px;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:10px;white-space:pre;overflow:auto}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
+.foot{font-size:13px;color:var(--muted);margin-top:18px}
+@media (max-width:600px){.actions{position:static;box-shadow:none}.form{grid-template-columns:1fr}}
+.f-land{fill:var(--land)} .s-shore{stroke:var(--land-edge)}
+.f-sky{fill:var(--sky)} .f-cloud{fill:var(--cloud)}
+.f-cold{fill:var(--cold)} .s-cold{stroke:var(--cold)} .f-sun{fill:var(--sun)} .s-sun{stroke:var(--sun)}
+.f-hi{fill:var(--hi)} .f-lo{fill:var(--lo)} .s-hi{stroke:var(--hi)} .s-lo{stroke:var(--lo)}
+.f-ink{fill:var(--map-ink)} .s-ink{stroke:var(--map-ink)} .f-mute{fill:var(--map-muted)} .s-mute{stroke:var(--map-muted)}
+.f-surf{fill:var(--surface)} .s-line{stroke:var(--line)}
+.maptxt{font-family:var(--body);font-weight:700}
+.maptxt .l2t{font-weight:400;fill:var(--l2c)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+.halo{paint-order:stroke;stroke:var(--halo);stroke-width:5px;stroke-linejoin:round}
+@media (prefers-reduced-motion: no-preference){
+  .btn,.dot,.frame,.word,.abtn{transition:border-color .15s, background-color .15s}
+  .flow{stroke-dasharray:9 7;animation:flow 1.1s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-16}}
+  .reveal{animation:reveal .6s ease-out both}
+  @keyframes reveal{from{opacity:0}to{opacity:1}}
+}
+</style>
+<div class="wrap" id="app"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ---------- LANGUAGES ---------- */
+const LANGS=['en','es','fr','ht','ar'];
+const LANG_NAMES={en:'English only',es:'Español',fr:'Français',ht:'Kreyòl',ar:'العربية'};
+const VOICE={en:'en',es:'es',fr:'fr',ht:'ht',ar:'ar'};
+
+/* ---------- PAGE TEXT IN EVERY LANGUAGE ----------
+   Each entry: [English, Español, Français, Kreyòl, العربية]  */
+const UI={
+title:["Highs and Lows","Altas y bajas presiones","Anticyclones et dépressions","Presyon wo ak presyon ba","المرتفعات والمنخفضات الجوية"],
+sub:["Weather unit: activity 1 of 5","Unidad del tiempo: actividad 1 de 5","Unité météo : activité 1 sur 5","Inite tan an: aktivite 1 sou 5","وحدة الطقس: النشاط 1 من 5"],
+lang:["Second language","Segundo idioma","Deuxième langue","Dezyèm lang","اللغة الثانية"],
+pics:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+theme:["Dark / light","Oscuro / claro","Sombre / clair","Fènwa / klè","داكن / فاتح"],
+tabL:["Learn","Aprender","Apprendre","Aprann","تعلّم"],
+tabP:["Practice","Practicar","S'entraîner","Pratike","تدرّب"],
+tabT:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+say:["Read aloud","Leer en voz alta","Lire à voix haute","Li awotvwa","القراءة بصوت عالٍ"],
+noVoice:["This device has no voice for this language, so it read the English only.","Este dispositivo no tiene voz para este idioma. Solo leyó el inglés.","Cet appareil n'a pas de voix pour cette langue. Il a lu seulement l'anglais.","Aparèy sa a pa gen vwa pou lang sa a. Li li angle a sèlman.","لا يوجد صوت لهذه اللغة على هذا الجهاز، لذلك قرأ الإنجليزية فقط."],
+noSpeech:["Read-aloud does not work in this browser.","La lectura en voz alta no funciona en este navegador.","La lecture à voix haute ne marche pas dans ce navigateur.","Lekti awotvwa pa mache nan navigatè sa a.","القراءة بصوت عالٍ لا تعمل في هذا المتصفح."],
+correct:["Correct.","Correcto.","Correct.","Kòrèk.","صحيح."],
+notYet:["Not yet.","Todavía no.","Pas encore.","Poko.","ليس بعد."],
+tagOk:["Correct","Correcto","Correct","Kòrèk","صحيح"],
+tagNo:["Not yet","Todavía no","Pas encore","Poko","ليس بعد"],
+introHead:["What do H and L mean on a weather map?","¿Qué significan H y L en un mapa del tiempo?","Que veulent dire H et L sur une carte météo ?","Kisa H ak L vle di sou yon kat tan?","ماذا يعني H و L على خريطة الطقس؟"],
+intro:["Air presses down on Earth. In some places it presses harder. That is high pressure (H). In other places it presses less. That is low pressure (L). Highs and Lows move the wind. They also decide if the sky is clear or stormy.","El aire empuja hacia abajo sobre la Tierra. En algunos lugares empuja más fuerte. Eso es alta presión (H). En otros lugares empuja menos. Eso es baja presión (L). Las altas y las bajas mueven el viento. También deciden si el cielo está despejado o con tormentas.","L'air appuie sur la Terre. À certains endroits, il appuie plus fort. C'est la haute pression (H). À d'autres endroits, il appuie moins. C'est la basse pression (L). Les H et les L font bouger le vent. Ils décident aussi si le ciel est dégagé ou orageux.","Lè a peze sou Latè. Nan kèk kote, li peze pi fò. Sa se presyon wo (H). Nan lòt kote, li peze mwens. Sa se presyon ba (L). H ak L fè van an deplase. Yo deside tou si syèl la klè oswa si gen tanpèt.","يضغط الهواء على الأرض. في بعض الأماكن يضغط بقوة أكبر، وهذا هو الضغط المرتفع (H). وفي أماكن أخرى يضغط أقل، وهذا هو الضغط المنخفض (L). تحرّك المرتفعات والمنخفضات الرياح، وتحدد أيضًا إن كانت السماء صافية أو عاصفة."],
+showH:["Show a High","Mostrar una alta","Montrer un anticyclone","Montre yon presyon wo","اعرض مرتفعًا"],
+showL:["Show a Low","Mostrar una baja","Montrer une dépression","Montre yon presyon ba","اعرض منخفضًا"],
+sideCap:["Side view: the air moves up or down.","Vista de lado: el aire sube o baja.","Vue de côté : l'air monte ou descend.","Vi sou kote: lè a monte oswa desann.","منظر جانبي: يصعد الهواء أو يهبط."],
+topCap:["Map view from above: the air moves along the ground.","Vista de mapa desde arriba: el aire se mueve sobre el suelo.","Vue de carte d'en haut : l'air se déplace au sol.","Vi kat anlè: lè a deplase sou tè a.","منظر الخريطة من الأعلى: يتحرك الهواء قرب الأرض."],
+hH:["High (H): air sinks. Sinking air warms and dries out, so clouds do not form. At the ground, the air flows out and spins clockwise.","Alta (H): el aire baja. El aire que baja se calienta y se seca, así que no se forman nubes. En el suelo, el aire sale hacia afuera y gira en el sentido de las agujas del reloj.","Anticyclone (H) : l'air descend. L'air qui descend se réchauffe et s'assèche, donc les nuages ne se forment pas. Au sol, l'air sort vers l'extérieur et tourne dans le sens des aiguilles d'une montre.","Presyon wo (H): lè a desann. Lè k ap desann chofe epi li vin sèk, kidonk nwaj pa fòme. Atè a, lè a soti deyò epi li vire nan menm sans ak zegwi yon revèy.","المرتفع (H): يهبط الهواء. الهواء الهابط يدفأ ويجف، فلا تتكوّن السحب. عند الأرض، يخرج الهواء إلى الخارج ويدور مع اتجاه عقارب الساعة."],
+hL:["Low (L): air flows in along the ground and spins counterclockwise. Then it rises. Rising air cools, and water vapor condenses into clouds, rain and storms.","Baja (L): el aire entra por el suelo y gira en sentido contrario a las agujas del reloj. Luego sube. El aire que sube se enfría y el vapor de agua se condensa en nubes, lluvia y tormentas.","Dépression (L) : l'air entre au ras du sol et tourne dans le sens inverse des aiguilles d'une montre. Puis il monte. L'air qui monte refroidit, et la vapeur d'eau se condense en nuages, pluie et orages.","Presyon ba (L): lè a antre sou tè a epi li vire nan sans kontrè zegwi yon revèy. Apre sa, li monte. Lè k ap monte refwadi, epi vapè dlo kondanse fè nwaj, lapli ak tanpèt.","المنخفض (L): يدخل الهواء قرب الأرض ويدور عكس اتجاه عقارب الساعة. ثم يصعد. الهواء الصاعد يبرد، ويتكثّف بخار الماء إلى سحب ومطر وعواصف."],
+lblSink:["Sinking air","Aire que baja","Air qui descend","Lè k ap desann","هواء هابط"],
+lblRise:["Rising air","Aire que sube","Air qui monte","Lè k ap monte","هواء صاعد"],
+lblOut:["Flows out","Sale","Sort","Soti","يخرج"],
+lblIn:["Flows in","Entra","Entre","Antre","يدخل"],
+lblCloud:["Clouds form","Se forman nubes","Des nuages","Nwaj fòme","تتكوّن السحب"],
+lblClear:["Clear sky","Cielo despejado","Ciel dégagé","Syèl klè","سماء صافية"],
+rulesHead:["Four rules for reading a pressure map","Cuatro reglas para leer un mapa de presión","Quatre règles pour lire une carte de pression","Kat règ pou li yon kat presyon","أربع قواعد لقراءة خريطة الضغط"],
+r1h:["1. Sky","1. Cielo","1. Ciel","1. Syèl","1. السماء"],
+r1:["High: sinking air, clear sky. Low: rising air, clouds and storms.","Alta: aire que baja, cielo despejado. Baja: aire que sube, nubes y tormentas.","Anticyclone : air qui descend, ciel dégagé. Dépression : air qui monte, nuages et orages.","Presyon wo: lè k ap desann, syèl klè. Presyon ba: lè k ap monte, nwaj ak tanpèt.","المرتفع: هواء هابط وسماء صافية. المنخفض: هواء صاعد وسحب وعواصف."],
+r2h:["2. Out or in","2. Afuera o adentro","2. Dehors ou dedans","2. Deyò oswa anndan","2. إلى الخارج أم الداخل"],
+r2:["Air flows out of a High and into a Low.","El aire sale de una alta y entra en una baja.","L'air sort d'un anticyclone et entre dans une dépression.","Lè a soti nan yon presyon wo epi li antre nan yon presyon ba.","يخرج الهواء من المرتفع ويدخل إلى المنخفض."],
+r3h:["3. Spin","3. Giro","3. Rotation","3. Vire","3. الدوران"],
+r3:["In the Northern Hemisphere, air spins clockwise around a High and counterclockwise around a Low.","En el hemisferio norte, el aire gira en el sentido de las agujas del reloj alrededor de una alta y en sentido contrario alrededor de una baja.","Dans l'hémisphère Nord, l'air tourne dans le sens des aiguilles d'une montre autour d'un anticyclone et dans le sens inverse autour d'une dépression.","Nan Emisfè Nò a, lè a vire nan sans zegwi revèy toutotou yon presyon wo, epi nan sans kontrè toutotou yon presyon ba.","في نصف الكرة الشمالي، يدور الهواء مع عقارب الساعة حول المرتفع وعكسها حول المنخفض."],
+r4h:["4. Numbers","4. Números","4. Nombres","4. Nimewo","4. الأرقام"],
+r4:["Isobars are lines of equal pressure, measured in millibars (mb). The numbers go up toward a High and down toward a Low.","Las isobaras son líneas de igual presión, medida en milibares (mb). Los números suben hacia una alta y bajan hacia una baja.","Les isobares sont des lignes de même pression, mesurée en millibars (mb). Les nombres augmentent vers un anticyclone et diminuent vers une dépression.","Izobar se liy ki gen menm presyon, yo mezire an milibar (mb). Nimewo yo monte lè ou pwoche yon presyon wo, epi yo desann lè ou pwoche yon presyon ba.","خطوط تساوي الضغط تصل أماكن لها الضغط نفسه، ويُقاس بالمليبار (mb). تزداد الأرقام نحو المرتفع وتنقص نحو المنخفض."],
+bothRule:["Put rules 2 and 3 together. The air does both at once, so it moves in a curve. That is why the arrows on the map bend.","Junta las reglas 2 y 3. El aire hace las dos cosas a la vez, así que se mueve en curva. Por eso las flechas del mapa se doblan.","Combine les règles 2 et 3. L'air fait les deux en même temps, donc il se déplace en courbe. C'est pour cela que les flèches de la carte se courbent.","Mete règ 2 ak règ 3 ansanm. Lè a fè toude an menm tan, kidonk li deplase an koub. Se poutèt sa flèch yo sou kat la koube.","اجمع القاعدتين 2 و3. يفعل الهواء الأمرين معًا، فيتحرك في منحنى. لهذا تنحني الأسهم على الخريطة."],
+start:["Start practice","Empezar a practicar","Commencer l'entraînement","Kòmanse pratike","ابدأ التدريب"],
+dotsLab:["Maps","Mapas","Cartes","Kat","الخرائط"],
+scOf:["Map {n} of 8","Mapa {n} de 8","Carte {n} sur 8","Kat {n} sou 8","الخريطة {n} من 8"],
+noteGuided:["Answer the two steps first. They help you choose the arrows.","Responde primero los dos pasos. Te ayudan a elegir las flechas.","Réponds d'abord aux deux étapes. Elles t'aident à choisir les flèches.","Reponn de etap yo anvan. Yo ede w chwazi flèch yo.","أجب عن الخطوتين أولًا. ستساعدانك على اختيار الأسهم."],
+notePlain:["No steps this time. Use the same rules to choose each arrow.","Esta vez no hay pasos. Usa las mismas reglas para elegir cada flecha.","Pas d'étapes cette fois. Utilise les mêmes règles pour choisir chaque flèche.","Fwa sa a pa gen etap. Sèvi ak menm règ yo pou chwazi chak flèch.","لا خطوات هذه المرة. استخدم القواعد نفسها لاختيار كل سهم."],
+noteTwo:["This map has two systems. For each point, use the system closest to it.","Este mapa tiene dos sistemas. Para cada punto, usa el sistema más cercano.","Cette carte a deux systèmes. Pour chaque point, utilise le système le plus proche.","Kat sa a gen de sistèm. Pou chak pwen, sèvi ak sistèm ki pi pre li a.","هذه الخريطة فيها نظامان. لكل نقطة، استخدم النظام الأقرب إليها."],
+noteUnk:["The centers have no letter. Read the isobar numbers to decide: High or Low?","Los centros no tienen letra. Lee los números de las isobaras para decidir: ¿alta o baja?","Les centres n'ont pas de lettre. Lis les nombres des isobares pour décider : anticyclone ou dépression ?","Sant yo pa gen lèt. Li nimewo izobar yo pou deside: presyon wo oswa presyon ba?","المراكز بلا حرف. اقرأ أرقام خطوط تساوي الضغط لتقرر: مرتفع أم منخفض؟"],
+qStep1H:["Step 1: At this High, does air flow out of the center or into it?","Paso 1: En esta alta, ¿el aire sale del centro o entra en él?","Étape 1 : dans cet anticyclone, l'air sort-il du centre ou y entre-t-il ?","Etap 1: Nan presyon wo sa a, èske lè a soti nan sant lan oswa li antre ladan l?","الخطوة 1: في هذا المرتفع، هل يخرج الهواء من المركز أم يدخل إليه؟"],
+qStep1L:["Step 1: At this Low, does air flow out of the center or into it?","Paso 1: En esta baja, ¿el aire sale del centro o entra en él?","Étape 1 : dans cette dépression, l'air sort-il du centre ou y entre-t-il ?","Etap 1: Nan presyon ba sa a, èske lè a soti nan sant lan oswa li antre ladan l?","الخطوة 1: في هذا المنخفض، هل يخرج الهواء من المركز أم يدخل إليه؟"],
+qStep2:["Step 2: Which way does the air spin?","Paso 2: ¿Hacia qué lado gira el aire?","Étape 2 : dans quel sens l'air tourne-t-il ?","Etap 2: Nan ki sans lè a vire?","الخطوة 2: في أي اتجاه يدور الهواء؟"],
+optOut:["Out of the center","Sale del centro","Il sort du centre","Li soti nan sant lan","يخرج من المركز"],
+optIn:["Into the center","Entra al centro","Il entre dans le centre","Li antre nan sant lan","يدخل إلى المركز"],
+optCW:["Clockwise ↻","En el sentido del reloj ↻","Sens des aiguilles d'une montre ↻","Sans zegwi revèy ↻","مع عقارب الساعة ↻"],
+optCCW:["Counterclockwise ↺","En sentido contrario al reloj ↺","Sens inverse des aiguilles d'une montre ↺","Sans kontrè zegwi revèy ↺","عكس عقارب الساعة ↺"],
+qCenter:["What kind of system is center {n}?","¿Qué tipo de sistema es el centro {n}?","Quel type de système est le centre {n} ?","Ki kalite sistèm sant {n} an ye?","ما نوع النظام في المركز {n}؟"],
+optH:["High (H)","Alta (H)","Anticyclone (H)","Presyon wo (H)","مرتفع (H)"],
+optL:["Low (L)","Baja (L)","Dépression (L)","Presyon ba (L)","منخفض (L)"],
+pointHead:["Point {p}","Punto {p}","Point {p}","Pwen {p}","النقطة {p}"],
+qArrow:["Which way is the air moving here? Tap an arrow.","¿Hacia dónde se mueve el aire aquí? Toca una flecha.","Dans quelle direction l'air se déplace-t-il ici ? Touche une flèche.","Nan ki direksyon lè a ap deplase la a? Tape sou yon flèch.","في أي اتجاه يتحرك الهواء هنا؟ اضغط على سهم."],
+moving:["Moving toward the {d}","Se mueve hacia el {d}","Direction : {d}","L ap deplase nan direksyon {d}","يتحرك نحو {d}"],
+noArrow:["No arrow yet. Your arrow will show on the map.","Todavía no hay flecha. Tu flecha aparecerá en el mapa.","Pas encore de flèche. Ta flèche apparaîtra sur la carte.","Poko gen flèch. Flèch ou ap parèt sou kat la.","لا يوجد سهم بعد. سيظهر سهمك على الخريطة."],
+qSky:["What is the sky like here?","¿Cómo está el cielo aquí?","Comment est le ciel ici ?","Kijan syèl la ye la a?","كيف تبدو السماء هنا؟"],
+skyClear:["Clear and calm","Despejado y en calma","Dégagé et calme","Klè e kalm","صافية وهادئة"],
+skyStorm:["Cloudy, with rain or storms","Nublado, con lluvia o tormentas","Nuageux, avec pluie ou orages","Nwaj, ak lapli oswa tanpèt","غائمة، مع مطر أو عواصف"],
+reason:["Explain your thinking (3 or more words)","Explica lo que piensas (3 palabras o más)","Explique ton raisonnement (3 mots ou plus)","Eksplike sa w panse (3 mo oswa plis)","اشرح تفكيرك (3 كلمات أو أكثر)"],
+frames:["Sentence starters","Inicios de oración","Débuts de phrase","Kòmansman fraz","بدايات الجمل"],
+framesTip:["Tap one to add it in English. Then fill in the blanks.","Toca uno para agregarlo en inglés. Luego completa los espacios.","Touche-en un pour l'ajouter en anglais. Puis remplis les blancs.","Tape sou youn pou mete l an angle. Apre sa, ranpli espas vid yo.","اضغط على واحدة لإضافتها بالإنجليزية. ثم املأ الفراغات."],
+wordBank:["Word bank","Banco de palabras","Banque de mots","Bank mo","بنك الكلمات"],
+hintBtn:["Show a hint","Mostrar una pista","Afficher un indice","Montre yon endis","اعرض تلميحًا"],
+hideHint:["Hide the hint","Ocultar la pista","Masquer l'indice","Kache endis la","أخفِ التلميح"],
+check:["Check","Revisar","Vérifier","Verifye","تحقّق"],
+prev:["Back","Atrás","Retour","Retounen","رجوع"],
+next:["Next map","Siguiente mapa","Carte suivante","Pwochen kat","الخريطة التالية"],
+toTurnIn:["Go to Turn In","Ir a Entregar","Aller à Remettre","Ale nan Remèt","انتقل إلى التسليم"],
+checks:["Checks: {n}"],
+ready:["Answer every question on this map, then press Check.","Responde todas las preguntas de este mapa y luego pulsa Revisar.","Réponds à toutes les questions de cette carte, puis appuie sur Vérifier.","Reponn tout kesyon sou kat sa a, epi peze Verifye.","أجب عن كل أسئلة هذه الخريطة، ثم اضغط تحقّق."],
+needAll:["Some questions have no answer yet. Answer every part, then check.","Algunas preguntas no tienen respuesta. Responde cada parte y luego revisa.","Certaines questions n'ont pas encore de réponse. Réponds à chaque partie, puis vérifie.","Gen kèk kesyon ki poko gen repons. Reponn chak pati, epi verifye.","بعض الأسئلة بلا إجابة بعد. أجب عن كل جزء ثم تحقّق."],
+needEv:["Write at least 3 words to explain your thinking.","Escribe al menos 3 palabras para explicar lo que piensas.","Écris au moins 3 mots pour expliquer ton raisonnement.","Ekri omwen 3 mo pou eksplike sa w panse.","اكتب 3 كلمات على الأقل لتشرح تفكيرك."],
+tryAgain:["Fix the parts marked Not yet, then press Check again.","Corrige las partes marcadas Todavía no y pulsa Revisar otra vez.","Corrige les parties marquées Pas encore, puis appuie de nouveau sur Vérifier.","Korije pati ki make Poko yo, epi peze Verifye ankò.","صحّح الأجزاء المعلَّمة «ليس بعد»، ثم اضغط تحقّق مرة أخرى."],
+nextUp:["Look at the map: the colored arrows show how the air really moves. Then go on to the next map.","Mira el mapa: las flechas de color muestran cómo se mueve el aire de verdad. Luego pasa al siguiente mapa.","Regarde la carte : les flèches en couleur montrent comment l'air bouge vraiment. Puis passe à la carte suivante.","Gade kat la: flèch ki gen koulè yo montre kijan lè a deplase vre. Apre sa, ale nan pwochen kat la.","انظر إلى الخريطة: الأسهم الملوّنة تبيّن كيف يتحرك الهواء فعلًا. ثم انتقل إلى الخريطة التالية."],
+allDone:["All 8 maps are done. Go to Turn In.","Terminaste los 8 mapas. Ve a Entregar.","Les 8 cartes sont faites. Va à Remettre.","Tout 8 kat yo fini. Ale nan Remèt.","أنهيت الخرائط الثماني. انتقل إلى التسليم."],
+cS1H:["Step 1: sinking air hits the ground. Does it spread out or pile in?","Paso 1: el aire que baja choca con el suelo. ¿Se extiende hacia afuera o se amontona adentro?","Étape 1 : l'air qui descend touche le sol. S'étale-t-il vers l'extérieur ou s'entasse-t-il au centre ?","Etap 1: lè k ap desann frape tè a. Èske li gaye deyò oswa li rasanble anndan?","الخطوة 1: الهواء الهابط يصطدم بالأرض. هل ينتشر إلى الخارج أم يتجمّع في الداخل؟"],
+cS1L:["Step 1: air at a Low rises. What has to fill the space it leaves at the ground?","Paso 1: en una baja el aire sube. ¿Qué tiene que llenar el espacio que deja en el suelo?","Étape 1 : dans une dépression, l'air monte. Qu'est-ce qui doit remplir la place qu'il laisse au sol ?","Etap 1: nan yon presyon ba lè a monte. Kisa ki dwe ranpli espas li kite atè a?","الخطوة 1: في المنخفض يصعد الهواء. ما الذي يجب أن يملأ المكان الذي يتركه عند الأرض؟"],
+cS2H:["Step 2: look at rule 3. Which way does air spin around a High?","Paso 2: mira la regla 3. ¿Hacia dónde gira el aire alrededor de una alta?","Étape 2 : regarde la règle 3. Dans quel sens l'air tourne-t-il autour d'un anticyclone ?","Etap 2: gade règ 3. Nan ki sans lè a vire toutotou yon presyon wo?","الخطوة 2: راجع القاعدة 3. في أي اتجاه يدور الهواء حول المرتفع؟"],
+cS2L:["Step 2: look at rule 3. Which way does air spin around a Low?","Paso 2: mira la regla 3. ¿Hacia dónde gira el aire alrededor de una baja?","Étape 2 : regarde la règle 3. Dans quel sens l'air tourne-t-il autour d'une dépression ?","Etap 2: gade règ 3. Nan ki sans lè a vire toutotou yon presyon ba?","الخطوة 2: راجع القاعدة 3. في أي اتجاه يدور الهواء حول المنخفض؟"],
+cCen:["Center {n}: do the numbers get bigger or smaller as you move toward the center?","Centro {n}: ¿los números se hacen más grandes o más pequeños al acercarte al centro?","Centre {n} : les nombres deviennent-ils plus grands ou plus petits quand tu vas vers le centre ?","Sant {n}: èske nimewo yo vin pi gwo oswa pi piti lè w ap pwoche sant lan?","المركز {n}: هل تكبر الأرقام أم تصغر كلما اقتربت من المركز؟"],
+cTanH:["Point {p}: the spin is right. But air also flows out of a High, so the arrow leans outward.","Punto {p}: el giro está bien. Pero el aire también sale de una alta, así que la flecha se inclina hacia afuera.","Point {p} : la rotation est bonne. Mais l'air sort aussi d'un anticyclone, donc la flèche penche vers l'extérieur.","Pwen {p}: sans vire a bon. Men lè a soti tou nan yon presyon wo, kidonk flèch la panche deyò.","النقطة {p}: الدوران صحيح. لكن الهواء يخرج أيضًا من المرتفع، فيميل السهم إلى الخارج."],
+cTanL:["Point {p}: the spin is right. But air also flows into a Low, so the arrow leans inward.","Punto {p}: el giro está bien. Pero el aire también entra en una baja, así que la flecha se inclina hacia adentro.","Point {p} : la rotation est bonne. Mais l'air entre aussi dans une dépression, donc la flèche penche vers l'intérieur.","Pwen {p}: sans vire a bon. Men lè a antre tou nan yon presyon ba, kidonk flèch la panche anndan.","النقطة {p}: الدوران صحيح. لكن الهواء يدخل أيضًا إلى المنخفض، فيميل السهم إلى الداخل."],
+cRadH:["Point {p}: yes, air flows out of a High. It also spins clockwise, so the arrow leans to one side.","Punto {p}: sí, el aire sale de una alta. También gira en el sentido del reloj, así que la flecha se inclina hacia un lado.","Point {p} : oui, l'air sort d'un anticyclone. Il tourne aussi dans le sens des aiguilles d'une montre, donc la flèche penche d'un côté.","Pwen {p}: wi, lè a soti nan yon presyon wo. Li vire tou nan sans zegwi revèy, kidonk flèch la panche sou yon bò.","النقطة {p}: نعم، يخرج الهواء من المرتفع. وهو يدور أيضًا مع عقارب الساعة، فيميل السهم إلى جانب."],
+cRadL:["Point {p}: yes, air flows into a Low. It also spins counterclockwise, so the arrow leans to one side.","Punto {p}: sí, el aire entra en una baja. También gira en sentido contrario al reloj, así que la flecha se inclina hacia un lado.","Point {p} : oui, l'air entre dans une dépression. Il tourne aussi dans le sens inverse des aiguilles d'une montre, donc la flèche penche d'un côté.","Pwen {p}: wi, lè a antre nan yon presyon ba. Li vire tou nan sans kontrè zegwi revèy, kidonk flèch la panche sou yon bò.","النقطة {p}: نعم، يدخل الهواء إلى المنخفض. وهو يدور أيضًا عكس عقارب الساعة، فيميل السهم إلى جانب."],
+cSpinH:["Point {p}: check the spin. Air spins clockwise around a High.","Punto {p}: revisa el giro. El aire gira en el sentido del reloj alrededor de una alta.","Point {p} : vérifie la rotation. L'air tourne dans le sens des aiguilles d'une montre autour d'un anticyclone.","Pwen {p}: tcheke sans vire a. Lè a vire nan sans zegwi revèy toutotou yon presyon wo.","النقطة {p}: تحقّق من الدوران. يدور الهواء مع عقارب الساعة حول المرتفع."],
+cSpinL:["Point {p}: check the spin. Air spins counterclockwise around a Low.","Punto {p}: revisa el giro. El aire gira en sentido contrario al reloj alrededor de una baja.","Point {p} : vérifie la rotation. L'air tourne dans le sens inverse des aiguilles d'une montre autour d'une dépression.","Pwen {p}: tcheke sans vire a. Lè a vire nan sans kontrè zegwi revèy toutotou yon presyon ba.","النقطة {p}: تحقّق من الدوران. يدور الهواء عكس عقارب الساعة حول المنخفض."],
+cSwapH:["Point {p}: that arrow is how air moves around a Low. Is the system near point {p} a High or a Low?","Punto {p}: esa flecha es como se mueve el aire alrededor de una baja. ¿El sistema cerca del punto {p} es una alta o una baja?","Point {p} : cette flèche, c'est l'air autour d'une dépression. Le système près du point {p} est-il un anticyclone ou une dépression ?","Pwen {p}: flèch sa a se jan lè a deplase toutotou yon presyon ba. Èske sistèm toupre pwen {p} an se yon presyon wo oswa yon presyon ba?","النقطة {p}: هذا السهم هو حركة الهواء حول منخفض. هل النظام قرب النقطة {p} مرتفع أم منخفض؟"],
+cSwapL:["Point {p}: that arrow is how air moves around a High. Is the system near point {p} a High or a Low?","Punto {p}: esa flecha es como se mueve el aire alrededor de una alta. ¿El sistema cerca del punto {p} es una alta o una baja?","Point {p} : cette flèche, c'est l'air autour d'un anticyclone. Le système près du point {p} est-il un anticyclone ou une dépression ?","Pwen {p}: flèch sa a se jan lè a deplase toutotou yon presyon wo. Èske sistèm toupre pwen {p} an se yon presyon wo oswa yon presyon ba?","النقطة {p}: هذا السهم هو حركة الهواء حول مرتفع. هل النظام قرب النقطة {p} مرتفع أم منخفض؟"],
+cOther:["Point {p}: find the closest system. Out or in? Clockwise or counterclockwise? The arrow shows both at once.","Punto {p}: busca el sistema más cercano. ¿Afuera o adentro? ¿En el sentido del reloj o al revés? La flecha muestra las dos cosas a la vez.","Point {p} : trouve le système le plus proche. Dehors ou dedans ? Dans le sens des aiguilles ou à l'inverse ? La flèche montre les deux à la fois.","Pwen {p}: jwenn sistèm ki pi pre a. Deyò oswa anndan? Sans zegwi revèy oswa kontrè? Flèch la montre toude an menm tan.","النقطة {p}: ابحث عن أقرب نظام. إلى الخارج أم الداخل؟ مع عقارب الساعة أم عكسها؟ السهم يبيّن الأمرين معًا."],
+cSky:["Point {p} sky: is the air near this system sinking or rising?","Cielo del punto {p}: ¿el aire cerca de este sistema baja o sube?","Ciel du point {p} : l'air près de ce système descend-il ou monte-t-il ?","Syèl pwen {p}: èske lè a toupre sistèm sa a ap desann oswa l ap monte?","سماء النقطة {p}: هل الهواء قرب هذا النظام يهبط أم يصعد؟"],
+hintH:["Sinking air hits the ground and spreads out. Around a High it turns the same way as clock hands.","El aire que baja choca con el suelo y se extiende. Alrededor de una alta gira igual que las agujas del reloj.","L'air qui descend touche le sol et s'étale. Autour d'un anticyclone, il tourne comme les aiguilles d'une montre.","Lè k ap desann frape tè a epi li gaye. Toutotou yon presyon wo, li vire menm jan ak zegwi revèy.","الهواء الهابط يصطدم بالأرض وينتشر. حول المرتفع يدور مثل عقارب الساعة."],
+hintL:["Air rushes in to fill the low pressure. Around a Low it turns the opposite way from clock hands.","El aire entra rápido para llenar la baja presión. Alrededor de una baja gira al revés de las agujas del reloj.","L'air se précipite pour remplir la basse pression. Autour d'une dépression, il tourne à l'inverse des aiguilles d'une montre.","Lè a kouri antre pou ranpli presyon ba a. Toutotou yon presyon ba, li vire nan sans kontrè zegwi revèy.","يندفع الهواء ليملأ الضغط المنخفض. حول المنخفض يدور عكس عقارب الساعة."],
+hintPlain:["Start at the point. Ask two questions: out or in? Clockwise or counterclockwise? The air does both, so the arrow points on a slant.","Empieza en el punto. Hazte dos preguntas: ¿afuera o adentro? ¿En el sentido del reloj o al revés? El aire hace las dos cosas, así que la flecha va inclinada.","Commence au point. Pose deux questions : dehors ou dedans ? Dans le sens des aiguilles ou à l'inverse ? L'air fait les deux, donc la flèche est en biais.","Kòmanse nan pwen an. Poze de kesyon: deyò oswa anndan? Sans zegwi revèy oswa kontrè? Lè a fè toude, kidonk flèch la panche.","ابدأ من النقطة. اسأل سؤالين: إلى الخارج أم الداخل؟ مع عقارب الساعة أم عكسها؟ الهواء يفعل الأمرين، فيكون السهم مائلًا."],
+hintTwo:["Each point follows the system closest to it. The two points can have different weather.","Cada punto sigue al sistema más cercano. Los dos puntos pueden tener tiempo diferente.","Chaque point suit le système le plus proche. Les deux points peuvent avoir une météo différente.","Chak pwen swiv sistèm ki pi pre li a. De pwen yo ka gen tan diferan.","كل نقطة تتبع النظام الأقرب إليها. يمكن أن يكون الطقس مختلفًا في النقطتين."],
+hintUnk:["Numbers get bigger toward a High and smaller toward a Low. Decide H or L first, then do the arrows.","Los números se hacen más grandes hacia una alta y más pequeños hacia una baja. Decide primero H o L y luego haz las flechas.","Les nombres grandissent vers un anticyclone et diminuent vers une dépression. Décide d'abord H ou L, puis fais les flèches.","Nimewo yo vin pi gwo lè w pwoche yon presyon wo epi pi piti lè w pwoche yon presyon ba. Deside H oswa L anvan, apre sa fè flèch yo.","تكبر الأرقام نحو المرتفع وتصغر نحو المنخفض. قرّر أولًا H أم L، ثم اختر الأسهم."],
+whyH:["At a High, air sinks, flows out and spins clockwise. Sinking air keeps the sky clear.","En una alta, el aire baja, sale y gira en el sentido del reloj. El aire que baja mantiene el cielo despejado.","Dans un anticyclone, l'air descend, sort et tourne dans le sens des aiguilles d'une montre. L'air qui descend garde le ciel dégagé.","Nan yon presyon wo, lè a desann, li soti epi li vire nan sans zegwi revèy. Lè k ap desann kenbe syèl la klè.","في المرتفع، يهبط الهواء ويخرج ويدور مع عقارب الساعة. الهواء الهابط يبقي السماء صافية."],
+whyL:["At a Low, air flows in, spins counterclockwise and rises. Rising air cools and makes clouds and storms.","En una baja, el aire entra, gira al revés del reloj y sube. El aire que sube se enfría y forma nubes y tormentas.","Dans une dépression, l'air entre, tourne dans le sens inverse des aiguilles d'une montre et monte. L'air qui monte refroidit et forme des nuages et des orages.","Nan yon presyon ba, lè a antre, li vire nan sans kontrè zegwi revèy epi li monte. Lè k ap monte refwadi epi li fè nwaj ak tanpèt.","في المنخفض، يدخل الهواء ويدور عكس عقارب الساعة ويصعد. الهواء الصاعد يبرد ويكوّن السحب والعواصف."],
+whyNum:["You read the numbers right: they go up toward a High and down toward a Low.","Leíste bien los números: suben hacia una alta y bajan hacia una baja.","Tu as bien lu les nombres : ils augmentent vers un anticyclone et diminuent vers une dépression.","Ou li nimewo yo byen: yo monte bò yon presyon wo epi yo desann bò yon presyon ba.","قرأت الأرقام جيدًا: تزداد نحو المرتفع وتنقص نحو المنخفض."],
+legH:["High","Alta","Anticyclone","Presyon wo","مرتفع"],
+legL:["Low","Baja","Dépression","Presyon ba","منخفض"],
+legIso:["Isobar (mb)","Isobara (mb)","Isobare (mb)","Izobar (mb)","خط تساوي الضغط (mb)"],
+legYou:["Your arrow","Tu flecha","Ta flèche","Flèch ou","سهمك"],
+legFlow:["Real air flow (after a correct check)","Flujo real del aire (después de acertar)","Vrai mouvement de l'air (après une bonne réponse)","Vrè mouvman lè a (apre yon bon repons)","حركة الهواء الحقيقية (بعد الإجابة الصحيحة)"],
+mapCap:["Simplified map. North is at the top.","Mapa simplificado. El norte está arriba.","Carte simplifiée. Le nord est en haut.","Kat senplifye. Nò anlè.","خريطة مبسّطة. الشمال في الأعلى."],
+centerN:["Center {n}","Centro {n}","Centre {n}","Sant {n}","المركز {n}"],
+dN:["north","norte","nord","nò","الشمال"],
+dNE:["northeast","noreste","nord-est","nòdès","الشمال الشرقي"],
+dE:["east","este","est","lès","الشرق"],
+dSE:["southeast","sureste","sud-est","sidès","الجنوب الشرقي"],
+dS:["south","sur","sud","sid","الجنوب"],
+dSW:["southwest","suroeste","sud-ouest","sidwès","الجنوب الغربي"],
+dW:["west","oeste","ouest","lwès","الغرب"],
+dNW:["northwest","noroeste","nord-ouest","nòdwès","الشمال الغربي"],
+reflHead:["Last question: use it to forecast","Última pregunta: úsalo para pronosticar","Dernière question : sers-t'en pour prévoir","Dènye kesyon: sèvi ak li pou fè prevwa","السؤال الأخير: استخدمه للتنبؤ"],
+refl:["A Low is moving toward your town. What weather do you predict? Explain why.","Una baja se acerca a tu pueblo. ¿Qué tiempo pronosticas? Explica por qué.","Une dépression se dirige vers ta ville. Quelle météo prévois-tu ? Explique pourquoi.","Yon presyon ba ap vini sou vil ou. Ki tan ou prevwa? Eksplike poukisa.","منخفض يتحرك نحو بلدتك. ما الطقس الذي تتوقعه؟ اشرح السبب."],
+answer:["Your answer","Tu respuesta","Ta réponse","Repons ou","إجابتك"],
+tiHead:["Turn in your work","Entrega tu trabajo","Remets ton travail","Remèt travay ou","سلّم عملك"],
+tiSteps:["Type your name. Then save a PDF, or copy the text and paste it into Google Classroom.","Escribe tu nombre. Luego guarda un PDF, o copia el texto y pégalo en Google Classroom.","Écris ton nom. Puis enregistre un PDF, ou copie le texte et colle-le dans Google Classroom.","Ekri non ou. Apre sa, anrejistre yon PDF, oswa kopye tèks la epi kole l nan Google Classroom.","اكتب اسمك. ثم احفظ ملف PDF، أو انسخ النص والصقه في Google Classroom."],
+name:["Name","Nombre","Nom","Non","الاسم"],
+hour:["Class hour","Hora de clase","Heure de cours","Lè klas","الحصة"],
+sumOk:["maps correct","mapas correctos","cartes justes","kat kòrèk","خرائط صحيحة"],
+sumFirst:["correct on the first try","correctos al primer intento","justes du premier coup","kòrèk premye fwa","صحيحة من المحاولة الأولى"],
+sumChecks:["checks in all","revisiones en total","vérifications en tout","verifikasyon an tout","مرات التحقق كلها"],
+sumRefl:["last question","última pregunta","dernière question","dènye kesyon","السؤال الأخير"],
+pdf:["Save PDF","Guardar PDF","Enregistrer le PDF","Anrejistre PDF","احفظ PDF"],
+copy:["Copy as text","Copiar como texto","Copier en texte","Kopye kòm tèks","انسخ كنص"],
+preview:["Preview of your record (in English)","Vista previa de tu registro (en inglés)","Aperçu de ton dossier (en anglais)","Apèsi dosye ou (an angle)","معاينة سجلك (بالإنجليزية)"],
+needName:["Type your name first.","Escribe tu nombre primero.","Écris d'abord ton nom.","Ekri non ou anvan.","اكتب اسمك أولًا."],
+pdfSaved:["PDF saved. Upload it to Google Classroom.","PDF guardado. Súbelo a Google Classroom.","PDF enregistré. Dépose-le dans Google Classroom.","PDF la anrejistre. Mete l nan Google Classroom.","تم حفظ PDF. ارفعه إلى Google Classroom."],
+pdfFail:["The PDF did not work here. Use Copy as text instead.","El PDF no funcionó aquí. Usa Copiar como texto.","Le PDF n'a pas marché ici. Utilise Copier en texte.","PDF la pa mache la a. Sèvi ak Kopye kòm tèks pito.","لم يعمل PDF هنا. استخدم «انسخ كنص» بدلًا منه."],
+pdfArabic:["Some letters may not show in the PDF. If they are missing, use Copy as text.","Algunas letras pueden no verse en el PDF. Si faltan, usa Copiar como texto.","Certaines lettres peuvent ne pas s'afficher dans le PDF. Si elles manquent, utilise Copier en texte.","Kèk lèt ka pa parèt nan PDF la. Si yo manke, sèvi ak Kopye kòm tèks.","قد لا تظهر بعض الحروف في PDF. إن كانت ناقصة، استخدم «انسخ كنص»."],
+copied:["Copied. Paste it into Google Classroom.","Copiado. Pégalo en Google Classroom.","Copié. Colle-le dans Google Classroom.","Kopye. Kole l nan Google Classroom.","تم النسخ. الصقه في Google Classroom."],
+copyFail:["Copy did not work. The text is selected, so press Ctrl+C.","No se pudo copiar. El texto está seleccionado: pulsa Ctrl+C.","La copie n'a pas marché. Le texte est sélectionné : appuie sur Ctrl+C.","Kopi a pa mache. Tèks la chwazi deja, peze Ctrl+C.","لم ينجح النسخ. النص محدّد، فاضغط Ctrl+C."],
+credit:["Weather unit, activity 1 of 5. Next: fronts.","Unidad del tiempo, actividad 1 de 5. Sigue: frentes.","Unité météo, activité 1 sur 5. Ensuite : les fronts.","Inite tan an, aktivite 1 sou 5. Apre: fwon yo.","وحدة الطقس، النشاط 1 من 5. التالي: الجبهات."]
+};
+
+/* Sentence frames and word bank: [en, es, fr, ht, ar]. English is what gets inserted. */
+const FRAMES=[
+["At point ___, the air moves toward the ___ because ___.","En el punto ___, el aire se mueve hacia el ___ porque ___.","Au point ___, l'air se déplace vers le ___ parce que ___.","Nan pwen ___, lè a deplase nan direksyon ___ paske ___.","عند النقطة ___، يتحرك الهواء نحو ___ لأن ___."],
+["Air flows (out of / into) a (High / Low) and spins (clockwise / counterclockwise).","El aire (sale de / entra en) una (alta / baja) y gira (en el sentido del reloj / al revés).","L'air (sort de / entre dans) (l'anticyclone / la dépression) et tourne (dans le sens / à l'inverse) des aiguilles d'une montre.","Lè a (soti nan / antre nan) yon (presyon wo / presyon ba) epi li vire (nan sans / kontrè) zegwi revèy.","الهواء (يخرج من / يدخل إلى) (المرتفع / المنخفض) ويدور (مع / عكس) عقارب الساعة."],
+["The sky is (clear / cloudy) because the air is (sinking / rising).","El cielo está (despejado / nublado) porque el aire (baja / sube).","Le ciel est (dégagé / nuageux) parce que l'air (descend / monte).","Syèl la (klè / gen nwaj) paske lè a (ap desann / ap monte).","السماء (صافية / غائمة) لأن الهواء (يهبط / يصعد)."],
+["Center ___ is a (High / Low) because the numbers go (up / down) toward the center.","El centro ___ es una (alta / baja) porque los números (suben / bajan) hacia el centro.","Le centre ___ est (un anticyclone / une dépression) parce que les nombres (montent / descendent) vers le centre.","Sant ___ se yon (presyon wo / presyon ba) paske nimewo yo (monte / desann) bò sant lan.","المركز ___ (مرتفع / منخفض) لأن الأرقام (تزداد / تنقص) نحو المركز."]
+];
+const WORDS=[
+["sinking","que baja","qui descend","ap desann","يهبط"],
+["rising","que sube","qui monte","ap monte","يصعد"],
+["clockwise","en el sentido del reloj","sens des aiguilles d'une montre","sans zegwi revèy","مع عقارب الساعة"],
+["counterclockwise","al revés del reloj","sens inverse des aiguilles d'une montre","sans kontrè zegwi revèy","عكس عقارب الساعة"],
+["flows out","sale","sort","soti deyò","يخرج"],
+["flows in","entra","entre","antre anndan","يدخل"],
+["isobar","isobara","isobare","izobar","خط تساوي الضغط"],
+["millibars","milibares","millibars","milibar","مليبار"],
+["high pressure","alta presión","haute pression","presyon wo","ضغط مرتفع"],
+["low pressure","baja presión","basse pression","presyon ba","ضغط منخفض"]
+];
+const REFL_FRAME=["I predict ___ weather because a Low has ___ air, which makes ___.","Pronostico tiempo ___ porque una baja tiene aire que ___, y eso forma ___.","Je prévois un temps ___ parce qu'une dépression a de l'air qui ___, ce qui forme ___.","Mwen prevwa tan ___ paske yon presyon ba gen lè ki ___, sa ki fè ___.","أتوقع طقسًا ___ لأن المنخفض فيه هواء ___، وهذا يكوّن ___."];
+
+/* ---------- GLOSSARY (word pictures): each language [word, definition] ---------- */
+const GL={
+isobar:{en:["isobar","A line on a map that joins places with the same air pressure."],es:["isobara","Una línea en un mapa que une lugares con la misma presión del aire."],fr:["isobare","Une ligne sur une carte qui relie des lieux ayant la même pression de l'air."],ht:["izobar","Yon liy sou yon kat ki konekte kote ki gen menm presyon lè."],ar:["خط تساوي الضغط","خط على الخريطة يصل بين أماكن لها ضغط الهواء نفسه."]},
+mb:{en:["millibar (mb)","The unit for air pressure on weather maps. Normal pressure is about 1013 mb."],es:["milibar (mb)","La unidad de presión del aire en los mapas del tiempo. La presión normal es de unos 1013 mb."],fr:["millibar (mb)","L'unité de pression de l'air sur les cartes météo. La pression normale est d'environ 1013 mb."],ht:["milibar (mb)","Inite pou presyon lè sou kat tan yo. Presyon nòmal se anviwon 1013 mb."],ar:["مليبار (mb)","وحدة ضغط الهواء على خرائط الطقس. الضغط العادي نحو 1013 mb."]},
+highP:{en:["high pressure (H)","An area where air sinks. Skies are usually clear and calm."],es:["alta presión (H)","Una zona donde el aire baja. El cielo suele estar despejado y en calma."],fr:["haute pression (H)","Une zone où l'air descend. Le ciel est souvent dégagé et calme."],ht:["presyon wo (H)","Yon zòn kote lè a desann. Syèl la souvan klè e kalm."],ar:["ضغط مرتفع (H)","منطقة يهبط فيها الهواء. تكون السماء عادةً صافية وهادئة."]},
+lowP:{en:["low pressure (L)","An area where air rises. It brings clouds, rain and storms."],es:["baja presión (L)","Una zona donde el aire sube. Trae nubes, lluvia y tormentas."],fr:["basse pression (L)","Une zone où l'air monte. Elle apporte nuages, pluie et orages."],ht:["presyon ba (L)","Yon zòn kote lè a monte. Li pote nwaj, lapli ak tanpèt."],ar:["ضغط منخفض (L)","منطقة يصعد فيها الهواء. يجلب السحب والمطر والعواصف."]},
+sinking:{en:["sinking air","Air moving down. It warms and dries, so clouds disappear."],es:["aire que baja","Aire que se mueve hacia abajo. Se calienta y se seca, así que las nubes desaparecen."],fr:["air qui descend","De l'air qui va vers le bas. Il se réchauffe et s'assèche, donc les nuages disparaissent."],ht:["lè k ap desann","Lè k ap deplase anba. Li chofe epi li vin sèk, kidonk nwaj yo disparèt."],ar:["هواء هابط","هواء يتحرك إلى أسفل. يدفأ ويجف، فتختفي السحب."]},
+rising:{en:["rising air","Air moving up. It cools, and water vapor condenses into clouds."],es:["aire que sube","Aire que se mueve hacia arriba. Se enfría y el vapor de agua se condensa en nubes."],fr:["air qui monte","De l'air qui va vers le haut. Il refroidit, et la vapeur d'eau se condense en nuages."],ht:["lè k ap monte","Lè k ap deplase anlè. Li refwadi, epi vapè dlo kondanse fè nwaj."],ar:["هواء صاعد","هواء يتحرك إلى أعلى. يبرد، فيتكثف بخار الماء إلى سحب."]},
+cw:{en:["clockwise","Turning the same way as the hands on a clock."],es:["en el sentido del reloj","Girar hacia el mismo lado que las agujas de un reloj."],fr:["sens des aiguilles d'une montre","Tourner dans le même sens que les aiguilles d'une horloge."],ht:["sans zegwi revèy","Vire menm jan ak zegwi yon revèy."],ar:["مع عقارب الساعة","الدوران في الاتجاه نفسه لعقارب الساعة."]},
+ccw:{en:["counterclockwise","Turning the opposite way from the hands on a clock."],es:["sentido contrario al reloj","Girar hacia el lado contrario a las agujas de un reloj."],fr:["sens inverse des aiguilles d'une montre","Tourner dans le sens contraire des aiguilles d'une horloge."],ht:["sans kontrè zegwi revèy","Vire nan sans opoze ak zegwi yon revèy."],ar:["عكس عقارب الساعة","الدوران في الاتجاه المعاكس لعقارب الساعة."]}
+};
+const VOCAB_LEARN=['highP','lowP','sinking','rising','cw','ccw','isobar','mb'];
+const VOCAB_PR=['highP','lowP','cw','ccw','isobar','mb'];
+
+/* ---------- THE 8 MAPS ----------
+   b = compass bearing from the system center to the point (0 = north, 90 = east).
+   Surface air spirals OUT of a High clockwise (b+45) and IN to a Low counterclockwise (b+225).
+   Answers are computed from this rule, so never hardcode them.
+   mode: guided (steps shown) -> plain -> two systems -> unk (unlabeled centers). Scaffolds fade. */
+const SC=[
+ {mode:'guided',sys:[{t:'H',x:300,y:190}],pts:[{p:'A',s:0,b:0},{p:'B',s:0,b:90}]},
+ {mode:'guided',sys:[{t:'L',x:300,y:190}],pts:[{p:'A',s:0,b:0},{p:'B',s:0,b:90}]},
+ {mode:'plain',sys:[{t:'H',x:300,y:190}],pts:[{p:'A',s:0,b:270},{p:'B',s:0,b:180}]},
+ {mode:'plain',sys:[{t:'L',x:300,y:190}],pts:[{p:'A',s:0,b:45},{p:'B',s:0,b:225}]},
+ {mode:'two',sys:[{t:'H',x:160,y:190},{t:'L',x:440,y:190}],pts:[{p:'A',s:0,b:315},{p:'B',s:1,b:180}]},
+ {mode:'two',sys:[{t:'L',x:160,y:190},{t:'H',x:440,y:190}],pts:[{p:'A',s:0,b:225},{p:'B',s:1,b:90}]},
+ {mode:'unk',sys:[{t:'H',x:300,y:190}],pts:[{p:'A',s:0,b:90},{p:'B',s:0,b:315}]},
+ {mode:'unk',sys:[{t:'L',x:160,y:190},{t:'H',x:440,y:190}],pts:[{p:'A',s:0,b:270},{p:'B',s:1,b:0}]}
+];
+const DIRK=['dN','dNE','dE','dSE','dS','dSW','dW','dNW'];
+const norm=a=>((a%360)+360)%360;
+const flowDir=(t,b)=>norm(t==='H'?b+45:b+225);
+const skyFor=t=>t==='H'?'clear':'storm';
+const isoVals=t=>t==='H'?[1024,1020,1016]:[1000,1004,1008];
+</script>
+<script>
+/* ---------- HELPERS ---------- */
+const LI=l=>Math.max(0,LANGS.indexOf(l));
+function raw(k,l){const e=UI[k];if(e==null)return k;return e[LI(l)]!=null?e[LI(l)]:e[0];}
+function U(k,vars,l){l=l||S.lang;let s=raw(k,l);if(vars)s=s.replace(/\{(\w+)\}/g,(m,n)=>{const v=vars[n];if(v==null)return m;if(typeof v==='object'&&v.k)return raw(v.k,l);return v;});return s;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function ltr(s){return s.replace(/(\d[\d.,]*(?:\s?mb)?|\bmb\b|\b[A-B]\b|\([HL]\))/g,'<bdi dir="ltr">$1</bdi>');}
+function l2span(t){if(S.lang==='en')return '';const ar=S.lang==='ar';return `<span class="l2" lang="${S.lang}"${ar?' dir="rtl"':''}>${ar?ltr(esc(t)):esc(t)}</span>`;}
+function B(k,vars){return `<span class="en">${esc(U(k,vars,'en'))}</span>`+l2span(U(k,vars,S.lang));}
+function BI(k,vars){return `<span class="inl">${B(k,vars)}</span>`;}
+function BA(a){return `<span class="en">${esc(a[0])}</span>`+l2span(a[LI(S.lang)]||a[0]);}
+const words=t=>(t.trim().match(/\S+/g)||[]).length;
+const rad=d=>d*Math.PI/180;
+
+/* ---------- READ-ALOUD ---------- */
+const SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+let SAY=new Map(),sid=0;
+function sayBtn(fn){const id='say'+(++sid);SAY.set(id,fn);const lab=esc(U('say',null,'en'));return `<button type="button" class="say" id="${id}" data-say="${id}" aria-label="${lab}" title="${lab}">${SPK}</button>`;}
+function sayK(k,vars){return sayBtn(()=>[U(k,vars,'en'),U(k,vars,S.lang)]);}
+function txt(k,vars,cls){return `<div class="txt"><p class="${cls||''}">${B(k,vars)}</p>${sayK(k,vars)}</div>`;}
+function voiceFor(l){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices();const c=VOICE[l];const m=vs.filter(v=>v.lang&&v.lang.replace('_','-').toLowerCase().startsWith(c));if(l==='en')return m.find(v=>/en-us/i.test(v.lang.replace('_','-')))||m[0]||null;return m[0]||null;}
+function clean(t){return String(t).replace(/_{2,}/g,', blank, ').replace(/[↻↺✓✗]/g,'').replace(/\bmb\b/g,'millibars');}
+function speak(en,l2){
+  if(!('speechSynthesis' in window)){toast(U('noSpeech'));return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(clean(en));u.lang='en-US';const ve=voiceFor('en');if(ve)u.voice=ve;u.rate=.95;speechSynthesis.speak(u);
+  if(S.lang!=='en'&&l2){const v=voiceFor(S.lang);if(v){const u2=new SpeechSynthesisUtterance(clean(l2));u2.lang=v.lang;u2.voice=v;u2.rate=.95;speechSynthesis.speak(u2);}else{toast(U('noVoice'));}}
+}
+let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4200);}
+function announce(m){const l=document.getElementById('live');l.textContent='';setTimeout(()=>l.textContent=m,30);}
+
+/* ---------- STATE ---------- */
+const KEY='pressure-lab-v2';
+function fresh(){return{v:2,lang:'en',tab:'learn',pics:false,cur:0,learn:'H',
+  sc:SC.map(()=>({a:{},marks:{},ev:'',checks:0,ok:false,first:null})),
+  refl:'',name:'',hour:'',fb:{}};}
+let S=fresh();
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&d.v===2){const f=fresh();S=Object.assign(f,d);if(!Array.isArray(S.sc)||S.sc.length!==SC.length)S.sc=f.sc;}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const openDet=new Set();let hintOpen=false;
+function setFb(part,type,parts){S.fb[part]={type,parts};announce(parts.map(([k,v])=>U(k,v,'en')).join(' '));}
+
+/* ---------- ANSWER LOGIC ---------- */
+function keys(i){const sc=SC[i],k=[];
+  if(sc.mode==='guided')k.push('s1','s2');
+  if(sc.mode==='unk')sc.sys.forEach((_,n)=>k.push('c'+n));
+  sc.pts.forEach(p=>k.push('d'+p.p,'k'+p.p));return k;}
+function ptOf(i,letter){return SC[i].pts.find(p=>p.p===letter);}
+function correctVal(i,k){const sc=SC[i],t0=sc.sys[0].t;
+  if(k==='s1')return t0==='H'?'out':'in';
+  if(k==='s2')return t0==='H'?'cw':'ccw';
+  if(k[0]==='c')return sc.sys[+k.slice(1)].t;
+  const pt=ptOf(i,k.slice(1)),t=sc.sys[pt.s].t;
+  if(k[0]==='d')return String(flowDir(t,pt.b));
+  return skyFor(t);}
+/* Diagnose a wrong arrow by its angle from the point's bearing */
+function arrowCause(t,b,c,p){const d=norm(c-b);
+  if(t==='H'){if(d===90)return['cTanH',{p}];if(d===0)return['cRadH',{p}];if(d===315)return['cSpinH',{p}];if(d===225)return['cSwapH',{p}];}
+  else{if(d===270)return['cTanL',{p}];if(d===180)return['cRadL',{p}];if(d===135)return['cSpinL',{p}];if(d===45)return['cSwapL',{p}];}
+  return['cOther',{p}];}
+function causeFor(i,k){const sc=SC[i],t0=sc.sys[0].t,st=S.sc[i];
+  if(k==='s1')return[t0==='H'?'cS1H':'cS1L'];
+  if(k==='s2')return[t0==='H'?'cS2H':'cS2L'];
+  if(k[0]==='c')return['cCen',{n:+k.slice(1)+1}];
+  const pt=ptOf(i,k.slice(1)),t=sc.sys[pt.s].t;
+  if(k[0]==='d')return arrowCause(t,pt.b,+st.a[k],pt.p);
+  return['cSky',{p:pt.p}];}
+function checkSc(){
+  const i=S.cur,sc=SC[i],st=S.sc[i],fk='s'+i;
+  if(st.ok)return;
+  const ta=document.getElementById('ev-'+i);if(ta)st.ev=ta.value;
+  const ks=keys(i);
+  if(ks.some(k=>st.a[k]==null)){setFb(fk,'bad',[['notYet'],['needAll']]);return;}
+  if(words(st.ev)<3){setFb(fk,'bad',[['notYet'],['needEv']]);return;}
+  st.checks++;st.marks={};const causes=[];
+  ks.forEach(k=>{const ok=st.a[k]===correctVal(i,k);st.marks[k]=ok;if(!ok)causes.push(causeFor(i,k));});
+  const ok=!causes.length;if(st.first==null)st.first=ok;
+  if(ok){st.ok=true;hintOpen=false;const parts=[['correct']];
+    [...new Set(sc.sys.map(s=>s.t))].forEach(t=>parts.push([t==='H'?'whyH':'whyL']));
+    if(sc.mode==='unk')parts.push(['whyNum']);
+    parts.push([S.sc.every(s=>s.ok)?'allDone':'nextUp']);setFb(fk,'good',parts);}
+  else setFb(fk,'bad',[['notYet'],...causes.slice(0,3),['tryAgain']]);}
+
+/* ---------- SVG PIECES ---------- */
+function svgT(x,y,key,o){o=o||{};const sz=o.size||15,anc=o.anchor||'middle',cls=o.cls||'maptxt f-ink';
+  const en=U(key,o.vars,'en'),l2=S.lang!=='en'?U(key,o.vars,S.lang):'';
+  return `<text x="${x}" y="${y}" text-anchor="${anc}" font-size="${sz}" class="${cls} halo"><tspan>${esc(en)}</tspan>${l2?`<tspan class="l2t" x="${x}" dy="${(sz*1.05).toFixed(1)}" font-size="${(sz*.8).toFixed(1)}"${S.lang==='ar'?' direction="rtl" unicode-bidi="embed"':''}>${esc(l2)}</tspan>`:''}</text>`;}
+const f1=n=>n.toFixed(1);
+/* straight arrow from (x1,y1) to (x2,y2) with a solid head */
+function arr(x1,y1,x2,y2,cls,w,extra){const a=Math.atan2(y2-y1,x2-x1),h=w*2.4+4,s=w*1.6+3;
+  const bx=x2-Math.cos(a)*h,by=y2-Math.sin(a)*h,px=Math.cos(a+Math.PI/2)*s,py=Math.sin(a+Math.PI/2)*s;
+  return `<path d="M${f1(x1)} ${f1(y1)}L${f1(bx)} ${f1(by)}" class="s-${cls}${extra?' '+extra:''}" stroke-width="${w}" stroke-linecap="round" fill="none"/><path d="M${f1(x2)} ${f1(y2)}L${f1(bx+px)} ${f1(by+py)}L${f1(bx-px)} ${f1(by-py)}Z" class="f-${cls}"/>`;}
+/* isobars are slightly squashed ellipses; posAt finds a spot at bearing b, "radius" d */
+const EX=1.12,EY=.95;
+function posAt(cx,cy,b,d){return[cx+Math.sin(rad(b))*d*EX,cy-Math.cos(rad(b))*d*EY];}
+function arrowAt(x,y,dir,len,cls,w){return arr(x,y,x+Math.sin(rad(dir))*len,y-Math.cos(rad(dir))*len,cls,w);}
+function flowRing(sys,d,len,extra,skip){let o='';const c=sys.t==='H'?'hi':'lo';
+  for(let b=0;b<360;b+=45){if(skip&&skip.includes(b))continue;const[px,py]=posAt(sys.x,sys.y,b,d);const dir=flowDir(sys.t,b);
+    const dx=Math.sin(rad(dir))*len/2,dy=-Math.cos(rad(dir))*len/2;o+=arr(px-dx,py-dy,px+dx,py+dy,c,2.8,extra);}
+  return o;}
+function isobars(sys,radii,vals,known){const c=known?(sys.t==='H'?'s-hi':'s-lo'):'s-mute';let o='';
+  radii.forEach(r=>{o+=`<ellipse cx="${sys.x}" cy="${sys.y}" rx="${f1(r*EX)}" ry="${f1(r*EY)}" fill="none" class="${c}" stroke-width="1.6" opacity=".75"/>`;});
+  radii.forEach((r,j)=>{const[lx,ly]=posAt(sys.x,sys.y,205,r);o+=`<text x="${f1(lx)}" y="${f1(ly+4)}" text-anchor="middle" font-size="12" class="num f-mute halo">${vals[j]}</text>`;});
+  return o;}
+function centerMark(sys,show,n){
+  if(show){const c=sys.t==='H'?'hi':'lo';return `<circle cx="${sys.x}" cy="${sys.y}" r="17" class="f-surf s-${c}" stroke-width="3"/><text x="${sys.x}" y="${sys.y+7}" text-anchor="middle" font-size="20" font-weight="800" class="f-${c}" style="font-family:var(--display)">${sys.t}</text>`;}
+  return `<circle cx="${sys.x}" cy="${sys.y}" r="17" class="f-surf s-ink" stroke-width="2" stroke-dasharray="4 3"/><text x="${sys.x}" y="${sys.y+7}" text-anchor="middle" font-size="19" font-weight="800" class="f-ink">?</text>`+svgT(sys.x,sys.y-26,'centerN',{size:13,vars:{n}});}
+function compassN(x,y){return `<g aria-hidden="true"><path d="M${x} ${y-16}L${x+7} ${y+4}L${x} ${y}L${x-7} ${y+4}Z" class="f-ink"/><text x="${x}" y="${y+20}" text-anchor="middle" font-size="13" font-weight="700" class="f-ink">N</text></g>`;}
+
+/* ---------- PRACTICE MAP ---------- */
+function mapSVG(i){const sc=SC[i],st=S.sc[i],two=sc.sys.length>1;
+  const radii=two?[38,72,106]:[44,84,124],d=two?89:104;
+  let o=`<svg class="map" viewBox="0 0 600 380" role="img" aria-label="${esc(mapLabel(i))}"><rect width="600" height="380" class="f-land"/>`;
+  for(let x=75;x<600;x+=75)o+=`<path d="M${x} 0V380" class="s-line" stroke-width="1" opacity=".6"/>`;
+  for(let y=95;y<380;y+=95)o+=`<path d="M0 ${y}H600" class="s-line" stroke-width="1" opacity=".6"/>`;
+  const known=sc.mode!=='unk'||st.ok;
+  sc.sys.forEach(s=>{o+=isobars(s,radii,isoVals(s.t),known);});
+  if(st.ok)sc.sys.forEach((s,n)=>{const skip=sc.pts.filter(p=>p.s===n).map(p=>p.b);o+=`<g class="reveal">${flowRing(s,d,32,'',skip)}</g>`;});
+  sc.sys.forEach((s,n)=>{o+=centerMark(s,known,n+1);});
+  sc.pts.forEach(pt=>{const s=sc.sys[pt.s];const[px,py]=posAt(s.x,s.y,pt.b,d);const v=st.a['d'+pt.p];
+    if(v!=null)o+=arrowAt(px,py,+v,52,'ink',4.5);
+    o+=`<circle cx="${f1(px)}" cy="${f1(py)}" r="13" class="f-surf s-ink" stroke-width="2.5"/><text x="${f1(px)}" y="${f1(py+5)}" text-anchor="middle" font-size="15" font-weight="800" class="f-ink" style="font-family:var(--display)">${pt.p}</text>`;});
+  return o+compassN(572,30)+`</svg>`;}
+function mapLabel(i){const sc=SC[i],st=S.sc[i],known=sc.mode!=='unk'||st.ok;
+  const sys=sc.sys.map((s,n)=>known?(s.t==='H'?'a High':'a Low'):'unlabeled center '+(n+1)).join(' and ');
+  const pts=sc.pts.map(p=>{const v=st.a['d'+p.p];return `point ${p.p}${v!=null?', your arrow toward the '+U(DIRK[+v/45],null,'en'):''}`;}).join('; ');
+  return `Pressure map ${i+1} with ${sys}. Isobars labeled in millibars. ${pts}. North is up.`;}
+
+/* ---------- LEARN DIAGRAMS ---------- */
+function sideView(t){let o=`<svg class="fig" viewBox="0 0 360 230" role="img" aria-label="${t==='H'?'Side view of a High: air sinks, then spreads out along the ground. The sky stays clear.':'Side view of a Low: air flows in along the ground, then rises. Clouds and rain form.'}"><rect width="360" height="230" class="f-sky"/><rect y="182" width="360" height="48" class="f-land"/><path d="M0 182H360" class="s-shore" stroke-width="2"/>`;
+  if(t==='H'){
+    o+=`<circle cx="52" cy="46" r="15" class="f-sun"/>`+[0,45,90,135,180,225,270,315].map(a=>`<path d="M${f1(52+Math.cos(rad(a))*21)} ${f1(46+Math.sin(rad(a))*21)}L${f1(52+Math.cos(rad(a))*28)} ${f1(46+Math.sin(rad(a))*28)}" class="s-sun" stroke-width="3" stroke-linecap="round"/>`).join('');
+    [150,180,210].forEach(x=>{o+=arr(x,34,x,150,'hi',4,'flow');});
+    o+=arr(166,168,62,168,'hi',4,'flow')+arr(194,168,298,168,'hi',4,'flow');
+    o+=svgT(284,70,'lblSink',{size:14})+svgT(66,150,'lblOut',{size:13})+svgT(60,98,'lblClear',{size:13});
+    o+=`<circle cx="180" cy="206" r="14" class="f-surf s-hi" stroke-width="3"/><text x="180" y="212" text-anchor="middle" font-size="16" font-weight="800" class="f-hi">H</text>`;
+  }else{
+    o+=`<ellipse cx="150" cy="40" rx="46" ry="20" class="f-cloud"/><ellipse cx="200" cy="34" rx="42" ry="22" class="f-cloud"/><ellipse cx="236" cy="44" rx="30" ry="16" class="f-cloud"/>`;
+    [118,140,232,254].forEach((x,j)=>{o+=`<path d="M${x} ${64+j%2*6}l-4 12" class="s-cold" stroke-width="2.5" stroke-linecap="round"/>`;});
+    [150,180,210].forEach(x=>{o+=arr(x,158,x,70,'lo',4,'flow');});
+    o+=arr(62,168,164,168,'lo',4,'flow')+arr(298,168,196,168,'lo',4,'flow');
+    o+=svgT(292,112,'lblRise',{size:14})+svgT(66,150,'lblIn',{size:13})+svgT(314,26,'lblCloud',{size:13});
+    o+=`<circle cx="180" cy="206" r="14" class="f-surf s-lo" stroke-width="3"/><text x="180" y="212" text-anchor="middle" font-size="16" font-weight="800" class="f-lo">L</text>`;
+  }
+  return o+`</svg>`;}
+function topView(t){const sys={t,x:150,y:130};
+  return `<svg class="fig" viewBox="0 0 300 260" role="img" aria-label="${t==='H'?'Map view of a High: arrows curve outward and turn clockwise. Isobar numbers go up toward the center.':'Map view of a Low: arrows curve inward and turn counterclockwise. Isobar numbers go down toward the center.'}"><rect width="300" height="260" class="f-land"/>`
+   +isobars(sys,[34,68,102],isoVals(t),true)+flowRing(sys,86,28,'')+centerMark(sys,true)+compassN(276,26)+`</svg>`;}
+
+/* word-picture and rule icons, drawn to match the page */
+function vIcon(k,s){s=s||52;const w=`<svg width="${s}" height="${s}" viewBox="0 0 56 56" aria-hidden="true">`;
+  const circ=(c,flip)=>{const tf=flip?' transform="translate(56 0) scale(-1 1)"':'';return `<g${tf}><path d="M28 12a16 16 0 1 1 -15.2 11" fill="none" class="s-${c}" stroke-width="3" stroke-linecap="round"/><path d="M7 27l5.5-9 5.5 8z" class="f-${c}"/></g>`;};
+  const spokes=(c,out)=>[45,135,225,315].map(a=>{const r1=out?14:26,r2=out?25:14;return arr(28+Math.sin(rad(a))*r1,28-Math.cos(rad(a))*r1,28+Math.sin(rad(a))*r2,28-Math.cos(rad(a))*r2,c,2);}).join('');
+  const m={
+   isobar:`<ellipse cx="28" cy="26" rx="22" ry="16" fill="none" class="s-hi" stroke-width="2"/><ellipse cx="28" cy="26" rx="11" ry="8" fill="none" class="s-hi" stroke-width="2"/><text x="28" y="52" text-anchor="middle" font-size="10" class="num f-ink">1016</text>`,
+   mb:`<circle cx="28" cy="30" r="20" class="f-surf s-ink" stroke-width="2"/><path d="M28 30L39 20" class="s-ink" stroke-width="3" stroke-linecap="round"/><circle cx="28" cy="30" r="3" class="f-ink"/><text x="28" y="45" text-anchor="middle" font-size="10" font-weight="700" class="f-ink">mb</text>`,
+   highP:`<circle cx="28" cy="28" r="11" class="f-surf s-hi" stroke-width="2.5"/><text x="28" y="33" text-anchor="middle" font-size="13" font-weight="800" class="f-hi">H</text>`+spokes('hi',true),
+   lowP:`<circle cx="28" cy="28" r="11" class="f-surf s-lo" stroke-width="2.5"/><text x="28" y="33" text-anchor="middle" font-size="13" font-weight="800" class="f-lo">L</text>`+spokes('lo',false),
+   sinking:arr(20,6,20,40,'hi',3)+arr(36,6,36,40,'hi',3)+`<path d="M6 48H50" class="s-shore" stroke-width="3"/>`,
+   rising:`<ellipse cx="28" cy="12" rx="18" ry="8" class="f-cloud"/>`+arr(20,48,20,24,'lo',3)+arr(36,48,36,24,'lo',3),
+   cw:circ('ink',false),ccw:circ('ink',true)};
+  return w+(m[k]||'')+`</svg>`;}
+function arrowIcon(a){return `<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(${a} 12 12)"><path d="M12 20V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;}
+
+/* ---------- SHARED PIECES ---------- */
+function fbHtml(part,fallbackKey){
+  const f=S.fb[part];
+  if(!f){if(!fallbackKey)return `<div class="fb"></div>`;return `<div class="fb"><div>${B(fallbackKey)}</div>${sayK(fallbackKey)}</div>`;}
+  const en=f.parts.map(([k,v])=>U(k,v,'en')).join(' '),l2=f.parts.map(([k,v])=>U(k,v,S.lang)).join(' ');
+  return `<div class="fb ${f.type}"><div><span class="en">${esc(en)}</span>${l2span(l2)}</div>${sayBtn(()=>[en,l2])}</div>`;}
+function supports(taId,list,wordsList,dis){
+  const fr=list.map((f,i)=>`<button type="button" class="frame" id="fr-${taId}-${i}" data-act="ins" data-ta="${taId}" data-txt="${esc(f[0])}" data-line="1"${dis?' disabled':''}>${BA(f)}</button>`).join('');
+  const wd=(wordsList||[]).map((w,i)=>`<button type="button" class="word" id="wd-${taId}-${i}" data-act="ins" data-ta="${taId}" data-txt="${esc(w[0])}"${dis?' disabled':''}><span class="inl">${BA(w)}</span></button>`).join('');
+  return `<details class="sup" id="det-${taId}"${openDet.has('det-'+taId)?' open':''}><summary>${BI('frames')}</summary>
+  <p class="note" style="margin:4px 0">${BI('framesTip')}</p><div class="frames">${fr}</div>
+  ${wd?`<p class="kicker" style="margin-top:10px">${BI('wordBank')}</p><div class="words">${wd}</div>`:''}</details>`;}
+function vocabBlock(list){
+  if(!S.pics)return '';
+  const cards=list.map(k=>{const g=GL[k];const en=g.en,l=g[S.lang]||g.en;
+    return `<div class="vcard"><div class="pic">${vIcon(k)}</div><div style="flex:1;min-width:0"><b>${esc(en[0])}</b>${S.lang!=='en'?l2span(l[0]):''}<p>${esc(en[1])}</p>${S.lang!=='en'?l2span(l[1]):''}</div>${sayBtn(()=>[en[0]+'. '+en[1],l[0]+'. '+l[1]])}</div>`;}).join('');
+  return `<div class="panel"><p class="kicker">${BI('pics')}</p><div class="vocab">${cards}</div></div>`;}
+function tag(m){if(m==null)return '';return `<p class="tag ${m?'ok':'no'}">${m?'✓':'✗'} ${BI(m?'tagOk':'tagNo')}</p>`;}
+
+/* ---------- HEADER + TABS ---------- */
+const TABS=[['learn','tabL'],['practice','tabP'],['turnin','tabT']];
+function header(){
+  const opts=LANGS.map(l=>`<option value="${l}"${S.lang===l?' selected':''}>${esc(LANG_NAMES[l])}</option>`).join('');
+  const done=S.sc.filter(s=>s.ok).length;
+  return `<header class="top"><div class="brand"><svg width="42" height="42" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" class="f-sky"/><text x="18" y="36" text-anchor="middle" font-size="22" font-weight="800" class="f-hi" style="font-family:var(--display)">H</text><text x="38" y="36" text-anchor="middle" font-size="22" font-weight="800" class="f-lo" style="font-family:var(--display)">L</text></svg>
+  <div><h1>${B('title')}</h1><p>${BI('sub')}</p></div></div>
+  <div class="tools"><label for="lang">${BI('lang')}</label><select id="lang" data-act="lang">${opts}</select>
+  <button type="button" class="btn" id="picsBtn" data-act="pics" aria-pressed="${S.pics}">${BI('pics')}</button>
+  <button type="button" class="btn" id="themeBtn" data-act="theme">${BI('theme')}</button></div></header>
+  <nav class="tabs" role="tablist" aria-label="Lab parts">${TABS.map(([id,k])=>`<button type="button" role="tab" class="tab" id="tab-${id}" data-act="tab" data-arg="${id}" aria-selected="${S.tab===id}"><span>${B(k)}</span>${id==='practice'?`<span class="chip">${done}/8</span>`:''}</button>`).join('')}</nav>`;}
+
+/* ---------- LEARN ---------- */
+function renderLearn(){const t=S.learn;
+  const toggle=`<div class="seg" role="group" aria-label="Choose a pressure system">${['H','L'].map(x=>`<button type="button" class="btn" id="lv-${x}" data-act="learnSys" data-arg="${x}" aria-pressed="${t===x}">${BI(x==='H'?'showH':'showL')}</button>`).join('')}</div>`;
+  const rules=[['r1',t==='H'?'sinking':'rising'],['r2',t==='H'?'highP':'lowP'],['r3',t==='H'?'cw':'ccw'],['r4','isobar']].map(([r,ic])=>`<div class="rule"><div class="ico">${vIcon(ic,56)}</div><div class="txt"><h3>${B(r+'h')}</h3>${sayBtn(()=>[U(r+'h',null,'en')+'. '+U(r,null,'en'),U(r+'h')+'. '+U(r)])}</div><p>${B(r)}</p></div>`).join('');
+  return `<section class="part" aria-labelledby="h-learn">
+  <div class="panel hero"><div><h2 id="h-learn">${B('introHead')}</h2>${txt('intro',null,'lead')}
+    <button type="button" class="btn primary" id="startBtn" data-act="start" style="margin-top:14px">${BI('start')}</button></div>
+    <div>${toggle}<div class="figs"><figure>${sideView(t)}<figcaption class="cap">${BI('sideCap')}</figcaption></figure><figure>${topView(t)}<figcaption class="cap">${BI('topCap')}</figcaption></figure></div>
+    <div class="explain">${txt(t==='H'?'hH':'hL')}</div></div></div>
+  <div class="panel"><h2 style="font-size:1.25rem;margin-bottom:10px">${B('rulesHead')}</h2><div class="rules">${rules}</div>
+    <div class="both">${txt('bothRule')}</div>
+    <div style="margin-top:12px"><button type="button" class="btn primary" id="startBtn2" data-act="start">${BI('start')}</button></div></div>
+  ${vocabBlock(VOCAB_LEARN)}</section>`;}
+
+/* ---------- PRACTICE ---------- */
+function optQ(k,qk,opts,vars,lock){const st=S.sc[S.cur];
+  return `<div class="oq"><div class="txt"><p class="qt">${B(qk,vars)}</p>${sayK(qk,vars)}</div><div class="opts" role="group">${opts.map(([v,lk])=>`<button type="button" class="btn" id="b-${k}-${v}" data-act="pick" data-k="${k}" data-arg="${v}" aria-pressed="${st.a[k]===v}"${lock?' disabled':''}>${B(lk)}</button>`).join('')}</div>${tag(st.marks[k])}</div>`;}
+const GRID=[315,0,45,270,null,90,225,180,135];
+function pointCard(pt,lock){const st=S.sc[S.cur],dk='d'+pt.p,kk='k'+pt.p,v=st.a[dk];
+  const grid=`<div class="agrid" role="group" aria-label="Arrows for point ${pt.p}">${GRID.map(a=>a==null?`<span class="acenter" aria-hidden="true">${pt.p}</span>`:`<button type="button" class="abtn" id="b-${dk}-${a}" data-act="pick" data-k="${dk}" data-arg="${a}" aria-pressed="${v===String(a)}" aria-label="Toward the ${U(DIRK[a/45],null,'en')}"${lock?' disabled':''}>${arrowIcon(a)}</button>`).join('')}</div>`;
+  const chosen=v!=null?`<div class="chosen">${B('moving',{d:{k:DIRK[+v/45]}})}</div>`:`<div class="chosen none">${B('noArrow')}</div>`;
+  const sky=[['clear','skyClear'],['storm','skyStorm']].map(([s,lk])=>`<button type="button" class="btn" id="b-${kk}-${s}" data-act="pick" data-k="${kk}" data-arg="${s}" aria-pressed="${st.a[kk]===s}"${lock?' disabled':''}>${B(lk)}</button>`).join('');
+  return `<div class="pcard"><div class="phead"><span class="pbadge" aria-hidden="true">${pt.p}</span><h3>${B('pointHead',{p:pt.p})}</h3></div>
+    <div class="txt"><p class="qt">${B('qArrow')}</p>${sayK('qArrow')}</div>
+    <div class="arow">${grid}${chosen}</div>${tag(st.marks[dk])}
+    <div class="txt"><p class="qt">${B('qSky')}</p>${sayK('qSky')}</div>
+    <div class="opts" role="group">${sky}</div>${tag(st.marks[kk])}</div>`;}
+function renderPractice(){
+  const i=S.cur,sc=SC[i],st=S.sc[i],lock=st.ok,last=i===SC.length-1;
+  const dots=SC.map((c,j)=>{const s=S.sc[j];const cls=s.ok?'ok':(s.checks?'no':'');const mk=s.ok?'✓':(s.checks?'✗':'');
+    const lab=`Map ${j+1}${s.ok?', correct':s.checks?', not yet correct':''}`;
+    return `<button type="button" class="dot ${cls}" id="dot-${j}" data-act="go" data-arg="${j}" aria-label="${esc(lab)}"${j===i?' aria-current="step"':''}>${j+1}${mk?`<span aria-hidden="true">${mk}</span>`:''}</button>`;}).join('');
+  const noteK={guided:'noteGuided',plain:'notePlain',two:'noteTwo',unk:'noteUnk'}[sc.mode];
+  const hintK=sc.mode==='guided'?(sc.sys[0].t==='H'?'hintH':'hintL'):{plain:'hintPlain',two:'hintTwo',unk:'hintUnk'}[sc.mode];
+  let pre='';
+  if(sc.mode==='guided'){const t=sc.sys[0].t;
+    pre=`<div class="panel">${optQ('s1',t==='H'?'qStep1H':'qStep1L',[['out','optOut'],['in','optIn']],null,lock)}${optQ('s2','qStep2',[['cw','optCW'],['ccw','optCCW']],null,lock)}</div>`;}
+  if(sc.mode==='unk')pre=`<div class="panel">${sc.sys.map((s,n)=>optQ('c'+n,'qCenter',[['H','optH'],['L','optL']],{n:n+1},lock)).join('')}</div>`;
+  const known=sc.mode!=='unk'||st.ok;
+  const legend=`<div class="legend">
+    ${known&&sc.sys.some(s=>s.t==='H')?`<span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" class="f-surf s-hi" stroke-width="2"/><text x="9" y="13" text-anchor="middle" font-size="11" font-weight="800" class="f-hi">H</text></svg>${BI('legH')}</span>`:''}
+    ${known&&sc.sys.some(s=>s.t==='L')?`<span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" class="f-surf s-lo" stroke-width="2"/><text x="9" y="13" text-anchor="middle" font-size="11" font-weight="800" class="f-lo">L</text></svg>${BI('legL')}</span>`:''}
+    <span><svg width="30" height="12" aria-hidden="true"><path d="M1 6H29" class="s-mute" stroke-width="1.6"/></svg>${BI('legIso')}</span>
+    <span><svg width="30" height="12" aria-hidden="true">${arr(2,6,28,6,'ink',3)}</svg>${BI('legYou')}</span>
+    <span>${(st.ok?[...new Set(sc.sys.map(x=>x.t))].map(x=>x==='H'?'hi':'lo'):['mute']).map(c=>`<svg width="30" height="12" aria-hidden="true">${arr(2,6,28,6,c,2.8)}</svg>`).join('')}${BI('legFlow')}</span></div>`;
+  const stage=`<div class="stage"><div class="mapbox">${mapSVG(i)}${legend}<p class="cap" style="padding:0 4px 4px">${BI('mapCap')}</p></div></div>`;
+  const side=`<div class="side">
+    <div class="panel"><div class="maphead"><h2 id="h-map">${B('scOf',{n:i+1})}</h2></div><div style="margin-top:6px">${txt(noteK,null,'note')}</div></div>
+    ${pre}
+    <div class="pts">${sc.pts.map(p=>pointCard(p,lock)).join('')}</div>
+    <div class="panel ev"><label for="ev-${i}" style="font-weight:700;display:block;margin-bottom:6px">${B('reason')}</label>
+      <textarea id="ev-${i}" data-ev="${i}" spellcheck="true"${lock?' disabled':''}>${esc(st.ev)}</textarea>
+      ${supports('ev-'+i,sc.mode==='unk'?FRAMES:FRAMES.slice(0,3),WORDS,lock)}
+      ${lock?'':`<button type="button" class="hintbtn" id="hintBtn" data-act="hint" aria-expanded="${hintOpen}">${BI(hintOpen?'hideHint':'hintBtn')}</button>${hintOpen?`<div class="hint">${txt(hintK)}</div>`:''}`}</div></div>`;
+  const nextBtn=`<button type="button" class="btn${st.ok?' primary':''}" id="nextBtn" data-act="${last?'toTurnIn':'next'}">${BI(last?'toTurnIn':'next')}</button>`;
+  return `<section class="part" aria-label="Practice">
+    <div class="dots" role="navigation" aria-label="Maps"><span class="kicker" style="margin:0 6px 0 0">${BI('dotsLab')}</span>${dots}</div>
+    <div class="pgrid">${stage}${side}</div>
+    <div class="actions">${fbHtml('s'+i,'ready')}<div class="act-btns"><span class="count">${esc(U('checks',{n:st.checks},'en'))}</span>
+      <button type="button" class="btn primary" id="checkBtn" data-act="check"${lock?' disabled':''}>${BI('check')}</button>
+      <button type="button" class="btn" id="prevBtn" data-act="prev"${i===0?' disabled':''}>${BI('prev')}</button>${nextBtn}</div></div>
+    ${vocabBlock(VOCAB_PR)}</section>`;}
+
+/* ---------- TURN IN ---------- */
+function scores(){return{ok:S.sc.filter(s=>s.ok).length,first:S.sc.filter(s=>s.first===true).length,checks:S.sc.reduce((n,s)=>n+s.checks,0)};}
+function ansText(k,v){
+  if(k==='s1')return v==='out'?'out of the center':'into the center';
+  if(k==='s2')return v==='cw'?'clockwise':'counterclockwise';
+  if(k[0]==='c')return v==='H'?'High':'Low';
+  if(k[0]==='d')return 'moving toward the '+U(DIRK[+v/45],null,'en');
+  return v==='clear'?'clear and calm':'cloudy, with rain or storms';}
+/* Marks come only from the last Check, so the record never reveals unchecked answers */
+function markText(st,k){if(st.ok)return 'OK';const m=st.marks[k];return m===true?'OK':m===false?'X':'not checked';}
+function line(st,k,label){return `  ${label}: ${st.a[k]!=null?ansText(k,st.a[k])+' - '+markText(st,k):'(no answer)'}`;}
+function recordText(){
+  const s=scores(),L=[];
+  L.push('HIGHS AND LOWS (PRESSURE SYSTEMS) - RESULTS');L.push('Name: '+(S.name.trim()||'(not entered)'));L.push('Class hour: '+(S.hour.trim()||'-'));
+  L.push('Date: '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}));L.push('');
+  L.push(`SCORE: ${s.ok}/8 maps correct | ${s.first}/8 correct on first try | ${s.checks} checks in all`);L.push('');
+  SC.forEach((sc,i)=>{const st=S.sc[i];
+    const desc=sc.sys.map(x=>x.t==='H'?'High':'Low').join(' + ')+(sc.mode==='unk'?', centers unlabeled':'');
+    L.push(`MAP ${i+1} (${desc}): ${st.ok?'OK':'X'} | checks: ${st.checks} | first try: ${st.first==null?'-':st.first?'OK':'X'}`);
+    if(sc.mode==='guided'){L.push(line(st,'s1','Step 1'));L.push(line(st,'s2','Step 2'));}
+    if(sc.mode==='unk')sc.sys.forEach((_,n)=>L.push(line(st,'c'+n,'Center '+(n+1))));
+    sc.pts.forEach(p=>{L.push(line(st,'d'+p.p,'Point '+p.p+' air'));L.push(line(st,'k'+p.p,'Point '+p.p+' sky'));});
+    L.push('  Reasoning: '+(st.ev.trim()||'(blank)'));});
+  L.push('');L.push('LAST QUESTION: A Low is moving toward your town. What weather do you predict? Why?');L.push('  '+(S.refl.trim()||'(blank)'));
+  return L.join('\n');}
+function renderTurnIn(){
+  const s=scores();
+  const sum=(k,v)=>`<div class="sum"><b>${v}</b><div>${B(k)}</div></div>`;
+  return `<section class="part tgrid" aria-labelledby="h-refl">
+  <div class="panel refl"><h2 id="h-refl" style="font-size:1.25rem;margin-bottom:8px">${B('reflHead')}</h2>${txt('refl')}
+    <label for="refl" class="note" style="display:block;margin:10px 0 4px">${BI('answer')}</label>
+    <textarea id="refl" data-f="refl" spellcheck="true">${esc(S.refl)}</textarea>
+    ${supports('refl',[REFL_FRAME],WORDS)}</div>
+  <div class="panel side" style="gap:12px"><h2 style="font-size:1.25rem">${B('tiHead')}</h2>${txt('tiSteps')}
+    <div class="form"><label for="stuName">${BI('name')} *<input type="text" id="stuName" data-f="name" autocomplete="name" value="${esc(S.name)}"></label>
+    <label for="stuHour">${BI('hour')}<input type="text" id="stuHour" data-f="hour" value="${esc(S.hour)}"></label></div>
+    <div class="sumgrid">${sum('sumOk',s.ok+'/8')}${sum('sumFirst',s.first+'/8')}${sum('sumChecks',s.checks)}${sum('sumRefl',S.refl.trim()?'✓':'–')}</div>
+    <div class="act-btns"><button type="button" class="btn primary" id="pdfBtn" data-act="pdf">${BI('pdf')}</button><button type="button" class="btn" id="copyBtn" data-act="copy">${BI('copy')}</button></div>
+    <div id="tiMsg" aria-live="polite">${S.fb.ti?fbHtml('ti'):''}</div>
+    <label for="rec" class="kicker">${BI('preview')}</label>
+    <textarea id="rec" class="rec" readonly>${esc(recordText())}</textarea></div></section>`;}
+let dlP=null;
+async function makePdf(){
+  if(!S.name.trim()){setFb('ti','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  if(!window.jspdf){setFb('ti','bad',[['pdfFail']]);render();return;}
+  const txtR=recordText();const warn=/[^\x00-\xFF]/.test(S.sc.map(s=>s.ev).join('')+S.refl+S.name);
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
+  let y=56;doc.setFontSize(10.5);
+  txtR.split('\n').forEach(ln=>{const bold=/^(HIGHS|SCORE|MAP|LAST)/.test(ln);doc.setFont('helvetica',bold?'bold':'normal');
+    doc.splitTextToSize(ln.replace(/[^\x00-\xFF]/g,'?')||' ',520).forEach(l=>{if(y>740){doc.addPage();y=56;}doc.text(l,46,y);y+=14;});});
+  const fname='highs-and-lows-'+(S.name.trim().replace(/[^a-z0-9]+/gi,'-').toLowerCase()||'student')+'.pdf';
+  const blob=doc.output('blob');let dl=null;try{if(dlP)dl=await dlP;}catch(e){}
+  const extra=warn?[['pdfArabic']]:[];
+  if(dl){try{await dl.save({filename:fname,data:blob});setFb('ti','good',[['pdfSaved'],...extra]);}catch(err){if(!(err&&err.code==='declined'))setFb('ti','bad',[['pdfFail']]);}}
+  else{try{doc.save(fname);setFb('ti','good',[['pdfSaved'],...extra]);}catch(e){setFb('ti','bad',[['pdfFail']]);}}
+  save();render();}
+function copyRec(){
+  if(!S.name.trim()){setFb('ti','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  const t=recordText();const fail=()=>{setFb('ti','bad',[['copyFail']]);render();const r=document.getElementById('rec');r.focus();r.select();};
+  try{navigator.clipboard.writeText(t).then(()=>{setFb('ti','good',[['copied']]);render();},fail);}catch(e){fail();}}
+
+/* ---------- RENDER ---------- */
+const app=document.getElementById('app');
+function render(){
+  const fid=document.activeElement&&document.activeElement.id;
+  SAY.clear();sid=0;
+  const part={learn:renderLearn,practice:renderPractice,turnin:renderTurnIn}[S.tab]();
+  app.innerHTML=header()+`<main>${part}</main><p class="foot">${BI('credit')}</p>`;
+  if(fid){const el=document.getElementById(fid);if(el&&!el.disabled)el.focus({preventScroll:true});}
+}
+function goSc(j){const ta=document.getElementById('ev-'+S.cur);if(ta)S.sc[S.cur].ev=ta.value;S.cur=j;hintOpen=false;S.tab='practice';}
+
+/* ---------- EVENTS ---------- */
+app.addEventListener('click',e=>{
+  const sb=e.target.closest('[data-say]');if(sb){const f=SAY.get(sb.dataset.say);if(f){const[a,b]=f();speak(a,b);}return;}
+  const t=e.target.closest('[data-act]');if(!t||t.tagName==='SELECT'||t.disabled)return;
+  const a=t.dataset.act,arg=t.dataset.arg;
+  switch(a){
+    case 'tab':if(S.tab==='practice')goSc(S.cur);S.tab=arg;window.scrollTo(0,0);break;
+    case 'start':S.tab='practice';window.scrollTo(0,0);break;
+    case 'learnSys':S.learn=arg;break;
+    case 'pics':S.pics=!S.pics;break;
+    case 'theme':{const r=document.documentElement;const cur=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const nx=cur==='dark'?'light':'dark';r.dataset.theme=nx;try{localStorage.setItem(KEY+'-theme',nx);}catch(err){}return;}
+    case 'go':goSc(+arg);window.scrollTo(0,0);break;
+    case 'prev':if(S.cur>0)goSc(S.cur-1);window.scrollTo(0,0);break;
+    case 'next':if(S.cur<SC.length-1)goSc(S.cur+1);window.scrollTo(0,0);break;
+    case 'toTurnIn':goSc(S.cur);S.tab='turnin';window.scrollTo(0,0);break;
+    case 'pick':{const st=S.sc[S.cur];if(st.ok)return;const ta=document.getElementById('ev-'+S.cur);if(ta)st.ev=ta.value;st.a[t.dataset.k]=arg;delete st.marks[t.dataset.k];break;}
+    case 'hint':hintOpen=!hintOpen;break;
+    case 'check':checkSc();break;
+    case 'pdf':makePdf();return;
+    case 'copy':copyRec();return;
+    case 'ins':{const id=t.dataset.ta,ta=document.getElementById(id);if(!ta||ta.disabled)return;let add=t.dataset.txt;const v=ta.value;
+      const pos=ta.selectionStart!=null&&document.activeElement===ta?ta.selectionStart:v.length;
+      const before=v.slice(0,pos),after=v.slice(pos);
+      if(t.dataset.line&&before.trim())add=(/[.!?]\s*$/.test(before)?' ':'. ')+add;else if(before&&!/\s$/.test(before))add=' '+add;
+      ta.value=before+add+after;syncTa(ta);ta.focus();const np=(before+add).length;ta.setSelectionRange(np,np);return;}
+    default:return;}
+  save();render();});
+function syncTa(t){if(t.dataset.ev!=null)S.sc[+t.dataset.ev].ev=t.value;if(t.dataset.f){S[t.dataset.f]=t.value;const r=document.getElementById('rec');if(r)r.value=recordText();}save();}
+app.addEventListener('change',e=>{const t=e.target;if(t.id==='lang'){S.lang=t.value;save();render();}});
+app.addEventListener('input',e=>{const t=e.target;if(t.tagName==='TEXTAREA'||t.tagName==='INPUT')syncTa(t);});
+app.addEventListener('toggle',e=>{const t=e.target;if(t.tagName==='DETAILS'&&t.id){t.open?openDet.add(t.id):openDet.delete(t.id);}},true);
+
+/* ---------- BOOT ---------- */
+load();
+try{const th=localStorage.getItem(KEY+'-theme');if(th)document.documentElement.dataset.theme=th;}catch(e){}
+try{if(window.claude&&typeof window.claude.use==='function')dlP=window.claude.use('downloads');}catch(e){}
+if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}
+render();
+</script>
+
+</body>
+</html>

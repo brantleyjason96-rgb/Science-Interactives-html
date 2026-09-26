@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Lake Effect Snow Forecaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#EDF1F5; --surface:#FFFFFF; --surface-2:#F4F7FA; --ink:#14202D; --muted:#4F5F70; --line:#C9D3DE;
+  --accent:#4A3BC4; --accent-ink:#FFFFFF; --accent-soft:#E7E4FA;
+  --l2c:#7A4A12;
+  --good:#1D7A4B; --good-soft:#E2F2E9; --bad:#B0301F; --bad-soft:#FBE6E2;
+  --focus:#2563EB;
+  --land:#E3E8E0; --land-2:#D5DCD2; --land-edge:#8E9C94; --water:#6EA6D8; --water-2:#4F8CC4; --water-ink:#0F3A63;
+  --sky:#DCE8F3; --sky-2:#EEF4FA; --cloud:#C3CCD5; --cloud-2:#8F9BA8; --snow:#FFFFFF; --snow-edge:#9DB0C2;
+  --cold:#2F74C0; --warm:#D0561F; --hi:#1F5AA6; --lo:#9A2E6E; --halo:#FFFFFF; --map-ink:#1C2A38; --map-muted:#5E6C7A;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --arabic:"Noto Sans Arabic","Geeza Pro","Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0B1219; --surface:#121C27; --surface-2:#182432; --ink:#E6EDF5; --muted:#9EAFC1; --line:#2B3A4B;
+    --accent:#AAB4FF; --accent-ink:#12173A; --accent-soft:#252B5E;
+    --l2c:#E8C07A;
+    --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+    --focus:#6FB2F2;
+    --land:#26303A; --land-2:#2E3945; --land-edge:#56657A; --water:#2C5A88; --water-2:#23496F; --water-ink:#CFE3F7;
+    --sky:#15212E; --sky-2:#1B2938; --cloud:#56626F; --cloud-2:#8995A2; --snow:#EEF3F8; --snow-edge:#8093A6;
+    --cold:#7DB6F0; --warm:#F29058; --hi:#8DB8F2; --lo:#E58CC0; --halo:#0B1219; --map-ink:#E6EDF5; --map-muted:#A7B5C3;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0B1219; --surface:#121C27; --surface-2:#182432; --ink:#E6EDF5; --muted:#9EAFC1; --line:#2B3A4B;
+  --accent:#AAB4FF; --accent-ink:#12173A; --accent-soft:#252B5E;
+  --l2c:#E8C07A;
+  --good:#5CCB8E; --good-soft:#10301F; --bad:#F08A76; --bad-soft:#3A1712;
+  --focus:#6FB2F2;
+  --land:#26303A; --land-2:#2E3945; --land-edge:#56657A; --water:#2C5A88; --water-2:#23496F; --water-ink:#CFE3F7;
+  --sky:#15212E; --sky-2:#1B2938; --cloud:#56626F; --cloud-2:#8995A2; --snow:#EEF3F8; --snow-edge:#8093A6;
+  --cold:#7DB6F0; --warm:#F29058; --hi:#8DB8F2; --lo:#E58CC0; --halo:#0B1219; --map-ink:#E6EDF5; --map-muted:#A7B5C3;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:10px 24px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+.en{display:block}
+.l2{display:block;color:var(--l2c);font-size:.8em;line-height:1.35;margin-top:1px}
+.l2[dir="rtl"]{font-family:var(--arabic);text-align:right}
+.inl .en,.inl .l2{display:inline}
+.inl .l2::before{content:" / ";color:var(--muted)}
+.inl .l2[dir="rtl"]{unicode-bidi:isolate}
+.inl .l2[dir="rtl"]::before{content:none}
+.inl .l2[dir="rtl"]::after{content:" / ";color:var(--muted)}
+bdi{unicode-bidi:isolate}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:6px 10px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.brand svg{flex:none}
+.brand h1{font-size:1.45rem;font-weight:800;letter-spacing:-.01em}
+.brand p{color:var(--muted);font-size:.9rem}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools label{font-size:.85rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+select,input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-height:38px;padding:4px 10px}
+.btn{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:6px 14px;cursor:pointer;font-weight:700;text-align:left}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary .l2{color:inherit;opacity:.85}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.say{flex:none;width:32px;height:32px;min-width:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);display:inline-grid;place-items:center;cursor:pointer;padding:0;color:var(--ink)}
+.say:hover{border-color:var(--accent)}
+.txt{display:flex;gap:8px;align-items:flex-start}
+.txt>div,.txt>p{flex:1;min-width:0}
+
+/* tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:12px}
+.tab{border:0;background:none;padding:8px 14px 9px;border-bottom:3px solid transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;min-height:44px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.chip{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:0 7px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.part{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.eyebrow{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 6px}
+.eyebrow .l2{text-transform:none;letter-spacing:0}
+.note{font-size:.9rem;color:var(--muted)}
+
+/* learn */
+.hero{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px;align-items:center}
+.hero h2{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.hero .lead{font-size:1.02rem;max-width:62ch}
+.hero .btn{margin-top:14px}
+.xsec{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+.cap{font-size:13px;color:var(--muted);margin-top:6px}
+.steps4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.step{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.step .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:500 14px var(--mono);background:var(--map-ink);color:var(--surface)}
+.step h3{font-size:1.02rem}
+.step p{font-size:.93rem}
+.conds{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.cond{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:12px}
+.cond .ico{width:100%;height:70px;border-radius:10px;background:var(--sky);display:grid;place-items:center}
+.cond h3{font-size:1.02rem}
+.cond p{font-size:.93rem}
+@media (max-width:980px){.hero{grid-template-columns:minmax(0,1fr)}.steps4,.conds{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.steps4,.conds{grid-template-columns:minmax(0,1fr)}}
+
+/* forecast */
+.dots{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dot{min-width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:var(--surface);font:500 14px var(--mono);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:0 8px;color:var(--ink)}
+.dot:hover{border-color:var(--accent)}
+.dot[aria-current="step"]{border:2px solid var(--accent);background:var(--accent-soft)}
+.dot.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.dot.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.dot[aria-current="step"].ok,.dot[aria-current="step"].no{outline:2px solid var(--accent);outline-offset:1px}
+.fgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.mapbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px}
+.map{display:block;width:100%;height:auto;max-height:calc(100vh - 290px);min-height:220px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);padding:6px 4px 2px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.side{display:flex;flex-direction:column;gap:12px}
+.cityhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.cityhead h2{font-size:1.35rem}
+.pnote{display:flex;gap:8px;align-items:flex-start;font-size:.93rem;color:var(--muted);margin-top:6px}
+.tiles{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+@media (max-width:520px){.tiles{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tiles .t-temp{grid-column:1/-1}}
+.tile{border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface-2);display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .tl{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .tl .l2{text-transform:none;letter-spacing:0}
+.tile svg{display:block;margin:0 auto;max-width:100%}
+.tile .val{font-weight:700;font-size:.95rem;line-height:1.25}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+.tvals{display:flex;justify-content:space-around;gap:6px;text-align:center;font-size:.9rem}
+.tvals b{display:block;font-size:13px;color:var(--muted)}
+.gap{font-size:.9rem;text-align:center;font-weight:700}
+.q h3{font-size:1.08rem}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.yn .btn{min-height:48px;font-size:1.05rem;text-align:center}
+.yn .btn[aria-pressed="true"]{border-width:2px;padding:5px 13px}
+.amt{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.amt .btn{text-align:center}
+.ev textarea{width:100%;min-height:92px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:8px 10px;resize:vertical}
+.ev textarea:disabled{opacity:.75}
+details.sup summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center;gap:6px}
+.frames{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.frame{text-align:left;border:1px dashed var(--accent);background:var(--surface);border-radius:10px;padding:6px 10px;cursor:pointer;min-height:38px}
+.words{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.word{border:1px solid var(--line);background:var(--surface-2);border-radius:99px;padding:4px 12px;cursor:pointer;min-height:38px}
+.word:hover,.frame:hover{border-color:var(--accent);border-style:solid}
+.hintbtn{background:none;border:0;padding:4px 0;min-height:38px;color:var(--accent);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-align:left}
+.hint{border:1px dashed var(--line);border-radius:10px;padding:8px 10px;background:var(--surface-2);font-size:.95rem}
+
+/* action bar */
+.actions{position:sticky;bottom:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:0 -6px 18px rgba(12,20,30,.12)}
+.fb{flex:1 1 320px;min-width:0;max-height:26vh;overflow:auto;display:flex;gap:8px;align-items:flex-start;font-size:.95rem;border-radius:10px;padding:6px 8px;border:1px solid transparent}
+.fb.good{background:var(--good-soft);border-color:var(--good)}
+.fb.bad{background:var(--bad-soft);border-color:var(--bad)}
+.act-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.count{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* vocab */
+.vocab{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.vcard{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.vcard .pic{flex:none;width:64px;height:64px;border-radius:10px;background:var(--sky);display:grid;place-items:center}
+.vcard b{font-size:1rem}
+.vcard p{font-size:.9rem}
+
+/* turn in */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:.9rem}
+.bonus textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:8px 10px;resize:vertical}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.sum{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface-2)}
+.sum b{font-family:var(--mono);font-size:1.2rem;font-variant-numeric:tabular-nums}
+.rec{width:100%;min-height:260px;font-family:var(--mono);font-size:13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:10px;white-space:pre}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
+.foot{font-size:13px;color:var(--muted);margin-top:18px}
+@media (max-width:600px){.actions{position:static;box-shadow:none}.form{grid-template-columns:1fr}}
+
+/* svg fills */
+.f-land{fill:var(--land)} .f-land2{fill:var(--land-2)} .f-water{fill:var(--water)} .f-water2{fill:var(--water-2)} .s-shore{stroke:var(--land-edge)}
+.f-sky{fill:var(--sky)} .f-sky2{fill:var(--sky-2)} .f-cloud{fill:var(--cloud)} .f-cloud2{fill:var(--cloud-2)} .f-snow{fill:var(--snow)} .s-snow{stroke:var(--snow-edge)}
+.f-cold{fill:var(--cold)} .s-cold{stroke:var(--cold)} .f-warm{fill:var(--warm)} .s-warm{stroke:var(--warm)}
+.f-hi{fill:var(--hi)} .f-lo{fill:var(--lo)} .s-hi{stroke:var(--hi)} .s-lo{stroke:var(--lo)}
+.f-ink{fill:var(--map-ink)} .s-ink{stroke:var(--map-ink)} .f-mute{fill:var(--map-muted)} .s-mute{stroke:var(--map-muted)}
+.f-surf{fill:var(--surface)} .s-halo{stroke:var(--halo)} .f-halo{fill:var(--halo)} .f-wink{fill:var(--water-ink)} .s-line{stroke:var(--line)} .f-line{fill:var(--line)}
+.maptxt{font-family:var(--body);font-weight:700}
+.lk{font-family:var(--display);font-weight:600;fill:var(--water-ink);letter-spacing:.02em}
+.lk .l2t,.maptxt .l2t{font-weight:400;fill:var(--l2c)}
+.lk .l2t{fill:var(--water-ink);opacity:.85}
+.halo{paint-order:stroke;stroke:var(--halo);stroke-width:5px;stroke-linejoin:round}
+@media (prefers-reduced-motion: no-preference){
+  .btn,.dot,.frame,.word{transition:border-color .15s, background-color .15s}
+  .flake{animation:fall 3.2s linear infinite}
+  @keyframes fall{from{transform:translateY(-18px);opacity:0}15%{opacity:1}to{transform:translateY(46px);opacity:0}}
+  .windpath{stroke-dasharray:14 10;animation:flow 1.4s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-24}}
+  .rise{animation:rise 2.6s ease-in-out infinite}
+  @keyframes rise{from{transform:translateY(6px);opacity:.2}50%{opacity:1}to{transform:translateY(-10px);opacity:0}}
+}
+</style>
+<div class="wrap" id="app"></div>
+<div class="sr" aria-live="polite" id="live"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ---------- LANGUAGES ---------- */
+const LANGS=['en','es','fr','ht','ar'];
+const LANG_NAMES={en:'English only',es:'Español',fr:'Français',ht:'Kreyòl',ar:'العربية'};
+const VOICE={en:'en',es:'es',fr:'fr',ht:'ht',ar:'ar'};
+
+/* ---------- PAGE TEXT IN EVERY LANGUAGE ----------
+   Each entry: [English, Español, Français, Kreyòl, العربية]  */
+const UI={
+title:["Lake Effect Snow Forecaster","Pronóstico de nieve por efecto lago","Prévisions de neige d'effet de lac","Prevwa nèj efè lak","متنبئ ثلوج تأثير البحيرة"],
+sub:["Great Lakes weather · Lesson 3","El tiempo en los Grandes Lagos · Lección 3","Météo des Grands Lacs · Leçon 3","Tan nan Gran Lak yo · Leson 3","طقس البحيرات العظمى · الدرس 3"],
+lang:["Second language","Segundo idioma","Deuxième langue","Dezyèm lang","اللغة الثانية"],
+pics:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+theme:["Dark / light","Oscuro / claro","Sombre / clair","Fènwa / klè","داكن / فاتح"],
+tabL:["Learn","Aprender","Apprendre","Aprann","تعلّم"],
+tabF:["Forecast","Pronosticar","Prévoir","Fè prevwa","توقّع"],
+tabT:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+say:["Read aloud","Leer en voz alta","Lire à voix haute","Li awotvwa","القراءة بصوت عالٍ"],
+noVoice:["This device has no voice for this language, so it read the English only.","Este dispositivo no tiene voz para este idioma. Solo leyó el inglés.","Cet appareil n'a pas de voix pour cette langue. Il a lu seulement l'anglais.","Aparèy sa a pa gen vwa pou lang sa a. Li li angle a sèlman.","لا يوجد صوت لهذه اللغة على هذا الجهاز، لذلك قرأ الإنجليزية فقط."],
+noSpeech:["Read-aloud does not work in this browser.","La lectura en voz alta no funciona en este navegador.","La lecture à voix haute ne marche pas dans ce navigateur.","Lekti awotvwa pa mache nan navigatè sa a.","القراءة بصوت عالٍ لا تعمل في هذا المتصفح."],
+picsHead:["Word pictures","Palabras con dibujos","Mots en images","Mo ak foto","كلمات بالصور"],
+correct:["Correct.","Correcto.","Correct.","Kòrèk.","صحيح."],
+notYet:["Not yet.","Todavía no.","Pas encore.","Poko.","ليس بعد."],
+
+/* Learn */
+introHead:["Will it snow?","¿Va a nevar?","Va-t-il neiger ?","Èske l ap fè nèj?","هل ستتساقط الثلوج؟"],
+intro:["Very cold air blows over a warmer lake. The lake adds heat and water vapor to the air. The air rises and makes snow on the shore where the wind is going. In this lab you will read real weather data for 8 cities. Then you will decide if lake-effect snow will form, and explain why.","Aire muy frío sopla sobre un lago más cálido. El lago le agrega calor y vapor de agua al aire. El aire sube y forma nieve en la orilla hacia donde va el viento. En este laboratorio vas a leer datos reales del tiempo de 8 ciudades. Luego vas a decidir si se formará nieve por efecto lago y vas a explicar por qué.","De l'air très froid souffle au-dessus d'un lac plus chaud. Le lac ajoute de la chaleur et de la vapeur d'eau à l'air. L'air monte et fait de la neige sur la rive où va le vent. Dans ce labo, tu vas lire de vraies données météo pour 8 villes. Ensuite, tu vas décider si de la neige d'effet de lac va se former, et expliquer pourquoi.","Lè ki frèt anpil soufle sou yon lak ki pi cho. Lak la ajoute chalè ak vapè dlo nan lè a. Lè a monte epi li fè nèj sou rivaj kote van an prale a. Nan laboratwa sa a, w ap li vrè done sou tan an pou 8 vil. Apre sa, w ap deside si nèj efè lak ap fòme, epi w ap eksplike poukisa.","يهبّ هواء شديد البرودة فوق بحيرة أدفأ منه. تضيف البحيرة حرارة وبخار ماء إلى الهواء. يرتفع الهواء ويكوّن ثلجًا على الشاطئ الذي تتجه إليه الرياح. في هذا المختبر ستقرأ بيانات طقس حقيقية لثماني مدن. ثم ستقرر هل سيتكوّن ثلج تأثير البحيرة، وتشرح السبب."],
+start:["Start forecasting","Empezar a pronosticar","Commencer les prévisions","Kòmanse fè prevwa","ابدأ التوقّع"],
+howHead:["How lake-effect snow forms","Cómo se forma la nieve por efecto lago","Comment se forme la neige d'effet de lac","Kijan nèj efè lak fòme","كيف يتكوّن ثلج تأثير البحيرة"],
+diagCap:["Side view across a lake in winter. Not to scale.","Vista de lado de un lago en invierno. No está a escala.","Vue de côté d'un lac en hiver. Pas à l'échelle.","Nou gade yon lak sou kote an ivè. Se pa bon mezi yo.","منظر جانبي لبحيرة في الشتاء. الرسم ليس بمقياس حقيقي."],
+st1h:["Cold, dry air arrives","Llega aire frío y seco","De l'air froid et sec arrive","Lè frèt e sèk rive","يصل هواء بارد وجاف"],
+st1:["Wind brings very cold, dry air over the lake. It often comes after a low-pressure system moves east.","El viento trae aire muy frío y seco sobre el lago. Muchas veces llega después de que un sistema de baja presión se mueve hacia el este.","Le vent apporte de l'air très froid et sec au-dessus du lac. Souvent, il arrive après qu'une dépression s'est déplacée vers l'est.","Van an pote lè ki frèt anpil e ki sèk sou lak la. Souvan li rive apre yon sistèm presyon ba deplase al nan lès.","تجلب الرياح هواءً شديد البرودة وجافًا فوق البحيرة. غالبًا ما يأتي بعد أن يتحرك منخفض جوي نحو الشرق."],
+st2h:["The lake adds heat and moisture","El lago agrega calor y humedad","Le lac ajoute chaleur et humidité","Lak la ajoute chalè ak imidite","تضيف البحيرة حرارة ورطوبة"],
+st2:["The lake is warmer than the air. Water evaporates into the air, and the lake warms the air from below.","El lago está más cálido que el aire. El agua se evapora hacia el aire, y el lago calienta el aire desde abajo.","Le lac est plus chaud que l'air. L'eau s'évapore dans l'air, et le lac réchauffe l'air par en dessous.","Lak la pi cho pase lè a. Dlo a evapore nan lè a, epi lak la chofe lè a pa anba.","البحيرة أدفأ من الهواء. يتبخر الماء في الهواء، وتدفّئ البحيرة الهواء من الأسفل."],
+st3h:["Warm, wet air rises","El aire cálido y húmedo sube","L'air chaud et humide monte","Lè cho e mouye a monte","يرتفع الهواء الدافئ الرطب"],
+st3:["Warm air rises. As it rises, it cools, and the water vapor condenses into clouds. The clouds grow as the air crosses more water (a longer fetch).","El aire cálido sube. Al subir, se enfría y el vapor de agua se condensa en nubes. Las nubes crecen cuando el aire cruza más agua (un fetch más largo).","L'air chaud monte. En montant, il se refroidit, et la vapeur d'eau se condense en nuages. Les nuages grossissent quand l'air traverse plus d'eau (un fetch plus long).","Lè cho monte. Pandan l ap monte, li refwadi, epi vapè dlo a kondanse fè nwaj. Nwaj yo grandi lè lè a travèse plis dlo (yon fetch ki pi long).","الهواء الدافئ يرتفع. وعندما يرتفع يبرد، ويتكثف بخار الماء إلى سحب. تكبر السحب كلما عبر الهواء ماءً أكثر (مسافة عبور أطول)."],
+st4h:["Snow falls downwind","La nieve cae viento abajo","La neige tombe sous le vent","Nèj tonbe kote van an ale","يتساقط الثلج باتجاه الريح"],
+st4:["The clouds drop heavy snow in narrow bands on the shore where the wind is going.","Las nubes dejan caer mucha nieve en franjas angostas en la orilla hacia donde va el viento.","Les nuages laissent tomber beaucoup de neige en bandes étroites sur la rive où va le vent.","Nwaj yo lage anpil nèj an ti bann etwat sou rivaj kote van an prale a.","تُسقط السحب ثلجًا كثيفًا في أشرطة ضيقة على الشاطئ الذي تتجه إليه الرياح."],
+checkHead:["Four things forecasters check","Cuatro cosas que revisan los pronosticadores","Quatre choses que vérifient les prévisionnistes","Kat bagay moun k ap fè prevwa yo tcheke","أربعة أشياء يتحقق منها المتنبئون"],
+c1h:["Temperature gap","Diferencia de temperatura","Écart de température","Diferans tanperati","فرق درجات الحرارة"],
+c1:["The lake must be much warmer than the air. A gap of 23°F (13°C) or more is big. A bigger gap means more energy and more snow.","El lago debe estar mucho más cálido que el aire. Una diferencia de 23°F (13°C) o más es grande. Una diferencia más grande significa más energía y más nieve.","Le lac doit être beaucoup plus chaud que l'air. Un écart de 23°F (13°C) ou plus est grand. Un plus grand écart veut dire plus d'énergie et plus de neige.","Lak la dwe pi cho anpil pase lè a. Yon diferans 23°F (13°C) oswa plis, se gwo. Yon pi gwo diferans vle di plis enèji ak plis nèj.","يجب أن تكون البحيرة أدفأ بكثير من الهواء. الفرق 23°F (13°C) أو أكثر فرق كبير. الفرق الأكبر يعني طاقة أكثر وثلجًا أكثر."],
+c2h:["Fetch","Fetch (recorrido sobre el agua)","Fetch (distance sur l'eau)","Fetch (distans sou dlo)","مسافة العبور فوق الماء"],
+c2:["Fetch is how far the wind travels over open water. A longer fetch picks up more heat and moisture, so more snow falls.","El fetch es la distancia que recorre el viento sobre agua abierta. Un fetch más largo recoge más calor y humedad, así que cae más nieve.","Le fetch, c'est la distance que le vent parcourt sur l'eau libre. Un fetch plus long ramasse plus de chaleur et d'humidité, donc il tombe plus de neige.","Fetch se distans van an fè sou dlo ouvè. Yon fetch ki pi long ranmase plis chalè ak imidite, kidonk plis nèj tonbe.","مسافة العبور هي المسافة التي تقطعها الرياح فوق مياه مفتوحة. المسافة الأطول تلتقط حرارة ورطوبة أكثر، فيتساقط ثلج أكثر."],
+c3h:["Barometer rising","Barómetro subiendo","Baromètre en hausse","Bawomèt k ap monte","ارتفاع البارومتر"],
+c3:["After a low-pressure system moves east, high pressure follows with cold northwest winds. A rising barometer signals this setup. A falling barometer means the low is still coming.","Después de que un sistema de baja presión se mueve hacia el este, llega alta presión con vientos fríos del noroeste. Un barómetro que sube indica esta situación. Un barómetro que baja significa que la baja presión todavía viene.","Après qu'une dépression s'est déplacée vers l'est, un anticyclone suit avec des vents froids du nord-ouest. Un baromètre en hausse signale cette situation. Un baromètre en baisse veut dire que la dépression arrive encore.","Apre yon sistèm presyon ba deplase al nan lès, presyon wo vini dèyè l ak van frèt ki soti nan nòdwès. Yon bawomèt k ap monte montre sitiyasyon sa a. Yon bawomèt k ap desann vle di presyon ba a ap vini toujou.","بعد أن يتحرك منخفض جوي نحو الشرق، يتبعه مرتفع جوي مع رياح شمالية غربية باردة. البارومتر المرتفع يدل على هذا الوضع. البارومتر المنخفض يعني أن المنخفض الجوي ما زال قادمًا."],
+c4h:["Wind crosses the lake","El viento cruza el lago","Le vent traverse le lac","Van an travèse lak la","الرياح تعبر البحيرة"],
+c4:["The wind must blow from the open lake toward the city. A wind is named for where it comes from. If the wind comes from land, no lake moisture reaches the city.","El viento debe soplar desde el lago abierto hacia la ciudad. El nombre de un viento dice de dónde viene. Si el viento viene de la tierra, no llega humedad del lago a la ciudad.","Le vent doit souffler du lac vers la ville. Un vent porte le nom de l'endroit d'où il vient. Si le vent vient de la terre, aucune humidité du lac n'atteint la ville.","Van an dwe soufle soti nan lak la pou ale nan vil la. Non yon van di ki kote li soti. Si van an soti sou tè a, pa gen imidite lak la ki rive nan vil la.","يجب أن تهبّ الرياح من البحيرة المفتوحة نحو المدينة. تُسمّى الرياح باسم الجهة التي تأتي منها. إذا جاءت الرياح من اليابسة، فلن تصل رطوبة البحيرة إلى المدينة."],
+dCold:["cold, dry air","aire frío y seco","air froid et sec","lè frèt e sèk","هواء بارد وجاف"],
+dLake:["warmer lake","lago más cálido","lac plus chaud","lak ki pi cho","بحيرة أدفأ"],
+dEvap:["heat + moisture","calor + humedad","chaleur + humidité","chalè + imidite","حرارة + رطوبة"],
+dClouds:["clouds grow","las nubes crecen","les nuages grossissent","nwaj yo grandi","السحب تكبر"],
+dSnow:["heavy snow","mucha nieve","beaucoup de neige","anpil nèj","ثلج كثيف"],
+dLid:["inversion: a warm lid","inversión: una tapa cálida","inversion : un couvercle chaud","envèsyon: yon kouvèti cho","انقلاب حراري: غطاء دافئ"],
+dDown:["downwind shore","orilla viento abajo","rive sous le vent","rivaj kote van an ale","الشاطئ باتجاه الريح"],
+dFetch:["fetch","fetch","fetch","fetch","مسافة العبور"],
+
+/* Forecast */
+scOf:["Scenario {n} of 8","Caso {n} de 8","Scénario {n} sur 8","Sitiyasyon {n} sou 8","الحالة {n} من 8"],
+dotsLab:["Scenarios","Casos","Scénarios","Sitiyasyon","الحالات"],
+lakeT:["Temperature","Temperatura","Température","Tanperati","درجة الحرارة"],
+lakeS:["Lake","Lago","Lac","Lak","البحيرة"],
+airS:["Air","Aire","Air","Lè","الهواء"],
+gapWarm:["Lake is {n}°F warmer","El lago está {n}°F más cálido","Le lac est plus chaud de {n}°F","Lak la pi cho pa {n}°F","البحيرة أدفأ بمقدار {n}°F"],
+gapCold:["Air is {n}°F warmer","El aire está {n}°F más cálido","L'air est plus chaud de {n}°F","Lè a pi cho pa {n}°F","الهواء أدفأ بمقدار {n}°F"],
+bigGap:["Big gap: 23°F or more","Diferencia grande: 23°F o más","Grand écart : 23°F ou plus","Gwo diferans: 23°F oswa plis","فرق كبير: 23°F أو أكثر"],
+windT:["Wind","Viento","Vent","Van","الرياح"],
+wN:["From the north","Del norte","Du nord","Soti nan nò","من الشمال"],
+wS:["From the south","Del sur","Du sud","Soti nan sid","من الجنوب"],
+wSW:["From the southwest","Del suroeste","Du sud-ouest","Soti nan sidwès","من الجنوب الغربي"],
+wNW:["From the northwest","Del noroeste","Du nord-ouest","Soti nan nòdwès","من الشمال الغربي"],
+wWNW:["From the west-northwest","Del oeste-noroeste","De l'ouest-nord-ouest","Soti nan lwès-nòdwès","من الغرب الشمالي الغربي"],
+wLight:["Light and variable","Suave y variable","Faible et variable","Fèb e chanjan","خفيفة ومتغيرة"],
+wNoSpeed:["Speed not given","Velocidad no dada","Vitesse non donnée","Yo pa bay vitès la","السرعة غير معطاة"],
+baroT:["Barometer","Barómetro","Baromètre","Bawomèt","البارومتر"],
+bRise:["Rising","Subiendo","En hausse","K ap monte","يرتفع"],
+bFall:["Falling","Bajando","En baisse","K ap desann","ينخفض"],
+bSteady:["Steady","Estable","Stable","Estab","ثابت"],
+bNA:["No reading","Sin lectura","Pas de mesure","Pa gen mezi","لا توجد قراءة"],
+qLikely:["Is a lake-effect snowstorm likely here?","¿Es probable una tormenta de nieve por efecto lago aquí?","Une tempête de neige d'effet de lac est-elle probable ici ?","Èske yon tanpèt nèj efè lak gen chans rive isit la?","هل من المحتمل حدوث عاصفة ثلجية بتأثير البحيرة هنا؟"],
+yes:["Yes","Sí","Oui","Wi","نعم"],
+no:["No","No","Non","Non","لا"],
+qAmt:["If yes, how much snow do you expect?","Si es así, ¿cuánta nieve esperas?","Si oui, combien de neige prévois-tu ?","Si wi, konbyen nèj ou panse ki pral tonbe?","إذا كانت الإجابة نعم، فما كمية الثلج التي تتوقعها؟"],
+aLight:["Light","Poca","Faible","Ti kras","خفيفة"],
+aMod:["Moderate","Moderada","Modérée","Mwayen","متوسطة"],
+aHeavy:["Heavy","Mucha","Forte","Anpil","كثيفة"],
+reason:["Explain your reasoning. Use evidence from the data.","Explica tu razonamiento. Usa evidencia de los datos.","Explique ton raisonnement. Utilise des preuves tirées des données.","Eksplike rezonman ou. Sèvi ak prèv ki nan done yo.","اشرح تفكيرك. استخدم أدلة من البيانات."],
+hintBtn:["Need a hint?","¿Necesitas una pista?","Besoin d'un indice ?","Ou bezwen yon endis?","هل تحتاج إلى تلميح؟"],
+hideHint:["Hide hint","Ocultar pista","Cacher l'indice","Kache endis la","إخفاء التلميح"],
+check:["Check","Revisar","Vérifier","Verifye","تحقّق"],
+checks:["Checks: {n}","Revisiones: {n}","Vérifications : {n}","Verifikasyon: {n}","مرات التحقق: {n}"],
+prev:["Previous","Anterior","Précédent","Anvan","السابق"],
+next:["Next scenario","Siguiente caso","Scénario suivant","Pwochen sitiyasyon","الحالة التالية"],
+toTurnIn:["Go to Turn In","Ir a Entregar","Aller à Remettre","Ale nan Remèt","انتقل إلى التسليم"],
+needAns:["Choose Yes or No first.","Primero elige Sí o No.","Choisis d'abord Oui ou Non.","Chwazi Wi oswa Non anvan.","اختر نعم أو لا أولًا."],
+needAmt:["Choose how much snow you expect.","Elige cuánta nieve esperas.","Choisis combien de neige tu prévois.","Chwazi konbyen nèj ou panse ki pral tonbe.","اختر كمية الثلج التي تتوقعها."],
+needEv:["Write your reasoning first. Use at least 3 words.","Primero escribe tu razonamiento. Usa por lo menos 3 palabras.","Écris d'abord ton raisonnement. Utilise au moins 3 mots.","Ekri rezonman ou anvan. Sèvi ak omwen 3 mo.","اكتب تفكيرك أولًا. استخدم 3 كلمات على الأقل."],
+ready:["Choose Yes or No, explain why, then press Check.","Elige Sí o No, explica por qué y luego presiona Revisar.","Choisis Oui ou Non, explique pourquoi, puis appuie sur Vérifier.","Chwazi Wi oswa Non, eksplike poukisa, apre sa peze Verifye.","اختر نعم أو لا، واشرح السبب، ثم اضغط تحقّق."],
+tryAgain:["Change your answer and your reasoning, then check again.","Cambia tu respuesta y tu razonamiento, y revisa otra vez.","Change ta réponse et ton raisonnement, puis vérifie encore.","Chanje repons ou ak rezonman ou, apre sa verifye ankò.","غيّر إجابتك وتفكيرك، ثم تحقّق مرة أخرى."],
+nextUp:["Go on to the next scenario.","Sigue con el próximo caso.","Passe au scénario suivant.","Ale nan pwochen sitiyasyon an.","انتقل إلى الحالة التالية."],
+allDone:["All 8 scenarios are correct. Go to Turn In.","Los 8 casos están correctos. Ve a Entregar.","Les 8 scénarios sont corrects. Va à Remettre.","Tout 8 sitiyasyon yo kòrèk. Ale nan Remèt.","الحالات الثماني كلها صحيحة. انتقل إلى التسليم."],
+mapCap:["Map of the Great Lakes. The arrow shows where the wind blows. Numbered dots are the 8 cities.","Mapa de los Grandes Lagos. La flecha muestra hacia dónde sopla el viento. Los puntos con número son las 8 ciudades.","Carte des Grands Lacs. La flèche montre où souffle le vent. Les points numérotés sont les 8 villes.","Kat Gran Lak yo. Flèch la montre ki kote van an ap soufle. Pwen ki gen nimewo yo se 8 vil yo.","خريطة البحيرات العظمى. يُظهر السهم اتجاه هبوب الرياح. النقاط المرقّمة هي المدن الثماني."],
+legWind:["Wind: points where the air goes","Viento: apunta hacia donde va el aire","Vent : montre où va l'air","Van: montre ki kote lè a prale","الرياح: يشير إلى حيث يذهب الهواء"],
+legH:["High pressure","Alta presión","Haute pression","Presyon wo","ضغط مرتفع"],
+legL:["Low pressure","Baja presión","Basse pression","Presyon ba","ضغط منخفض"],
+legInd:["Steel mills: heat + particles","Acerías: calor + partículas","Aciéries : chaleur + particules","Faktori asye: chalè + patikil","مصانع الصلب: حرارة + جسيمات"],
+lkSup:["Lake Superior","Lago Superior","Lac Supérieur","Lak Siperyè","بحيرة سوبيريور"],
+lkMic:["Lake Michigan","Lago Míchigan","Lac Michigan","Lak Michigan","بحيرة ميشيغان"],
+lkHur:["Lake Huron","Lago Hurón","Lac Huron","Lak Huron","بحيرة هورون"],
+lkEri:["Lake Erie","Lago Erie","Lac Érié","Lak Eri","بحيرة إيري"],
+lkOnt:["Lake Ontario","Lago Ontario","Lac Ontario","Lak Ontario","بحيرة أونتاريو"],
+answer:["Your answer","Tu respuesta","Ta réponse","Repons ou","إجابتك"],
+frames:["Sentence starters and word bank","Inicios de oración y banco de palabras","Débuts de phrase et banque de mots","Kòmansman fraz ak bank mo","بدايات الجمل وبنك الكلمات"],
+framesTip:["Tap one to add it in English.","Toca uno para añadirlo en inglés.","Touche-en un pour l'ajouter en anglais.","Touche youn pou ajoute l an angle.","المس واحدًا لإضافته بالإنجليزية."],
+wordBank:["Word bank","Banco de palabras","Banque de mots","Bank mo","بنك الكلمات"],
+
+/* Turn in */
+bonusHead:["Bonus: write your own scenario","Extra: escribe tu propio caso","Bonus : écris ton propre scénario","Bonis: ekri pwòp sitiyasyon pa w","إضافي: اكتب حالتك الخاصة"],
+bonusSteps:["Pick a city near one of the Great Lakes. Write a lake-effect scenario with real conditions. Include the lake temperature, air temperature, wind direction and speed, and barometer. Trade with a partner and answer each other's question.","Elige una ciudad cerca de uno de los Grandes Lagos. Escribe un caso de efecto lago con condiciones reales. Incluye la temperatura del lago, la temperatura del aire, la dirección y velocidad del viento y el barómetro. Intercambia con un compañero y respondan la pregunta del otro.","Choisis une ville près d'un des Grands Lacs. Écris un scénario d'effet de lac avec de vraies conditions. Mets la température du lac, la température de l'air, la direction et la vitesse du vent, et le baromètre. Échange avec un partenaire et répondez chacun à la question de l'autre.","Chwazi yon vil ki toupre youn nan Gran Lak yo. Ekri yon sitiyasyon efè lak ak vrè kondisyon. Mete tanperati lak la, tanperati lè a, direksyon ak vitès van an, ak bawomèt la. Fè echanj ak yon patnè epi reponn kesyon youn lòt.","اختر مدينة قريبة من إحدى البحيرات العظمى. اكتب حالة لتأثير البحيرة بظروف حقيقية. اذكر درجة حرارة البحيرة ودرجة حرارة الهواء واتجاه الرياح وسرعتها والبارومتر. تبادل مع زميل وأجب كلٌّ منكما عن سؤال الآخر."],
+p4Head:["Turn In","Entregar","Remettre","Remèt","التسليم"],
+p4Steps:["Type your name and class hour. Download the PDF or copy your results. Then turn it in on Google Classroom.","Escribe tu nombre y tu hora de clase. Descarga el PDF o copia tus resultados. Luego entrégalo en Google Classroom.","Écris ton nom et ton heure de cours. Télécharge le PDF ou copie tes résultats. Ensuite, remets-le sur Google Classroom.","Ekri non w ak lè klas ou. Telechaje PDF la oswa kopye rezilta ou yo. Apre sa, remèt li sou Google Classroom.","اكتب اسمك وحصة الصف. نزّل ملف PDF أو انسخ نتائجك. ثم سلّمه على Google Classroom."],
+name:["Your name","Tu nombre","Ton nom","Non ou","اسمك"],
+hour:["Class hour","Hora de clase","Heure de cours","Lè klas","حصة الصف"],
+pdf:["Download PDF","Descargar PDF","Télécharger le PDF","Telechaje PDF","تنزيل PDF"],
+copy:["Copy results as text","Copiar resultados como texto","Copier les résultats en texte","Kopye rezilta yo an tèks","نسخ النتائج كنص"],
+copied:["Copied. Paste it into Google Classroom.","Copiado. Pégalo en Google Classroom.","Copié. Colle-le dans Google Classroom.","Kopye. Kole l nan Google Classroom.","تم النسخ. الصقه في Google Classroom."],
+copyFail:["Copy did not work. The text is selected. Press Ctrl+C to copy it.","No se pudo copiar. El texto está seleccionado. Presiona Ctrl+C para copiarlo.","La copie n'a pas marché. Le texte est sélectionné. Appuie sur Ctrl+C pour le copier.","Kopi a pa mache. Tèks la chwazi. Peze Ctrl+C pou kopye l.","لم ينجح النسخ. النص محدد. اضغط Ctrl+C لنسخه."],
+needName:["Type your name first.","Primero escribe tu nombre.","Écris d'abord ton nom.","Ekri non w anvan.","اكتب اسمك أولًا."],
+pdfSaved:["PDF saved. Upload it to Google Classroom.","PDF guardado. Súbelo a Google Classroom.","PDF enregistré. Dépose-le sur Google Classroom.","PDF la anrejistre. Mete l sou Google Classroom.","تم حفظ ملف PDF. ارفعه إلى Google Classroom."],
+pdfFail:["The PDF did not download here. Use Copy results as text instead.","El PDF no se descargó aquí. Usa Copiar resultados como texto.","Le PDF ne s'est pas téléchargé ici. Utilise Copier les résultats en texte.","PDF la pa telechaje isit la. Sèvi ak Kopye rezilta yo an tèks.","لم يُنزَّل ملف PDF هنا. استخدم نسخ النتائج كنص."],
+pdfArabic:["Some answers use letters the PDF can't show. Use Copy results as text.","Algunas respuestas usan letras que el PDF no puede mostrar. Usa Copiar resultados como texto.","Certaines réponses utilisent des lettres que le PDF ne peut pas afficher. Utilise Copier les résultats en texte.","Kèk repons gen lèt PDF la pa ka montre. Sèvi ak Kopye rezilta yo an tèks.","بعض الإجابات تستخدم حروفًا لا يعرضها ملف PDF. استخدم نسخ النتائج كنص."],
+preview:["Your results (in English)","Tus resultados (en inglés)","Tes résultats (en anglais)","Rezilta ou (an angle)","نتائجك (بالإنجليزية)"],
+sumOk:["Scenarios correct","Casos correctos","Scénarios corrects","Sitiyasyon kòrèk","الحالات الصحيحة"],
+sumFirst:["Correct on first try","Correctos al primer intento","Réussis du premier coup","Kòrèk premye fwa","صحيحة من المحاولة الأولى"],
+sumChecks:["Total checks","Revisiones en total","Vérifications en tout","Total verifikasyon","مجموع مرات التحقق"],
+sumBonus:["Bonus scenario","Caso extra","Scénario bonus","Sitiyasyon bonis","الحالة الإضافية"],
+written:["written","escrito","écrit","ekri","مكتوبة"],
+blank:["blank","vacío","vide","vid","فارغة"],
+credit:["Scenarios from the Lake Effect Snow lesson. The map and city locations are approximate. Translations were written by Claude and need review by a native speaker.","Casos de la lección de nieve por efecto lago. El mapa y las ubicaciones de las ciudades son aproximados. Las traducciones las escribió Claude y necesitan revisión.","Scénarios de la leçon sur la neige d'effet de lac. La carte et la position des villes sont approximatives. Les traductions ont été écrites par Claude et doivent être vérifiées.","Sitiyasyon yo soti nan leson sou nèj efè lak. Kat la ak kote vil yo apeprè. Se Claude ki ekri tradiksyon yo, yo bezwen verifikasyon.","الحالات من درس ثلج تأثير البحيرة. الخريطة ومواقع المدن تقريبية. كتب Claude الترجمات وتحتاج إلى مراجعة."]
+};
+
+/* ---------- THE 8 SCENARIOS ----------
+   Temps in °F. wind: from-direction in degrees (N=0, S=180), mph (null = not given, 'light' = light and variable).
+   ans: correct yes/no. amt: required snow amount (scenario 4 only).
+   hint = opt-in nudge before checking. cause = feedback when the answer is wrong (names the condition, then the student changes it).
+   why = explanation shown after a correct answer. */
+const SC=[
+{city:"Michigan City, Indiana",lon:-86.9,lat:41.72,lx:12,ly:22,anc:'start',lake:33,air:2,wd:0,wk:'wN',mph:12,baro:'bRise',note:'n1',ans:'yes',
+ press:[{t:'L',lon:-76.6,lat:42.55,east:1}],
+ note_:["The low-pressure system moved east into New York State.","El sistema de baja presión se movió al este, hacia el estado de Nueva York.","La dépression s'est déplacée vers l'est, dans l'État de New York.","Sistèm presyon ba a deplase al nan lès, nan eta New York.","تحرك المنخفض الجوي شرقًا إلى ولاية نيويورك."],
+ hint:["Do north winds reach Michigan City over open lake water? How big is the temperature gap?","¿Los vientos del norte llegan a Michigan City sobre agua abierta del lago? ¿Qué tan grande es la diferencia de temperatura?","Les vents du nord arrivent-ils à Michigan City au-dessus de l'eau du lac ? Quelle est la taille de l'écart de température ?","Èske van nò yo rive Michigan City sou dlo lak la? Konbyen diferans tanperati a ye?","هل تصل الرياح الشمالية إلى ميشيغان سيتي فوق مياه البحيرة المفتوحة؟ ما حجم فرق درجات الحرارة؟"],
+ cause:["Look at the map again. North winds cross the whole length of Lake Michigan to reach Michigan City. The gap is 31°F, and the barometer is rising.","Mira el mapa otra vez. Los vientos del norte cruzan todo el largo del lago Míchigan para llegar a Michigan City. La diferencia es de 31°F y el barómetro está subiendo.","Regarde encore la carte. Les vents du nord traversent toute la longueur du lac Michigan pour arriver à Michigan City. L'écart est de 31°F, et le baromètre est en hausse.","Gade kat la ankò. Van nò yo travèse tout longè lak Michigan pou yo rive Michigan City. Diferans lan se 31°F, epi bawomèt la ap monte.","انظر إلى الخريطة مرة أخرى. تعبر الرياح الشمالية بحيرة ميشيغان بطولها كله لتصل إلى ميشيغان سيتي. الفرق 31°F، والبارومتر يرتفع."],
+ why:["Lake-effect snow is likely. The gap is very large (31°F). North winds cross the whole length of Lake Michigan, so the fetch is long. The barometer is rising because the low moved east.","Es probable la nieve por efecto lago. La diferencia es muy grande (31°F). Los vientos del norte cruzan todo el largo del lago Míchigan, así que el fetch es largo. El barómetro sube porque la baja presión se movió al este.","La neige d'effet de lac est probable. L'écart est très grand (31°F). Les vents du nord traversent toute la longueur du lac Michigan, donc le fetch est long. Le baromètre monte parce que la dépression est partie vers l'est.","Nèj efè lak gen chans rive. Diferans lan gwo anpil (31°F). Van nò yo travèse tout longè lak Michigan, kidonk fetch la long. Bawomèt la ap monte paske presyon ba a deplase al nan lès.","ثلج تأثير البحيرة محتمل. الفرق كبير جدًا (31°F). تعبر الرياح الشمالية بحيرة ميشيغان بطولها كله، فمسافة العبور طويلة. البارومتر يرتفع لأن المنخفض تحرك شرقًا."]},
+{city:"Erie, Pennsylvania",lon:-80.08,lat:42.13,lx:10,ly:24,anc:'start',lake:33,air:30,wd:180,wk:'wS',mph:'light',baro:'bSteady',ans:'no',
+ press:[{t:'H',lon:-76.4,lat:41.05,east:1}],
+ note_:["The high-pressure system moved east into New Jersey.","El sistema de alta presión se movió al este, hacia Nueva Jersey.","L'anticyclone s'est déplacé vers l'est, dans le New Jersey.","Sistèm presyon wo a deplase al nan lès, nan New Jersey.","تحرك المرتفع الجوي شرقًا إلى نيوجيرسي."],
+ hint:["Does a south wind reach Erie from land or from the lake? Is 3°F a big gap?","¿Un viento del sur llega a Erie desde la tierra o desde el lago? ¿Es grande una diferencia de 3°F?","Un vent du sud arrive-t-il à Erie de la terre ou du lac ? Un écart de 3°F, est-ce grand ?","Èske yon van sid rive Erie soti sou tè a oswa soti nan lak la? Èske 3°F se yon gwo diferans?","هل تصل الرياح الجنوبية إلى إيري من اليابسة أم من البحيرة؟ هل 3°F فرق كبير؟"],
+ cause:["Look at the map again. A south wind reaches Erie from land, not across Lake Erie. The gap is only 3°F.","Mira el mapa otra vez. Un viento del sur llega a Erie desde la tierra, no cruzando el lago Erie. La diferencia es de solo 3°F.","Regarde encore la carte. Un vent du sud arrive à Erie de la terre, pas en traversant le lac Érié. L'écart n'est que de 3°F.","Gade kat la ankò. Yon van sid rive Erie soti sou tè a, li pa travèse lak Eri. Diferans lan se 3°F sèlman.","انظر إلى الخريطة مرة أخرى. تصل الرياح الجنوبية إلى إيري من اليابسة، لا عبر بحيرة إيري. الفرق 3°F فقط."],
+ why:["Lake-effect snow is not likely. A south wind comes from land, so there is no fetch over Lake Erie. The gap is only 3°F, which is too small.","No es probable la nieve por efecto lago. Un viento del sur viene de la tierra, así que no hay fetch sobre el lago Erie. La diferencia es de solo 3°F, que es muy poca.","La neige d'effet de lac n'est pas probable. Un vent du sud vient de la terre, donc il n'y a pas de fetch sur le lac Érié. L'écart n'est que de 3°F, c'est trop petit.","Nèj efè lak pa gen chans rive. Yon van sid soti sou tè a, kidonk pa gen fetch sou lak Eri. Diferans lan se 3°F sèlman, sa twò piti.","ثلج تأثير البحيرة غير محتمل. الرياح الجنوبية تأتي من اليابسة، فلا توجد مسافة عبور فوق بحيرة إيري. الفرق 3°F فقط، وهو صغير جدًا."]},
+{city:"Kingston, Ontario",lon:-76.48,lat:44.23,lx:-10,ly:-14,anc:'end',lake:33,air:20,wd:225,wk:'wSW',mph:9,baro:'bFall',ans:'no',
+ press:[{t:'L',lon:-78.3,lat:44.45,east:0}],
+ note_:["A low-pressure system is just west, over Peterborough, Ontario.","Hay un sistema de baja presión justo al oeste, sobre Peterborough, Ontario.","Une dépression est juste à l'ouest, au-dessus de Peterborough, en Ontario.","Gen yon sistèm presyon ba jis nan lwès, sou Peterborough, Ontario.","يوجد منخفض جوي إلى الغرب مباشرة، فوق بيتربورو في أونتاريو."],
+ hint:["Lake-effect snow usually comes after a low passes east and high pressure follows. What is the barometer doing?","La nieve por efecto lago casi siempre llega después de que una baja presión pasa al este y la sigue la alta presión. ¿Qué está haciendo el barómetro?","La neige d'effet de lac arrive d'habitude après qu'une dépression passe vers l'est et qu'un anticyclone suit. Que fait le baromètre ?","Nèj efè lak konn vini apre yon presyon ba pase al nan lès epi presyon wo vini dèyè l. Kisa bawomèt la ap fè?","يأتي ثلج تأثير البحيرة عادةً بعد أن يمر المنخفض شرقًا ويتبعه مرتفع جوي. ماذا يفعل البارومتر؟"],
+ cause:["Look at the barometer again. It is falling, so the low has not passed yet. The gap is also small (13°F).","Mira otra vez el barómetro. Está bajando, así que la baja presión todavía no ha pasado. La diferencia también es pequeña (13°F).","Regarde encore le baromètre. Il est en baisse, donc la dépression n'est pas encore passée. L'écart est aussi petit (13°F).","Gade bawomèt la ankò. L ap desann, kidonk presyon ba a poko pase. Diferans lan piti tou (13°F).","انظر إلى البارومتر مرة أخرى. إنه ينخفض، أي أن المنخفض لم يمرّ بعد. والفرق صغير أيضًا (13°F)."],
+ why:["Lake-effect snow is not likely. The barometer is falling because the low is still coming from the west. Lake-effect snow comes after the low passes east and cold northwest winds follow. The gap is also small (13°F).","No es probable la nieve por efecto lago. El barómetro baja porque la baja presión todavía viene del oeste. La nieve por efecto lago llega después de que la baja pasa al este y siguen vientos fríos del noroeste. La diferencia también es pequeña (13°F).","La neige d'effet de lac n'est pas probable. Le baromètre baisse parce que la dépression arrive encore de l'ouest. La neige d'effet de lac vient après que la dépression passe vers l'est et que des vents froids du nord-ouest suivent. L'écart est aussi petit (13°F).","Nèj efè lak pa gen chans rive. Bawomèt la ap desann paske presyon ba a ap vini toujou soti nan lwès. Nèj efè lak vini apre presyon ba a pase al nan lès epi van frèt nòdwès vini dèyè l. Diferans lan piti tou (13°F).","ثلج تأثير البحيرة غير محتمل. البارومتر ينخفض لأن المنخفض ما زال قادمًا من الغرب. يأتي ثلج تأثير البحيرة بعد أن يمر المنخفض شرقًا وتتبعه رياح شمالية غربية باردة. والفرق صغير أيضًا (13°F)."]},
+{city:"Marquette, Michigan",lon:-87.4,lat:46.55,lx:10,ly:24,anc:'start',lake:33,air:-10,wd:0,wk:'wN',mph:20,baro:'bRise',ans:'yes',amt:'aHeavy',
+ press:[],
+ note_:["A classic setup after a cold front passes.","Una situación típica después de que pasa un frente frío.","Une situation classique après le passage d'un front froid.","Yon sitiyasyon klasik apre yon fwon frèt pase.","وضع نموذجي بعد مرور جبهة باردة."],
+ hint:["The gap is huge. North winds blow across Lake Superior toward Marquette. How does a very long fetch change the amount of snow?","La diferencia es enorme. Los vientos del norte soplan sobre el lago Superior hacia Marquette. ¿Cómo cambia la cantidad de nieve con un fetch muy largo?","L'écart est énorme. Les vents du nord soufflent sur le lac Supérieur vers Marquette. Comment un fetch très long change-t-il la quantité de neige ?","Diferans lan gwo anpil. Van nò yo soufle sou lak Siperyè pou ale Marquette. Kijan yon fetch ki long anpil chanje kantite nèj la?","الفرق هائل. تهبّ الرياح الشمالية فوق بحيرة سوبيريور نحو ماركيت. كيف تغيّر مسافة العبور الطويلة جدًا كمية الثلج؟"],
+ cause:["Look at the map again. North winds cross the widest part of Lake Superior. The gap is 43°F, and the barometer is rising.","Mira el mapa otra vez. Los vientos del norte cruzan la parte más ancha del lago Superior. La diferencia es de 43°F y el barómetro está subiendo.","Regarde encore la carte. Les vents du nord traversent la partie la plus large du lac Supérieur. L'écart est de 43°F, et le baromètre est en hausse.","Gade kat la ankò. Van nò yo travèse pati ki pi laj nan lak Siperyè. Diferans lan se 43°F, epi bawomèt la ap monte.","انظر إلى الخريطة مرة أخرى. تعبر الرياح الشمالية أعرض جزء من بحيرة سوبيريور. الفرق 43°F، والبارومتر يرتفع."],
+ amtCause:["Your Yes is right. Now look at the amount again. A huge gap and a very long fetch give the most snow.","Tu Sí es correcto. Ahora mira otra vez la cantidad. Una diferencia enorme y un fetch muy largo dan la mayor cantidad de nieve.","Ton Oui est juste. Regarde encore la quantité. Un écart énorme et un fetch très long donnent le plus de neige.","Wi ou a bon. Kounye a, gade kantite a ankò. Yon diferans ki gwo anpil ak yon fetch ki long anpil bay plis nèj.","إجابتك «نعم» صحيحة. انظر الآن إلى الكمية مرة أخرى. الفرق الهائل ومسافة العبور الطويلة جدًا يعطيان أكبر كمية من الثلج."],
+ why:["Lake-effect snow is likely, and it will be heavy. The gap is huge (43°F). North winds cross the whole width of Lake Superior, so the fetch is very long. The barometer is rising.","Es probable la nieve por efecto lago, y será mucha. La diferencia es enorme (43°F). Los vientos del norte cruzan todo el ancho del lago Superior, así que el fetch es muy largo. El barómetro está subiendo.","La neige d'effet de lac est probable, et elle sera forte. L'écart est énorme (43°F). Les vents du nord traversent toute la largeur du lac Supérieur, donc le fetch est très long. Le baromètre est en hausse.","Nèj efè lak gen chans rive, epi l ap anpil. Diferans lan gwo anpil (43°F). Van nò yo travèse tout lajè lak Siperyè, kidonk fetch la long anpil. Bawomèt la ap monte.","ثلج تأثير البحيرة محتمل، وسيكون كثيفًا. الفرق هائل (43°F). تعبر الرياح الشمالية بحيرة سوبيريور بعرضها كله، فمسافة العبور طويلة جدًا. البارومتر يرتفع."]},
+{city:"Holland, Michigan",lon:-86.11,lat:42.79,lx:12,ly:6,anc:'start',lake:32,air:12,wd:225,wk:'wSW',mph:null,baro:'bRise',ans:'yes',gary:1,
+ press:[{t:'H',lon:-84.7,lat:43.75,east:0}],
+ note_:["A large high-pressure system is over central Michigan.","Un gran sistema de alta presión está sobre el centro de Míchigan.","Un grand anticyclone est au-dessus du centre du Michigan.","Yon gwo sistèm presyon wo sou mitan Michigan.","يوجد مرتفع جوي كبير فوق وسط ميشيغان."],
+ hint:["Southwest winds cross only the southern tip of Lake Michigan, so the fetch is short. What do those winds pass over before they reach the lake?","Los vientos del suroeste cruzan solo la punta sur del lago Míchigan, así que el fetch es corto. ¿Sobre qué pasan esos vientos antes de llegar al lago?","Les vents du sud-ouest traversent seulement la pointe sud du lac Michigan, donc le fetch est court. Au-dessus de quoi passent ces vents avant d'arriver au lac ?","Van sidwès yo travèse sèlman pwent sid lak Michigan, kidonk fetch la kout. Sou kisa van sa yo pase anvan yo rive nan lak la?","تعبر الرياح الجنوبية الغربية الطرف الجنوبي فقط من بحيرة ميشيغان، فمسافة العبور قصيرة. فوق ماذا تمر هذه الرياح قبل أن تصل إلى البحيرة؟"],
+ cause:["Look at the map again. Before the wind reaches the lake, it passes over the steel mills in Gary, Indiana. The mills add heat and tiny particles to the air.","Mira el mapa otra vez. Antes de llegar al lago, el viento pasa sobre las acerías de Gary, Indiana. Las acerías le agregan calor y partículas diminutas al aire.","Regarde encore la carte. Avant d'arriver au lac, le vent passe au-dessus des aciéries de Gary, en Indiana. Les aciéries ajoutent de la chaleur et de minuscules particules à l'air.","Gade kat la ankò. Anvan van an rive nan lak la, li pase sou faktori asye yo nan Gary, Indiana. Faktori yo ajoute chalè ak ti patikil nan lè a.","انظر إلى الخريطة مرة أخرى. قبل أن تصل الرياح إلى البحيرة، تمر فوق مصانع الصلب في غاري بولاية إنديانا. تضيف المصانع حرارة وجسيمات دقيقة إلى الهواء."],
+ why:["Lake-effect snow is likely. The fetch is short, but the air first passes over the steel mills in Gary, Indiana. The mills add heat and tiny particles (nuclei) that help snowflakes form. The barometer is also rising.","Es probable la nieve por efecto lago. El fetch es corto, pero el aire primero pasa sobre las acerías de Gary, Indiana. Las acerías agregan calor y partículas diminutas (núcleos) que ayudan a formar copos de nieve. El barómetro también está subiendo.","La neige d'effet de lac est probable. Le fetch est court, mais l'air passe d'abord au-dessus des aciéries de Gary, en Indiana. Les aciéries ajoutent de la chaleur et de minuscules particules (noyaux) qui aident les flocons à se former. Le baromètre est aussi en hausse.","Nèj efè lak gen chans rive. Fetch la kout, men lè a pase anvan sou faktori asye yo nan Gary, Indiana. Faktori yo ajoute chalè ak ti patikil (nwayo) ki ede flòk nèj fòme. Bawomèt la ap monte tou.","ثلج تأثير البحيرة محتمل. مسافة العبور قصيرة، لكن الهواء يمر أولًا فوق مصانع الصلب في غاري بولاية إنديانا. تضيف المصانع حرارة وجسيمات دقيقة (نوى) تساعد على تكوّن رقاقات الثلج. والبارومتر يرتفع أيضًا."]},
+{city:"Stevens Point, Wisconsin",lon:-89.57,lat:44.52,lx:-12,ly:6,anc:'end',lake:32,air:10,wd:315,wk:'wNW',mph:8,baro:'bRise',ans:'no',
+ press:[],
+ note_:["A normal winter setup.","Una situación normal de invierno.","Une situation d'hiver normale.","Yon sitiyasyon nòmal pou ivè.","وضع شتوي عادي."],
+ hint:["Find Stevens Point (city 6) on the map. Is it on the shore of a Great Lake?","Busca Stevens Point (ciudad 6) en el mapa. ¿Está en la orilla de uno de los Grandes Lagos?","Trouve Stevens Point (ville 6) sur la carte. Est-elle sur la rive d'un des Grands Lacs ?","Chèche Stevens Point (vil 6) sou kat la. Èske li bò rivaj yon Gran Lak?","ابحث عن ستيفنز بوينت (المدينة 6) على الخريطة. هل تقع على شاطئ إحدى البحيرات العظمى؟"],
+ cause:["Look at the map again. Stevens Point is not on a Great Lake. The air has no lake to cross.","Mira el mapa otra vez. Stevens Point no está en uno de los Grandes Lagos. El aire no tiene un lago que cruzar.","Regarde encore la carte. Stevens Point n'est pas sur un des Grands Lacs. L'air n'a pas de lac à traverser.","Gade kat la ankò. Stevens Point pa bò yon Gran Lak. Lè a pa gen okenn lak pou l travèse.","انظر إلى الخريطة مرة أخرى. ستيفنز بوينت لا تقع على إحدى البحيرات العظمى. لا توجد بحيرة يعبرها الهواء."],
+ why:["Lake-effect snow is not likely. Stevens Point, Wisconsin, is not on a Great Lake. The air is cold and the barometer is rising, but there is no lake to add heat and moisture.","No es probable la nieve por efecto lago. Stevens Point, Wisconsin, no está en uno de los Grandes Lagos. El aire está frío y el barómetro sube, pero no hay un lago que agregue calor y humedad.","La neige d'effet de lac n'est pas probable. Stevens Point, au Wisconsin, n'est pas sur un des Grands Lacs. L'air est froid et le baromètre monte, mais il n'y a pas de lac pour ajouter chaleur et humidité.","Nèj efè lak pa gen chans rive. Stevens Point, Wisconsin, pa bò yon Gran Lak. Lè a frèt epi bawomèt la ap monte, men pa gen lak pou ajoute chalè ak imidite.","ثلج تأثير البحيرة غير محتمل. ستيفنز بوينت في ويسكونسن لا تقع على إحدى البحيرات العظمى. الهواء بارد والبارومتر يرتفع، لكن لا توجد بحيرة تضيف الحرارة والرطوبة."]},
+{city:"Duluth, Minnesota",lon:-92.1,lat:46.78,lx:-10,ly:24,anc:'end',lake:32,air:-8,wd:315,wk:'wNW',mph:18,baro:'bSteady',ans:'no',
+ press:[],
+ note_:["A normal winter setup.","Una situación normal de invierno.","Une situation d'hiver normale.","Yon sitiyasyon nòmal pou ivè.","وضع شتوي عادي."],
+ hint:["Duluth is at the far west tip of Lake Superior. Does a northwest wind reach Duluth from the lake or from land?","Duluth está en la punta oeste del lago Superior. ¿Un viento del noroeste llega a Duluth desde el lago o desde la tierra?","Duluth est tout au bout ouest du lac Supérieur. Un vent du nord-ouest arrive-t-il à Duluth du lac ou de la terre ?","Duluth nan pwent lwès lak Siperyè. Èske yon van nòdwès rive Duluth soti nan lak la oswa soti sou tè a?","تقع دولوث عند الطرف الغربي البعيد لبحيرة سوبيريور. هل تصل الرياح الشمالية الغربية إلى دولوث من البحيرة أم من اليابسة؟"],
+ cause:["Look at the map again. A northwest wind reaches Duluth from land. It does not cross Lake Superior.","Mira el mapa otra vez. Un viento del noroeste llega a Duluth desde la tierra. No cruza el lago Superior.","Regarde encore la carte. Un vent du nord-ouest arrive à Duluth de la terre. Il ne traverse pas le lac Supérieur.","Gade kat la ankò. Yon van nòdwès rive Duluth soti sou tè a. Li pa travèse lak Siperyè.","انظر إلى الخريطة مرة أخرى. تصل الرياح الشمالية الغربية إلى دولوث من اليابسة. إنها لا تعبر بحيرة سوبيريور."],
+ why:["Lake-effect snow is not likely. The gap is large (40°F), but a northwest wind reaches Duluth from land. The air does not cross Lake Superior, so it picks up no lake moisture.","No es probable la nieve por efecto lago. La diferencia es grande (40°F), pero un viento del noroeste llega a Duluth desde la tierra. El aire no cruza el lago Superior, así que no recoge humedad del lago.","La neige d'effet de lac n'est pas probable. L'écart est grand (40°F), mais un vent du nord-ouest arrive à Duluth de la terre. L'air ne traverse pas le lac Supérieur, donc il ne ramasse pas d'humidité du lac.","Nèj efè lak pa gen chans rive. Diferans lan gwo (40°F), men yon van nòdwès rive Duluth soti sou tè a. Lè a pa travèse lak Siperyè, kidonk li pa ranmase imidite lak la.","ثلج تأثير البحيرة غير محتمل. الفرق كبير (40°F)، لكن الرياح الشمالية الغربية تصل إلى دولوث من اليابسة. لا يعبر الهواء بحيرة سوبيريور، فلا يلتقط رطوبة البحيرة."]},
+{city:"Manitoulin Island, Ontario",lon:-82.2,lat:45.8,lx:0,ly:-16,anc:'middle',lake:60,air:75,wd:292.5,wk:'wWNW',mph:5,baro:'bNA',ans:'no',
+ press:[{t:'H',lon:-87.0,lat:44.2,east:0}],
+ note_:["A low moved east. High pressure is over Lake Michigan.","Una baja presión se movió al este. Hay alta presión sobre el lago Míchigan.","Une dépression s'est déplacée vers l'est. Un anticyclone est au-dessus du lac Michigan.","Yon presyon ba deplase al nan lès. Gen presyon wo sou lak Michigan.","تحرك منخفض جوي شرقًا. يوجد مرتفع جوي فوق بحيرة ميشيغان."],
+ hint:["The lake is 60°F and the air is 75°F. Which is warmer? What does lake-effect snow need?","El lago está a 60°F y el aire a 75°F. ¿Cuál está más cálido? ¿Qué necesita la nieve por efecto lago?","Le lac est à 60°F et l'air à 75°F. Lequel est le plus chaud ? De quoi la neige d'effet de lac a-t-elle besoin ?","Lak la a 60°F epi lè a a 75°F. Kiyès ki pi cho? Kisa nèj efè lak bezwen?","البحيرة 60°F والهواء 75°F. أيهما أدفأ؟ ماذا يحتاج ثلج تأثير البحيرة؟"],
+ cause:["Look at the temperatures again. The air (75°F) is warmer than the lake (60°F). Lake-effect snow needs the lake to be warmer.","Mira otra vez las temperaturas. El aire (75°F) está más cálido que el lago (60°F). La nieve por efecto lago necesita que el lago esté más cálido.","Regarde encore les températures. L'air (75°F) est plus chaud que le lac (60°F). La neige d'effet de lac a besoin que le lac soit plus chaud.","Gade tanperati yo ankò. Lè a (75°F) pi cho pase lak la (60°F). Nèj efè lak bezwen lak la pi cho.","انظر إلى درجات الحرارة مرة أخرى. الهواء (75°F) أدفأ من البحيرة (60°F). يحتاج ثلج تأثير البحيرة إلى أن تكون البحيرة أدفأ."],
+ why:["Lake-effect snow is not likely. It is summer. The air (75°F) is warmer than the lake (60°F), so the lake cannot warm the air and make it rise. No rising air means no snow.","No es probable la nieve por efecto lago. Es verano. El aire (75°F) está más cálido que el lago (60°F), así que el lago no puede calentar el aire y hacerlo subir. Si el aire no sube, no hay nieve.","La neige d'effet de lac n'est pas probable. C'est l'été. L'air (75°F) est plus chaud que le lac (60°F), donc le lac ne peut pas réchauffer l'air et le faire monter. Sans air qui monte, pas de neige.","Nèj efè lak pa gen chans rive. Se ete. Lè a (75°F) pi cho pase lak la (60°F), kidonk lak la pa ka chofe lè a pou fè l monte. Si lè a pa monte, pa gen nèj.","ثلج تأثير البحيرة غير محتمل. إنه الصيف. الهواء (75°F) أدفأ من البحيرة (60°F)، فلا تستطيع البحيرة تدفئة الهواء وجعله يرتفع. لا هواء صاعد يعني لا ثلج."]}
+];
+SC.forEach((s,i)=>{UI['note'+i]=s.note_;UI['hint'+i]=s.hint;UI['cause'+i]=s.cause;UI['why'+i]=s.why;if(s.amtCause)UI['amt'+i]=s.amtCause;});
+
+/* Sentence frames and word bank for reasoning: [en, es, fr, ht, ar] */
+const FRAMES=[
+["Lake-effect snow is (likely / not likely) because ___.","La nieve por efecto lago (es probable / no es probable) porque ___.","La neige d'effet de lac est (probable / peu probable) parce que ___.","Nèj efè lak (gen chans / pa gen chans) rive paske ___.","ثلج تأثير البحيرة (محتمل / غير محتمل) لأن ___."],
+["The lake is ___°F and the air is ___°F, so the gap is ___°F.","El lago está a ___°F y el aire a ___°F, así que la diferencia es de ___°F.","Le lac est à ___°F et l'air à ___°F, donc l'écart est de ___°F.","Lak la a ___°F epi lè a a ___°F, kidonk diferans lan se ___°F.","البحيرة ___°F والهواء ___°F، إذن الفرق ___°F."],
+["The wind comes from the ___, so it (crosses / does not cross) the lake.","El viento viene del ___, así que (cruza / no cruza) el lago.","Le vent vient du ___, donc il (traverse / ne traverse pas) le lac.","Van an soti nan ___, kidonk li (travèse / pa travèse) lak la.","تأتي الرياح من ___، لذلك (تعبر / لا تعبر) البحيرة."],
+["The barometer is ___, which means ___.","El barómetro está ___, lo que significa que ___.","Le baromètre est ___, ce qui veut dire que ___.","Bawomèt la ___, sa vle di ___.","البارومتر ___، وهذا يعني أن ___."]
+];
+const WORDS=[
+["temperature gap","diferencia de temperatura","écart de température","diferans tanperati","فرق درجات الحرارة"],
+["fetch","fetch","fetch","fetch","مسافة العبور"],
+["crosses the lake","cruza el lago","traverse le lac","travèse lak la","تعبر البحيرة"],
+["from land","desde la tierra","de la terre","soti sou tè","من اليابسة"],
+["rising","subiendo","en hausse","k ap monte","يرتفع"],
+["falling","bajando","en baisse","k ap desann","ينخفض"],
+["warmer","más cálido","plus chaud","pi cho","أدفأ"],
+["colder","más frío","plus froid","pi frèt","أبرد"],
+["moisture","humedad","humidité","imidite","رطوبة"],
+["low-pressure system","sistema de baja presión","dépression","sistèm presyon ba","منخفض جوي"]
+];
+const BONUS_FRAME=["You are in ___. The lake temperature is ___°F. The air temperature is ___°F. Winds are from the ___ at ___ mph. The barometer is ___. Is a lake-effect snowstorm likely?","Estás en ___. La temperatura del lago es de ___°F. La temperatura del aire es de ___°F. El viento viene del ___ a ___ mph. El barómetro está ___. ¿Es probable una tormenta de nieve por efecto lago?","Tu es à ___. La température du lac est de ___°F. La température de l'air est de ___°F. Le vent vient du ___ à ___ mph. Le baromètre est ___. Une tempête de neige d'effet de lac est-elle probable ?","Ou nan ___. Tanperati lak la se ___°F. Tanperati lè a se ___°F. Van an soti nan ___ a ___ mph. Bawomèt la ___. Èske yon tanpèt nèj efè lak gen chans rive?","أنت في ___. درجة حرارة البحيرة ___°F. درجة حرارة الهواء ___°F. الرياح من ___ بسرعة ___ mph. البارومتر ___. هل من المحتمل حدوث عاصفة ثلجية بتأثير البحيرة؟"];
+
+/* ---------- GLOSSARY (word pictures) ----------  each language: [word, definition] */
+const GL={
+lakeEffect:{en:["lake-effect snow","Snow made when cold air crosses a warmer lake and picks up heat and moisture."],es:["nieve por efecto lago","Nieve que se forma cuando aire frío cruza un lago más cálido y recoge calor y humedad."],fr:["neige d'effet de lac","Neige qui se forme quand de l'air froid traverse un lac plus chaud et ramasse chaleur et humidité."],ht:["nèj efè lak","Nèj ki fòme lè lè frèt travèse yon lak ki pi cho epi li ranmase chalè ak imidite."],ar:["ثلج تأثير البحيرة","ثلج يتكوّن عندما يعبر هواء بارد بحيرة أدفأ ويلتقط الحرارة والرطوبة."]},
+gap:{en:["temperature gap","How much warmer the lake is than the air. Subtract: lake minus air."],es:["diferencia de temperatura","Cuánto más cálido está el lago que el aire. Resta: lago menos aire."],fr:["écart de température","De combien le lac est plus chaud que l'air. Soustrais : lac moins air."],ht:["diferans tanperati","Konbyen lak la pi cho pase lè a. Fè soustraksyon: lak mwens lè."],ar:["فرق درجات الحرارة","كم البحيرة أدفأ من الهواء. اطرح: البحيرة ناقص الهواء."]},
+fetch:{en:["fetch","How far the wind travels over open water."],es:["fetch","La distancia que recorre el viento sobre agua abierta."],fr:["fetch","La distance que le vent parcourt sur l'eau libre."],ht:["fetch","Distans van an fè sou dlo ouvè."],ar:["مسافة العبور","المسافة التي تقطعها الرياح فوق مياه مفتوحة."]},
+windFrom:{en:["north wind","A wind is named for where it comes from. A north wind blows from the north toward the south."],es:["viento del norte","El nombre de un viento dice de dónde viene. Un viento del norte sopla del norte hacia el sur."],fr:["vent du nord","Un vent porte le nom de l'endroit d'où il vient. Un vent du nord souffle du nord vers le sud."],ht:["van nò","Non yon van di ki kote li soti. Yon van nò soufle soti nan nò pou ale nan sid."],ar:["رياح شمالية","تُسمّى الرياح باسم الجهة التي تأتي منها. الرياح الشمالية تهبّ من الشمال نحو الجنوب."]},
+barometer:{en:["barometer","A tool that measures air pressure. When it rises, high pressure is coming."],es:["barómetro","Un instrumento que mide la presión del aire. Cuando sube, viene alta presión."],fr:["baromètre","Un instrument qui mesure la pression de l'air. Quand il monte, la haute pression arrive."],ht:["bawomèt","Yon zouti ki mezire presyon lè a. Lè l ap monte, presyon wo ap vini."],ar:["البارومتر","أداة تقيس ضغط الهواء. عندما يرتفع، يكون الضغط المرتفع قادمًا."]},
+highP:{en:["high pressure","An area where air sinks. It often follows a low and brings cold, clear air."],es:["alta presión","Una zona donde el aire baja. Muchas veces llega después de una baja presión y trae aire frío y despejado."],fr:["haute pression","Une zone où l'air descend. Elle suit souvent une dépression et apporte de l'air froid et clair."],ht:["presyon wo","Yon zòn kote lè a desann. Souvan li vini apre yon presyon ba epi li pote lè frèt ak syèl klè."],ar:["ضغط مرتفع","منطقة يهبط فيها الهواء. غالبًا ما يأتي بعد منخفض ويجلب هواءً باردًا وصافيًا."]},
+lowP:{en:["low pressure","An area where air rises. It brings clouds and storms."],es:["baja presión","Una zona donde el aire sube. Trae nubes y tormentas."],fr:["basse pression","Une zone où l'air monte. Elle apporte des nuages et des tempêtes."],ht:["presyon ba","Yon zòn kote lè a monte. Li pote nwaj ak tanpèt."],ar:["ضغط منخفض","منطقة يرتفع فيها الهواء. تجلب السحب والعواصف."]},
+evaporation:{en:["evaporation","Liquid water turning into water vapor, a gas."],es:["evaporación","El agua líquida se convierte en vapor de agua, un gas."],fr:["évaporation","L'eau liquide se transforme en vapeur d'eau, un gaz."],ht:["evaporasyon","Dlo likid ki tounen vapè dlo, yon gaz."],ar:["التبخر","تحوّل الماء السائل إلى بخار ماء، وهو غاز."]},
+downwind:{en:["downwind","The side the wind blows toward. Lake-effect snow falls on the downwind shore."],es:["viento abajo","El lado hacia donde sopla el viento. La nieve por efecto lago cae en la orilla viento abajo."],fr:["sous le vent","Le côté vers lequel souffle le vent. La neige d'effet de lac tombe sur la rive sous le vent."],ht:["kote van an ale","Bò kote van an ap soufle a. Nèj efè lak tonbe sou rivaj kote van an ale a."],ar:["باتجاه الريح","الجهة التي تهبّ نحوها الرياح. يتساقط ثلج تأثير البحيرة على الشاطئ الذي باتجاه الريح."]}
+};
+const VOCAB_LEARN=['lakeEffect','evaporation','downwind','gap','fetch','barometer'];
+const VOCAB_FC=['gap','fetch','windFrom','barometer','highP','lowP'];
+</script>
+<script>
+/* ---------- HELPERS ---------- */
+const LI=l=>Math.max(0,LANGS.indexOf(l));
+function raw(k,l){const e=UI[k];if(e==null)return k;if(typeof e==='string')return e;return e[LI(l)]!=null?e[LI(l)]:e[0];}
+function U(k,vars,l){l=l||S.lang;let s=raw(k,l);if(vars)s=s.replace(/\{(\w+)\}/g,(m,n)=>{const v=vars[n];if(v==null)return m;if(typeof v==='object'&&v.k)return raw(v.k,l);return v;});return s;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function ltr(s){return s.replace(/([−-]?\d[\d.,]*\s?(?:°F|°C|°|mph)?)/g,'<bdi dir="ltr">$1</bdi>');}
+function l2span(t){if(S.lang==='en')return '';const ar=S.lang==='ar';return `<span class="l2" lang="${S.lang}"${ar?' dir="rtl"':''}>${ar?ltr(esc(t)):esc(t)}</span>`;}
+function B(k,vars){return `<span class="en">${esc(U(k,vars,'en'))}</span>`+l2span(U(k,vars,S.lang));}
+function BI(k,vars){return `<span class="inl">${B(k,vars)}</span>`;}
+function BA(a){return `<span class="en">${esc(a[0])}</span>`+l2span(a[LI(S.lang)]||a[0]);}
+const f2c=f=>{const c=Math.round((f-32)*5/9*10)/10;const r=Math.abs(c)>=10||Number.isInteger(c)?Math.round(c):c;return (r<0?'−':'')+Math.abs(r);};
+const fmtF=f=>(f<0?'−':'')+Math.abs(f)+'°F';
+const tempStr=f=>`${fmtF(f)} (${f2c(f)}°C)`;
+
+/* ---------- READ-ALOUD ---------- */
+const SPK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+let SAY=new Map(),sid=0;
+function sayBtn(fn){const id='say'+(++sid);SAY.set(id,fn);const lab=esc(U('say',null,'en'));return `<button type="button" class="say" id="${id}" data-say="${id}" aria-label="${lab}" title="${lab}">${SPK}</button>`;}
+function sayK(k,vars){return sayBtn(()=>[U(k,vars,'en'),U(k,vars,S.lang)]);}
+function txt(k,vars,cls){return `<div class="txt"><p class="${cls||''}">${B(k,vars)}</p>${sayK(k,vars)}</div>`;}
+function voiceFor(l){if(!('speechSynthesis' in window))return null;const vs=speechSynthesis.getVoices();const c=VOICE[l];const m=vs.filter(v=>v.lang&&v.lang.replace('_','-').toLowerCase().startsWith(c));if(l==='en')return m.find(v=>/en-us/i.test(v.lang.replace('_','-')))||m[0]||null;return m[0]||null;}
+function clean(t){return String(t).replace(/_{2,}/g,', blank, ').replace(/−/g,'minus ');}
+function speak(en,l2){
+  if(!('speechSynthesis' in window)){toast(U('noSpeech'));return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(clean(en));u.lang='en-US';const ve=voiceFor('en');if(ve)u.voice=ve;u.rate=.95;speechSynthesis.speak(u);
+  if(S.lang!=='en'&&l2){const v=voiceFor(S.lang);if(v){const u2=new SpeechSynthesisUtterance(clean(l2).replace(/minus /g,'−'));u2.lang=v.lang;u2.voice=v;u2.rate=.95;speechSynthesis.speak(u2);}else{toast(U('noVoice'));}}
+}
+let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4200);}
+function announce(m){const l=document.getElementById('live');l.textContent='';setTimeout(()=>l.textContent=m,30);}
+
+/* ---------- STATE ---------- */
+const KEY='lake-effect-lab-v1';
+function fresh(){return{v:1,lang:'en',tab:'learn',pics:false,cur:0,
+  sc:SC.map(()=>({ans:null,amt:null,ev:'',checks:0,ok:false,first:null})),
+  bonus:'',name:'',hour:'',fb:{}};}
+let S=fresh();
+function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&d.v===1){const f=fresh();S=Object.assign(f,d);if(!Array.isArray(S.sc)||S.sc.length!==8)S.sc=f.sc;}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const openDet=new Set();let hintOpen=false;
+function setFb(part,type,parts){S.fb[part]={type,parts};announce(parts.map(([k,v])=>U(k,v,'en')).join(' '));}
+const words=t=>(t.trim().match(/\S+/g)||[]).length;
+
+/* ---------- SVG TEXT ---------- */
+function svgT(x,y,key,o){o=o||{};const sz=o.size||15,anc=o.anchor||'middle',cls=o.cls||'maptxt f-ink';
+  const en=U(key,o.vars,'en'),l2=S.lang!=='en'?U(key,o.vars,S.lang):'';
+  return `<text x="${x}" y="${y}" text-anchor="${anc}" font-size="${sz}" class="${cls}${o.halo?' halo':''}"><tspan>${esc(en)}</tspan>${l2?`<tspan class="l2t" x="${x}" dy="${(sz*1.05).toFixed(1)}" font-size="${(sz*.8).toFixed(1)}"${S.lang==='ar'?' direction="rtl" unicode-bidi="embed"':''}>${esc(l2)}</tspan>`:''}</text>`;}
+
+/* ---------- MAP (equirectangular, lon −94.5…−75.5, lat 49.6…40.5) ---------- */
+const MX=l=>(l+94.5)*42.4, MY=a=>(49.6-a)*60;
+const pt=(lo,la)=>[MX(lo),MY(la)];
+function poly(a){return 'M'+a.map(([lo,la])=>MX(lo).toFixed(1)+' '+MY(la).toFixed(1)).join('L')+'Z';}
+const LAKES={
+sup:[[-92.1,46.75],[-91.67,47.02],[-91.27,47.29],[-90.33,47.75],[-89.7,47.98],[-89.2,48.38],[-88.6,48.62],[-88.25,48.95],[-87.6,48.85],[-87.1,48.78],[-86.4,48.72],[-85.9,48.1],[-84.9,47.95],[-84.75,47.4],[-84.6,46.95],[-84.45,46.52],[-84.9,46.5],[-84.96,46.77],[-85.5,46.7],[-85.98,46.67],[-86.65,46.42],[-87.1,46.5],[-87.4,46.53],[-87.7,46.82],[-88.1,46.88],[-88.4,46.85],[-88.1,47.15],[-87.9,47.45],[-88.35,47.3],[-88.7,47.1],[-89.3,46.87],[-89.9,46.75],[-90.4,46.58],[-90.8,46.7],[-90.75,46.95],[-91.2,46.85],[-92.0,46.7]],
+mic:[[-87.62,41.88],[-87.52,41.68],[-87.3,41.62],[-86.9,41.72],[-86.48,42.1],[-86.27,42.4],[-86.2,42.78],[-86.23,43.06],[-86.33,43.23],[-86.5,43.65],[-86.45,43.95],[-86.33,44.25],[-86.24,44.63],[-86.07,44.9],[-85.76,45.02],[-85.6,45.18],[-85.3,45.3],[-85.0,45.38],[-84.95,45.55],[-84.75,45.78],[-84.95,45.85],[-85.45,46.08],[-85.9,46.0],[-86.25,45.95],[-86.55,45.8],[-86.7,45.6],[-86.9,45.8],[-87.05,45.75],[-87.35,45.4],[-87.6,45.1],[-87.8,44.8],[-88.0,44.55],[-87.8,44.65],[-87.45,44.95],[-87.2,45.12],[-86.95,45.28],[-87.1,45.05],[-87.35,44.82],[-87.5,44.46],[-87.66,44.09],[-87.71,43.75],[-87.9,43.4],[-87.9,43.04],[-87.78,42.73],[-87.83,42.36],[-87.68,42.05]],
+hur:[[-84.75,45.78],[-84.47,45.65],[-83.82,45.42],[-83.43,45.06],[-83.3,44.7],[-83.33,44.42],[-83.5,44.25],[-83.87,44.05],[-83.88,43.62],[-83.6,43.75],[-83.27,43.94],[-82.95,44.05],[-82.65,44.02],[-82.62,43.84],[-82.54,43.43],[-82.42,42.99],[-81.95,43.2],[-81.75,43.31],[-81.72,43.74],[-81.64,44.18],[-81.37,44.5],[-81.5,44.9],[-81.67,45.25],[-81.3,45.1],[-81.14,44.74],[-80.94,44.57],[-80.6,44.6],[-80.22,44.5],[-79.9,44.75],[-80.03,45.35],[-80.6,45.95],[-81.5,45.97],[-81.8,46.18],[-82.95,46.18],[-83.55,46.25],[-83.9,46.05],[-84.36,45.99],[-84.73,45.87]],
+eri:[[-83.47,41.7],[-83.1,41.6],[-82.7,41.45],[-82.18,41.47],[-81.69,41.5],[-81.2,41.75],[-80.79,41.9],[-80.08,42.13],[-79.33,42.48],[-78.9,42.87],[-79.25,42.88],[-79.9,42.8],[-80.05,42.55],[-80.4,42.6],[-80.8,42.64],[-81.21,42.66],[-81.85,42.26],[-82.3,42.12],[-82.5,41.93],[-82.9,42.03],[-83.12,42.08],[-83.4,41.93]],
+ont:[[-79.07,43.26],[-79.85,43.27],[-79.6,43.55],[-79.38,43.64],[-78.86,43.87],[-78.17,43.95],[-77.6,44.0],[-77.1,43.95],[-76.85,44.05],[-77.0,44.15],[-76.48,44.23],[-76.33,44.13],[-76.12,43.95],[-76.2,43.6],[-76.5,43.46],[-76.97,43.27],[-77.6,43.26],[-78.7,43.34]],
+stc:[[-82.9,42.45],[-82.7,42.65],[-82.45,42.55],[-82.55,42.35],[-82.85,42.35]]
+};
+const MANITOULIN=[[-83.25,45.93],[-82.9,45.98],[-82.3,46.0],[-81.95,45.98],[-81.7,45.85],[-81.75,45.7],[-82.1,45.6],[-82.6,45.72],[-83.05,45.8]];
+const REGIONS=[["MINNESOTA",-93.4,47.6],["WISCONSIN",-90.9,45.55],["MICHIGAN",-84.4,42.35],["ONTARIO",-84.2,49.05],["ILLINOIS",-89.6,41.6],["INDIANA",-86.3,40.8],["OHIO",-82.6,40.8],["NEW YORK",-77.3,42.55],["PENNSYLVANIA",-78.9,41.35]];
+const GARY=[-87.35,41.6];
+function windArrow(sc){
+  const [cx,cy]=pt(sc.lon,sc.lat);const th=sc.wd*Math.PI/180;
+  const bx=-Math.sin(th),by=Math.cos(th);
+  const light=sc.mph==='light';
+  let sx,sy;
+  if(sc.gary){const [gx,gy]=pt(GARY[0],GARY[1]);const vx=gx-cx,vy=gy-cy,vl=Math.hypot(vx,vy);sx=gx+vx/vl*45;sy=gy+vy/vl*45;}
+  else{const L=light?60:Math.min(240,90+(sc.mph||14)*7);sx=cx-bx*L;sy=cy-by*L;}
+  const dx=cx-sx,dy=cy-sy,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len;
+  const ex=cx-ux*15,ey=cy-uy*15,hx=ex-ux*20,hy=ey-uy*20,px=-uy*11,py=ux*11;
+  const cls=sc.air<sc.lake?'cold':'warm';
+  return `<g aria-hidden="true"><path d="M${sx.toFixed(1)} ${sy.toFixed(1)}L${hx.toFixed(1)} ${hy.toFixed(1)}" class="s-halo" stroke-width="13" stroke-linecap="round"/>
+  <path d="M${sx.toFixed(1)} ${sy.toFixed(1)}L${hx.toFixed(1)} ${hy.toFixed(1)}" class="s-${cls}${light?'':' windpath'}" stroke-width="7" stroke-linecap="round" ${light?'stroke-dasharray="4 8"':''}/>
+  <path d="M${ex.toFixed(1)} ${ey.toFixed(1)}L${(hx+px).toFixed(1)} ${(hy+py).toFixed(1)}L${(hx-px).toFixed(1)} ${(hy-py).toFixed(1)}Z" class="f-${cls} s-halo" stroke-width="2.5" stroke-linejoin="round"/></g>`;}
+function pressSym(p){const [x,y]=pt(p.lon,p.lat);const c=p.t==='H'?'hi':'lo';
+  return `<g><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="17" class="f-surf s-${c}" stroke-width="2.5"/><text x="${x.toFixed(1)}" y="${(y+8).toFixed(1)}" text-anchor="middle" font-size="23" font-weight="800" class="f-${c}" style="font-family:var(--display)">${p.t}</text>
+  ${p.east?`<path d="M${(x+21).toFixed(1)} ${y.toFixed(1)}h14" class="s-${c}" stroke-width="3"/><path d="M${(x+40).toFixed(1)} ${y.toFixed(1)}l-8-5v10z" class="f-${c}"/>`:''}</g>`;}
+function mapSVG(i){
+  const sc=SC[i];let g=`<rect width="806" height="546" class="f-land"/>`;
+  Object.entries(LAKES).forEach(([k,a])=>g+=`<path d="${poly(a)}" class="f-water s-shore" stroke-width="1.5" stroke-linejoin="round"/>`);
+  g+=`<path d="${poly(MANITOULIN)}" class="f-land s-shore" stroke-width="1.2"/>`;
+  REGIONS.forEach(([n,lo,la])=>g+=`<text x="${MX(lo).toFixed(0)}" y="${MY(la).toFixed(0)}" text-anchor="middle" font-size="13" letter-spacing="2" class="maptxt f-mute" opacity=".75">${n}</text>`);
+  [['lkSup',-87.6,47.75],['lkMic',-87.05,43.3],['lkHur',-82.4,44.8],['lkEri',-81.2,42.12],['lkOnt',-77.8,43.66]].forEach(([k,lo,la])=>g+=svgT(MX(lo).toFixed(0),MY(la).toFixed(0),k,{size:16,cls:'lk'}));
+  /* scale bar + north arrow */
+  const km100=100/69*60;
+  g+=`<g class="f-ink"><path d="M20 528h${km100.toFixed(1)}M20 522v12M${(20+km100).toFixed(1)} 522v12" class="s-ink" stroke-width="2.5"/><text x="${(26+km100).toFixed(1)}" y="533" font-size="14" class="maptxt f-ink">100 mi</text>
+  <path d="M34 450l10 26-10-6-10 6z" class="f-ink"/><text x="34" y="444" text-anchor="middle" font-size="15" class="maptxt f-ink">N</text></g>`;
+  SC.forEach((c,j)=>{if(j===i)return;const [x,y]=pt(c.lon,c.lat);g+=`<g opacity=".8"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" class="f-surf s-mute" stroke-width="1.5"/><text x="${x.toFixed(1)}" y="${(y+4.5).toFixed(1)}" text-anchor="middle" font-size="12" class="f-mute" style="font-family:var(--mono)">${j+1}</text></g>`;});
+  sc.press.forEach(p=>g+=pressSym(p));
+  if(sc.gary){const [x,y]=pt(GARY[0],GARY[1]);g+=`<g><rect x="${(x-14).toFixed(1)}" y="${(y-4).toFixed(1)}" width="28" height="14" class="f-mute"/><rect x="${(x-10).toFixed(1)}" y="${(y-18).toFixed(1)}" width="5" height="16" class="f-mute"/><rect x="${(x+3).toFixed(1)}" y="${(y-22).toFixed(1)}" width="5" height="20" class="f-mute"/><circle cx="${(x-6).toFixed(1)}" cy="${(y-26).toFixed(1)}" r="5" class="f-cloud2" opacity=".8"/><circle cx="${(x+8).toFixed(1)}" cy="${(y-31).toFixed(1)}" r="6" class="f-cloud2" opacity=".8"/>
+    <text x="${(x-20).toFixed(1)}" y="${(y+22).toFixed(1)}" text-anchor="end" font-size="14" class="maptxt f-ink halo">Gary, IN</text></g>`;}
+  g+=windArrow(sc);
+  const [x,y]=pt(sc.lon,sc.lat);
+  g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" class="f-surf s-ink" stroke-width="3"/><text x="${x.toFixed(1)}" y="${(y+5).toFixed(1)}" text-anchor="middle" font-size="14" font-weight="700" class="f-ink" style="font-family:var(--mono)">${i+1}</text>
+  <text x="${(x+sc.lx).toFixed(1)}" y="${(y+sc.ly).toFixed(1)}" text-anchor="${sc.anc}" font-size="17" class="maptxt f-ink halo">${esc(sc.city.split(',')[0])}</text>`;
+  return `<svg class="map" viewBox="0 0 806 546" role="img" aria-label="${esc(`Map. City ${i+1}: ${sc.city}. ${U(sc.wk,null,'en')} wind.`)}">${g}</svg>`;}
+
+/* ---------- DATA VISUALS ---------- */
+function thermo(lake,air){
+  const Y=t=>170-(t+40)*1.25;
+  const tube=(x,t,cls)=>`<rect x="${x-9}" y="20" width="18" height="155" rx="9" class="f-surf s-line" stroke-width="1.5"/><rect x="${x-5}" y="${Y(t).toFixed(1)}" width="10" height="${(176-Y(t)).toFixed(1)}" rx="5" class="${cls}"/><circle cx="${x}" cy="182" r="12" class="${cls}"/>`;
+  let s='';[-40,0,32,80].forEach(t=>{s+=`<path d="M30 ${Y(t)}h8" class="s-mute" stroke-width="1.5"/><text x="27" y="${Y(t)+4}" text-anchor="end" font-size="11" class="f-mute" style="font-family:var(--mono)">${t<0?'−'+(-t):t}</text>`;});
+  s+=`<path d="M40 ${Y(32)}H150" class="s-mute" stroke-width="1" stroke-dasharray="3 3"/>`;
+  s+=tube(62,lake,'f-water')+tube(122,air,air<lake?'f-cold':'f-warm');
+  const a=Y(lake),b=Y(air);
+  s+=`<path d="M86 ${a.toFixed(1)}h12M92 ${a.toFixed(1)}V${b.toFixed(1)}M86 ${b.toFixed(1)}h12" class="s-ink" stroke-width="2"/>`;
+  return `<svg width="160" height="196" viewBox="0 0 160 200" aria-hidden="true">${s}</svg>`;}
+function compass(sc){
+  const light=sc.mph==='light';const th=sc.wd*Math.PI/180,bx=-Math.sin(th),by=Math.cos(th);const L=light?22:34;
+  const x1=60-bx*L,y1=60-by*L,x2=60+bx*L,y2=60+by*L,px=-by*8,py=bx*8;
+  const cls=sc.air<sc.lake?'cold':'warm';
+  let s=`<circle cx="60" cy="60" r="50" class="f-surf s-line" stroke-width="1.5"/>`;
+  [['N',60,22],['E',99,65],['S',60,106],['W',21,65]].forEach(([t,x,y])=>s+=`<text x="${x}" y="${y}" text-anchor="middle" font-size="13" font-weight="700" class="f-mute">${t}</text>`);
+  s+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}L${(x2-bx*12).toFixed(1)} ${(y2-by*12).toFixed(1)}" class="s-${cls}" stroke-width="6" stroke-linecap="round" ${light?'stroke-dasharray="3 6"':''}/>
+  <path d="M${x2.toFixed(1)} ${y2.toFixed(1)}L${(x2-bx*14+px).toFixed(1)} ${(y2-by*14+py).toFixed(1)}L${(x2-bx*14-px).toFixed(1)} ${(y2-by*14-py).toFixed(1)}Z" class="f-${cls}"/>
+  <circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="5" class="f-${cls}"/>`;
+  return `<svg width="110" height="110" viewBox="0 0 120 120" aria-hidden="true">${s}</svg>`;}
+function baro(st){
+  const ang={bRise:40,bFall:-40,bSteady:0}[st];
+  let s=`<path d="M14 72A46 46 0 0 1 106 72" fill="none" class="s-line" stroke-width="10" stroke-linecap="round"/>
+  <text x="14" y="90" font-size="12" text-anchor="middle" font-weight="700" class="f-lo">L</text><text x="106" y="90" font-size="12" text-anchor="middle" font-weight="700" class="f-hi">H</text>`;
+  if(ang==null){s+=`<text x="60" y="68" text-anchor="middle" font-size="26" font-weight="800" class="f-mute">?</text>`;}
+  else{s+=`<g transform="rotate(${ang} 60 72)"><path d="M60 72L56 70 60 30 64 70Z" class="f-ink"/></g><circle cx="60" cy="72" r="6" class="f-ink"/>`;
+    if(st!=='bSteady'){const d=st==='bRise';s+=`<path d="${d?'M40 30A34 34 0 0 1 80 30':'M80 30A34 34 0 0 0 40 30'}" fill="none" class="s-mute" stroke-width="2.5"/><path d="${d?'M84 27l-3 10-6-7z':'M36 27l3 10 6-7z'}" class="f-mute"/>`;}}
+  return `<svg width="120" height="96" viewBox="0 0 120 96" aria-hidden="true">${s}</svg>`;}
+
+/* word-picture and condition icons (56x56) */
+function vIcon(k,w){w=w||56;let g='';
+  switch(k){
+  case 'lakeEffect':g=`<rect y="36" width="30" height="20" class="f-water"/><rect x="30" y="36" width="26" height="20" class="f-land2"/><circle cx="36" cy="14" r="8" class="f-cloud2"/><circle cx="46" cy="16" r="8" class="f-cloud2"/><circle cx="28" cy="17" r="6" class="f-cloud2"/>`+[[32,26],[40,30],[48,26],[36,33],[46,34]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2" class="f-snow s-snow"/>`).join('');break;
+  case 'gap':g=`<rect x="12" y="8" width="10" height="40" rx="5" class="f-surf s-line"/><rect x="14" y="18" width="6" height="30" rx="3" class="f-water"/><rect x="34" y="8" width="10" height="40" rx="5" class="f-surf s-line"/><rect x="36" y="36" width="6" height="12" rx="3" class="f-cold"/><path d="M26 19h4M28 19v18M26 37h4" class="s-ink" stroke-width="1.8"/>`;break;
+  case 'fetch':g=`<rect y="30" width="8" height="26" class="f-land2"/><rect x="8" y="30" width="40" height="26" class="f-water"/><rect x="48" y="30" width="8" height="26" class="f-land2"/><path d="M12 22H44" class="s-ink" stroke-width="2"/><path d="M8 22l6-4v8zM48 22l-6-4v8z" class="f-ink"/><path d="M12 40q4-3 8 0t8 0 8 0 8 0" fill="none" class="s-halo" stroke-width="1.5"/>`;break;
+  case 'windFrom':g=`<text x="28" y="14" text-anchor="middle" font-size="13" font-weight="800" class="f-ink">N</text><path d="M28 19V44" class="s-cold" stroke-width="5"/><path d="M28 52l-8-10h16z" class="f-cold"/>`;break;
+  case 'cross':g=`<rect y="0" width="56" height="56" class="f-land2"/><path d="M6 12H44Q52 30 44 48H6Q14 30 6 12Z" class="f-water"/><path d="M8 30H40" class="s-cold" stroke-width="4"/><path d="M47 30l-9-6v12z" class="f-cold"/><circle cx="51" cy="30" r="3.5" class="f-ink"/>`;break;
+  case 'barometer':g=`<path d="M8 40A20 20 0 0 1 48 40" fill="none" class="s-line" stroke-width="6" stroke-linecap="round"/><g transform="rotate(40 28 40)"><path d="M28 40l-2.5-1 2.5-22 2.5 22z" class="f-ink"/></g><circle cx="28" cy="40" r="3.5" class="f-ink"/><path d="M40 12l6 6-8 1z" class="f-mute"/><path d="M22 12A20 20 0 0 1 42 16" fill="none" class="s-mute" stroke-width="2"/>`;break;
+  case 'highP':g=`<circle cx="28" cy="28" r="14" class="f-surf s-hi" stroke-width="2.5"/><text x="28" y="35" text-anchor="middle" font-size="19" font-weight="800" class="f-hi">H</text><path d="M28 2v8M28 46v8M2 28h8M46 28h8" class="s-hi" stroke-width="2"/>`;break;
+  case 'lowP':g=`<circle cx="28" cy="28" r="14" class="f-surf s-lo" stroke-width="2.5"/><text x="28" y="35" text-anchor="middle" font-size="19" font-weight="800" class="f-lo">L</text><path d="M10 10q-6 18 4 30M46 46q6-18-4-30" fill="none" class="s-lo" stroke-width="2"/>`;break;
+  case 'evaporation':g=`<rect y="38" width="56" height="18" class="f-water"/><path d="M14 34q-4-5 0-10t0-10M28 34q-4-5 0-10t0-10M42 34q-4-5 0-10t0-10" fill="none" class="s-warm" stroke-width="2.5" stroke-linecap="round"/>`;break;
+  case 'downwind':g=`<rect y="40" width="30" height="16" class="f-water"/><rect x="30" y="40" width="26" height="16" class="f-land2"/><path d="M4 22H34" class="s-cold" stroke-width="4"/><path d="M42 22l-9-6v12z" class="f-cold"/><path d="M34 40q8-8 18 0z" class="f-snow s-snow"/>`+[[44,28],[50,33],[40,34]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2" class="f-snow s-snow"/>`).join('');break;
+  }
+  return `<svg width="${w}" height="${w}" viewBox="0 0 56 56" aria-hidden="true">${g}</svg>`;}
+
+/* ---------- LEARN: cross-section ---------- */
+function xsection(){
+  let g=`<rect width="760" height="300" class="f-sky"/>`;
+  g+=`<path d="M0 44L760 34" class="s-mute" stroke-width="2" stroke-dasharray="7 6"/>`+svgT(124,66,'dLid',{size:14,anchor:'start',cls:'maptxt f-mute'});
+  g+=`<path d="M0 206H116L128 218V300H0Z" class="f-land2"/><path d="M624 218L636 204H760V300H624Z" class="f-land2"/>`;
+  g+=`<rect x="116" y="216" width="520" height="84" class="f-water"/>`;
+  g+=`<path d="M118 216q20-6 40 0t40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0 40 0" fill="none" class="s-halo" stroke-width="2" opacity=".5"/>`;
+  /* fetch arrow */
+  g+=`<path d="M140 290H612" class="s-ink" stroke-width="2"/><path d="M132 290l12-6v12zM620 290l-12-6v12z" class="f-ink"/>`+svgT(376,S.lang==='en'?282:266,'dFetch',{size:14,cls:'maptxt f-wink'});
+  g+=`<text x="520" y="250" text-anchor="middle" font-size="17" class="f-wink" style="font-family:var(--mono);font-weight:500">lake 35°F</text>`;
+  /* cold air */
+  [150,184].forEach(y=>g+=`<path d="M10 ${y}H92" class="s-cold windpath" stroke-width="6" stroke-linecap="round"/><path d="M104 ${y}l-14-8v16z" class="f-cold"/>`);
+  g+=svgT(12,96,'dCold',{size:15,anchor:'start',cls:'maptxt f-ink'});
+  g+=`<text x="12" y="${S.lang==='en'?116:130}" font-size="15" class="f-ink" style="font-family:var(--mono);font-weight:500">air 5°F</text>`;
+  /* evaporation */
+  [170,250,330,410,490,560].forEach((x,k)=>g+=`<path class="s-warm rise" style="animation-delay:${(k*.35).toFixed(2)}s" d="M${x} 208q-5-7 0-14t0-14" fill="none" stroke-width="3" stroke-linecap="round"/>`);
+  g+=svgT(250,176,'dEvap',{size:14,cls:'maptxt f-warm',halo:true});
+  /* rising arrows */
+  [[300,190,280,120],[420,188,400,110],[520,186,505,100]].forEach(([a,b,c,d])=>g+=`<path d="M${a} ${b}L${c} ${d}" class="s-mute" stroke-width="2"/><path d="M${c} ${d-2}l-5 10h10z" transform="rotate(${(Math.atan2(c-a,b-d)*180/Math.PI).toFixed(0)} ${c} ${d})" class="f-mute"/>`);
+  /* clouds growing */
+  const cloud=(x,y,s,cls)=>`<g class="${cls}"><circle cx="${x}" cy="${y}" r="${14*s}"/><circle cx="${x+16*s}" cy="${y-8*s}" r="${17*s}"/><circle cx="${x+34*s}" cy="${y}" r="${14*s}"/><rect x="${x}" y="${y}" width="${34*s}" height="${12*s}"/></g>`;
+  g+=cloud(210,112,.7,'f-cloud')+cloud(320,96,1,'f-cloud')+cloud(440,86,1.35,'f-cloud2')+cloud(592,82,1.8,'f-cloud2');
+  g+=svgT(356,70,'dClouds',{size:14,cls:'maptxt f-ink',halo:true});
+  /* snow */
+  let fl='';for(let k=0;k<22;k++){const x=596+((k*37)%130),y=120+((k*53)%70);fl+=`<circle class="flake f-snow s-snow" style="animation-delay:${((k*0.29)%3).toFixed(2)}s" cx="${x}" cy="${y}" r="3" stroke-width="1"/>`;}
+  g+=fl+`<path d="M636 206q30-18 60-6t64-4V210H636Z" class="f-snow s-snow" stroke-width="1.5"/>`;
+  g+=`<path d="M700 204v-16h14v16M698 190l9-8 9 8" class="s-ink" fill="none" stroke-width="2"/>`;
+  g+=svgT(690,236,'dSnow',{size:15,cls:'maptxt f-ink',halo:true});
+  g+=svgT(692,264,'dDown',{size:13,cls:'maptxt f-ink'});
+  g+=svgT(250,238,'dLake',{size:14,cls:'maptxt f-wink'});
+  /* step markers */
+  [[62,212,1],[210,212,2],[420,150,3],[660,112,4]].forEach(([x,y,n])=>g+=`<circle cx="${x}" cy="${y}" r="13" class="f-ink"/><text x="${x}" y="${y+5}" text-anchor="middle" font-size="14" class="f-surf" style="font-family:var(--mono);font-weight:500">${n}</text>`);
+  return `<svg class="xsec" viewBox="0 0 760 300" role="img" aria-label="Cross-section: cold dry air blows over a warmer lake, water evaporates, warm air rises into growing clouds, and heavy snow falls on the downwind shore.">${g}</svg>`;}
+
+/* ---------- SHARED PIECES ---------- */
+function fbHtml(part,fallbackKey){
+  const f=S.fb[part];
+  if(!f){if(!fallbackKey)return `<div class="fb"></div>`;return `<div class="fb"><div>${B(fallbackKey)}</div>${sayK(fallbackKey)}</div>`;}
+  const en=f.parts.map(([k,v])=>U(k,v,'en')).join(' '),l2=f.parts.map(([k,v])=>U(k,v,S.lang)).join(' ');
+  return `<div class="fb ${f.type}"><div><span class="en">${esc(en)}</span>${l2span(l2)}</div>${sayBtn(()=>[en,l2])}</div>`;}
+function supports(taId,list,wordsList,dis){
+  const fr=list.map((f,i)=>`<button type="button" class="frame" id="fr-${taId}-${i}" data-act="ins" data-ta="${taId}" data-txt="${esc(f[0])}" data-line="1"${dis?' disabled':''}>${BA(f)}</button>`).join('');
+  const wd=(wordsList||[]).map((w,i)=>`<button type="button" class="word" id="wd-${taId}-${i}" data-act="ins" data-ta="${taId}" data-txt="${esc(w[0])}"${dis?' disabled':''}><span class="inl">${BA(w)}</span></button>`).join('');
+  return `<details class="sup" id="det-${taId}"${openDet.has('det-'+taId)?' open':''}><summary>${BI('frames')}</summary>
+  <p class="note" style="margin:4px 0">${BI('framesTip')}</p><div class="frames">${fr}</div>
+  ${wd?`<p class="eyebrow" style="margin-top:10px">${BI('wordBank')}</p><div class="words">${wd}</div>`:''}</details>`;}
+function vocabBlock(list){
+  if(!S.pics)return '';
+  const cards=list.map(k=>{const g=GL[k];const en=g.en,l=g[S.lang]||g.en;
+    return `<div class="vcard"><div class="pic">${vIcon(k)}</div><div style="flex:1;min-width:0"><b>${esc(en[0])}</b>${S.lang!=='en'?l2span(l[0]):''}<p>${esc(en[1])}</p>${S.lang!=='en'?l2span(l[1]):''}</div>${sayBtn(()=>[en[0]+'. '+en[1],l[0]+'. '+l[1]])}</div>`;}).join('');
+  return `<div class="panel"><p class="eyebrow">${BI('picsHead')}</p><div class="vocab">${cards}</div></div>`;}
+
+/* ---------- HEADER + TABS ---------- */
+const TABS=[['learn','tabL'],['forecast','tabF'],['turnin','tabT']];
+function header(){
+  const opts=LANGS.map(l=>`<option value="${l}"${S.lang===l?' selected':''}>${esc(LANG_NAMES[l])}</option>`).join('');
+  const done=S.sc.filter(s=>s.ok).length;
+  return `<header class="top"><div class="brand"><svg width="42" height="42" viewBox="0 0 56 56" aria-hidden="true"><rect width="56" height="56" rx="12" class="f-sky"/>${vIcon('lakeEffect').replace(/<svg[^>]*>|<\/svg>/g,'')}</svg>
+  <div><h1>${B('title')}</h1><p>${BI('sub')}</p></div></div>
+  <div class="tools"><label for="lang">${BI('lang')}</label><select id="lang" data-act="lang">${opts}</select>
+  <button type="button" class="btn" id="picsBtn" data-act="pics" aria-pressed="${S.pics}">${BI('pics')}</button>
+  <button type="button" class="btn" id="themeBtn" data-act="theme">${BI('theme')}</button></div></header>
+  <nav class="tabs" role="tablist" aria-label="Lab parts">${TABS.map(([id,k])=>`<button type="button" role="tab" class="tab" id="tab-${id}" data-act="tab" data-arg="${id}" aria-selected="${S.tab===id}"><span>${B(k)}</span>${id==='forecast'?`<span class="chip">${done}/8</span>`:''}</button>`).join('')}</nav>`;}
+
+/* ---------- LEARN ---------- */
+function renderLearn(){
+  const steps=[1,2,3,4].map(n=>`<div class="step"><div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><span class="n" aria-hidden="true">${n}</span>${sayBtn(()=>[U('st'+n+'h',null,'en')+'. '+U('st'+n,null,'en'),U('st'+n+'h')+'. '+U('st'+n)])}</div><h3>${B('st'+n+'h')}</h3><p>${B('st'+n)}</p></div>`).join('');
+  const icons=['gap','fetch','barometer','cross'];
+  const conds=[1,2,3,4].map(n=>`<div class="cond"><div class="ico">${vIcon(icons[n-1],60)}</div><div class="txt"><h3>${B('c'+n+'h')}</h3>${sayBtn(()=>[U('c'+n+'h',null,'en')+'. '+U('c'+n,null,'en'),U('c'+n+'h')+'. '+U('c'+n)])}</div><p>${B('c'+n)}</p></div>`).join('');
+  return `<section class="part" aria-labelledby="h-learn">
+  <div class="panel hero"><div><h2 id="h-learn">${B('introHead')}</h2>${txt('intro',null,'lead')}
+    <button type="button" class="btn primary" id="startBtn" data-act="start">${BI('start')} →</button></div>
+    <figure style="margin:0">${xsection()}<figcaption class="cap">${BI('diagCap')}</figcaption></figure></div>
+  <div class="panel"><h2 style="font-size:1.25rem;margin-bottom:10px">${B('howHead')}</h2><div class="steps4">${steps}</div></div>
+  <div class="panel"><h2 style="font-size:1.25rem;margin-bottom:10px">${B('checkHead')}</h2><div class="conds">${conds}</div>
+    <div style="margin-top:12px"><button type="button" class="btn primary" id="startBtn2" data-act="start">${BI('start')} →</button></div></div>
+  ${vocabBlock(VOCAB_LEARN)}</section>`;}
+
+/* ---------- FORECAST ---------- */
+function windText(sc,l){let t=U(sc.wk,null,l);if(sc.mph==='light')t+=', '+U('wLight',null,l).toLowerCase();else if(sc.mph)t+=', '+sc.mph+' mph';return t;}
+function renderForecast(){
+  const i=S.cur,sc=SC[i],st=S.sc[i],lock=st.ok;
+  const dots=SC.map((c,j)=>{const s=S.sc[j];const cls=s.ok?'ok':(s.checks?'no':'');const mk=s.ok?'✓':(s.checks?'✗':'');
+    const lab=`Scenario ${j+1}: ${c.city}${s.ok?', correct':s.checks?', not yet correct':''}`;
+    return `<button type="button" class="dot ${cls}" id="dot-${j}" data-act="go" data-arg="${j}" aria-label="${esc(lab)}"${j===i?' aria-current="step"':''}>${j+1}${mk?`<span aria-hidden="true">${mk}</span>`:''}</button>`;}).join('');
+  const gap=sc.lake-sc.air;
+  const gapK=gap>=0?'gapWarm':'gapCold';
+  const windSub=sc.mph==='light'?B('wLight'):sc.mph?`<span class="en num">${sc.mph} mph</span>`:B('wNoSpeed');
+  const tiles=`<div class="tiles">
+    <div class="tile t-temp"><span class="tl">${BI('lakeT')}</span>${thermo(sc.lake,sc.air)}
+      <div class="tvals"><div><b>${BI('lakeS')}</b><span class="num">${esc(tempStr(sc.lake))}</span></div><div><b>${BI('airS')}</b><span class="num">${esc(tempStr(sc.air))}</span></div></div>
+      <div class="gap">${B(gapK,{n:Math.abs(gap)})}</div><div class="note" style="text-align:center;font-size:13px">${B('bigGap')}</div></div>
+    <div class="tile"><span class="tl">${BI('windT')}</span>${compass(sc)}<div class="val">${B(sc.wk)}</div><div class="note">${windSub}</div></div>
+    <div class="tile"><span class="tl">${BI('baroT')}</span>${baro(sc.baro)}<div class="val">${B(sc.baro)}</div></div></div>`;
+  const yn=['yes','no'].map(a=>`<button type="button" class="btn" id="ans-${a}" data-act="ans" data-arg="${a}" aria-pressed="${st.ans===a}"${lock?' disabled':''}>${BI(a)}</button>`).join('');
+  const amt=sc.amt?`<div class="q" style="margin-top:10px"><div class="txt"><p style="font-weight:700">${B('qAmt')}</p>${sayK('qAmt')}</div><div class="amt" role="group">${['aLight','aMod','aHeavy'].map(a=>`<button type="button" class="btn" id="amt-${a}" data-act="amt" data-arg="${a}" aria-pressed="${st.amt===a}"${lock?' disabled':''}>${B(a)}</button>`).join('')}</div></div>`:'';
+  const last=i===7;
+  const side=`<div class="side">
+    <div class="panel"><p class="eyebrow">${BI('scOf',{n:i+1})}</p><div class="cityhead"><h2 id="h-city">${esc(sc.city)}</h2></div>
+      <div class="pnote"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;margin-top:2px"><circle cx="12" cy="12" r="10" fill="none" class="s-mute" stroke-width="2"/><path d="M12 11v6M12 7v.5" class="s-mute" stroke-width="2.4" stroke-linecap="round"/></svg><div style="flex:1">${B('note'+i)}</div>${sayK('note'+i)}</div>
+      <div style="margin-top:10px">${tiles}</div></div>
+    <div class="panel q"><div class="txt"><h3>${B('qLikely')}</h3>${sayK('qLikely')}</div><div class="yn" role="group" aria-labelledby="h-city">${yn}</div>${amt}
+      <div class="ev" style="margin-top:12px"><label for="ev-${i}" class="txt" style="font-weight:700"><span style="flex:1">${B('reason')}</span></label>
+      <textarea id="ev-${i}" data-ev="${i}" spellcheck="true"${lock?' disabled':''}>${esc(st.ev)}</textarea>
+      ${supports('ev-'+i,FRAMES,WORDS,lock)}</div>
+      ${lock?'':`<button type="button" class="hintbtn" id="hintBtn" data-act="hint" aria-expanded="${hintOpen}">${BI(hintOpen?'hideHint':'hintBtn')}</button>${hintOpen?`<div class="hint">${txt('hint'+i)}</div>`:''}`}</div></div>`;
+  const stage=`<div class="mapbox">${mapSVG(i)}
+    <div class="legend"><span><svg width="30" height="10" aria-hidden="true"><path d="M2 5H20" class="s-${sc.air<sc.lake?'cold':'warm'}" stroke-width="5"/><path d="M28 5l-9-5v10z" class="f-${sc.air<sc.lake?'cold':'warm'}"/></svg>${BI('legWind')}</span>
+    <span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" class="f-surf s-hi" stroke-width="2"/><text x="9" y="13" text-anchor="middle" font-size="11" font-weight="800" class="f-hi">H</text></svg>${BI('legH')}</span>
+    <span><svg width="18" height="18" aria-hidden="true"><circle cx="9" cy="9" r="8" class="f-surf s-lo" stroke-width="2"/><text x="9" y="13" text-anchor="middle" font-size="11" font-weight="800" class="f-lo">L</text></svg>${BI('legL')}</span>
+    ${sc.gary?`<span><svg width="18" height="18" aria-hidden="true"><rect x="2" y="9" width="14" height="8" class="f-mute"/><rect x="4" y="2" width="3" height="8" class="f-mute"/><rect x="11" y="0" width="3" height="10" class="f-mute"/></svg>${BI('legInd')}</span>`:''}</div>
+    <p class="cap" style="padding:0 4px 4px">${BI('mapCap')}</p></div>`;
+  const nextBtn=`<button type="button" class="btn${st.ok?' primary':''}" id="nextBtn" data-act="${last?'toTurnIn':'next'}">${BI(last?'toTurnIn':'next')} →</button>`;
+  return `<section class="part" aria-label="Forecast">
+    <div class="dots" role="navigation" aria-label="Scenarios"><span class="eyebrow" style="margin:0 6px 0 0">${BI('dotsLab')}</span>${dots}</div>
+    <div class="fgrid"><div>${stage}</div>${side}</div>
+    <div class="actions">${fbHtml('s'+i,'ready')}<div class="act-btns"><span class="count">${esc(U('checks',{n:st.checks},'en'))}</span>
+      <button type="button" class="btn primary" id="checkBtn" data-act="check"${lock?' disabled':''}>${BI('check')}</button>
+      <button type="button" class="btn" id="prevBtn" data-act="prev"${i===0?' disabled':''}>← ${BI('prev')}</button>${nextBtn}</div></div>
+    ${vocabBlock(VOCAB_FC)}</section>`;}
+function checkSc(){
+  const i=S.cur,sc=SC[i],st=S.sc[i],fk='s'+i;
+  if(st.ok)return;
+  const ta=document.getElementById('ev-'+i);if(ta)st.ev=ta.value;
+  if(!st.ans){setFb(fk,'bad',[['notYet'],['needAns']]);return;}
+  if(sc.amt&&st.ans==='yes'&&!st.amt){setFb(fk,'bad',[['notYet'],['needAmt']]);return;}
+  if(words(st.ev)<3){setFb(fk,'bad',[['notYet'],['needEv']]);return;}
+  st.checks++;
+  const yn=st.ans===sc.ans,amtOk=!sc.amt||st.amt===sc.amt;const ok=yn&&amtOk;
+  if(st.first==null)st.first=ok;
+  if(ok){st.ok=true;hintOpen=false;const all=S.sc.every(s=>s.ok);setFb(fk,'good',[['correct'],['why'+i],[all?'allDone':'nextUp']]);}
+  else if(yn){setFb(fk,'bad',[['notYet'],['amt'+i]]);}
+  else setFb(fk,'bad',[['notYet'],['cause'+i],['tryAgain']]);}
+
+/* ---------- TURN IN ---------- */
+function scores(){return{ok:S.sc.filter(s=>s.ok).length,first:S.sc.filter(s=>s.first===true).length,checks:S.sc.reduce((n,s)=>n+s.checks,0)};}
+function recordText(){
+  const s=scores(),L=[];
+  L.push('LAKE EFFECT SNOW FORECASTER - RESULTS');L.push('Name: '+(S.name.trim()||'(not entered)'));L.push('Class hour: '+(S.hour.trim()||'-'));
+  L.push('Date: '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}));L.push('');
+  L.push(`SCORE: ${s.ok}/8 correct | ${s.first}/8 correct on first try | ${s.checks} checks in all`);L.push('');
+  SC.forEach((c,i)=>{const st=S.sc[i];
+    const ans=st.ans?(st.ans==='yes'?'Yes':'No')+(c.amt&&st.ans==='yes'&&st.amt?' ('+U(st.amt,null,'en').toLowerCase()+' snow)':''):'(no answer)';
+    L.push(`SCENARIO ${i+1}: ${c.city}`);
+    L.push(`  Answer: ${ans} - ${st.ok?'OK':'X'} | checks: ${st.checks} | first try: ${st.first==null?'-':st.first?'OK':'X'}`);
+    L.push('  Reasoning: '+(st.ev.trim()||'(blank)'));});
+  L.push('');L.push('BONUS - MY OWN SCENARIO');L.push('  '+(S.bonus.trim()||'(blank)'));
+  return L.join('\n');}
+function renderTurnIn(){
+  const s=scores();
+  const sum=(k,v)=>`<div class="sum"><b>${v}</b><div>${B(k)}</div></div>`;
+  return `<section class="part" aria-labelledby="h-bonus">
+  <div class="panel bonus"><div class="txt"><h2 id="h-bonus" style="font-size:1.25rem;flex:1">${B('bonusHead')}</h2></div>
+    <div style="margin-top:6px">${txt('bonusSteps')}</div>
+    <label for="bonus" class="note" style="display:block;margin:10px 0 4px">${BI('answer')}</label>
+    <textarea id="bonus" data-f="bonus" spellcheck="true">${esc(S.bonus)}</textarea>
+    ${supports('bonus',[BONUS_FRAME],WORDS)}</div>
+  <div class="panel side" style="gap:12px"><h2 id="h-p4" style="font-size:1.25rem">${B('p4Head')}</h2>${txt('p4Steps')}
+    <div class="form"><label for="stuName">${BI('name')} *<input type="text" id="stuName" data-f="name" autocomplete="name" value="${esc(S.name)}"></label>
+    <label for="stuHour">${BI('hour')}<input type="text" id="stuHour" data-f="hour" value="${esc(S.hour)}"></label></div>
+    <div class="sumgrid">${sum('sumOk',s.ok+'/8')}${sum('sumFirst',s.first+'/8')}${sum('sumChecks',s.checks)}${sum('sumBonus',S.bonus.trim()?'✓':'–')}</div>
+    <div class="act-btns"><button type="button" class="btn primary" id="pdfBtn" data-act="pdf">${BI('pdf')}</button><button type="button" class="btn" id="copyBtn" data-act="copy">${BI('copy')}</button></div>
+    <div id="tiMsg" aria-live="polite">${S.fb.ti?fbHtml('ti'):''}</div>
+    <label for="rec" class="eyebrow">${BI('preview')}</label>
+    <textarea id="rec" class="rec" readonly>${esc(recordText())}</textarea></div></section>`;}
+let dlP=null;
+async function makePdf(){
+  if(!S.name.trim()){setFb('ti','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  if(!window.jspdf){setFb('ti','bad',[['pdfFail']]);render();return;}
+  const txtR=recordText();const warn=/[^\x00-\xFF]/.test(S.sc.map(s=>s.ev).join('')+S.bonus+S.name);
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
+  let y=56;doc.setFontSize(10.5);
+  txtR.split('\n').forEach(line=>{const bold=/^(LAKE|SCORE|SCENARIO|BONUS)/.test(line);doc.setFont('helvetica',bold?'bold':'normal');
+    doc.splitTextToSize(line.replace(/−/g,'-').replace(/[^\x00-\xFF]/g,'?')||' ',520).forEach(l=>{if(y>740){doc.addPage();y=56;}doc.text(l,46,y);y+=14;});});
+  const fname='lake-effect-'+(S.name.trim().replace(/[^a-z0-9]+/gi,'-').toLowerCase()||'student')+'.pdf';
+  const blob=doc.output('blob');let dl=null;try{if(dlP)dl=await dlP;}catch(e){}
+  const extra=warn?[['pdfArabic']]:[];
+  if(dl){try{await dl.save({filename:fname,data:blob});setFb('ti','good',[['pdfSaved'],...extra]);}catch(err){if(!(err&&err.code==='declined'))setFb('ti','bad',[['pdfFail']]);}}
+  else{try{doc.save(fname);setFb('ti','good',[['pdfSaved'],...extra]);}catch(e){setFb('ti','bad',[['pdfFail']]);}}
+  save();render();}
+function copyRec(){
+  if(!S.name.trim()){setFb('ti','bad',[['needName']]);render();document.getElementById('stuName').focus();return;}
+  const t=recordText();const fail=()=>{setFb('ti','bad',[['copyFail']]);render();const r=document.getElementById('rec');r.focus();r.select();};
+  try{navigator.clipboard.writeText(t).then(()=>{setFb('ti','good',[['copied']]);render();},fail);}catch(e){fail();}}
+
+/* ---------- RENDER ---------- */
+const app=document.getElementById('app');
+function render(){
+  const fid=document.activeElement&&document.activeElement.id;
+  SAY.clear();sid=0;
+  const part={learn:renderLearn,forecast:renderForecast,turnin:renderTurnIn}[S.tab]();
+  app.innerHTML=header()+`<main>${part}</main><p class="foot">${BI('credit')}</p>`;
+  if(fid){const el=document.getElementById(fid);if(el&&!el.disabled)el.focus({preventScroll:true});}
+}
+function goSc(j){const ta=document.getElementById('ev-'+S.cur);if(ta)S.sc[S.cur].ev=ta.value;S.cur=j;hintOpen=false;S.tab='forecast';}
+
+/* ---------- EVENTS ---------- */
+app.addEventListener('click',e=>{
+  const sb=e.target.closest('[data-say]');if(sb){const f=SAY.get(sb.dataset.say);if(f){const[a,b]=f();speak(a,b);}return;}
+  const t=e.target.closest('[data-act]');if(!t||t.tagName==='SELECT'||t.disabled)return;
+  const a=t.dataset.act,arg=t.dataset.arg;
+  switch(a){
+    case 'tab':if(S.tab==='forecast')goSc(S.cur);S.tab=arg;window.scrollTo(0,0);break;
+    case 'start':S.tab='forecast';window.scrollTo(0,0);break;
+    case 'pics':S.pics=!S.pics;break;
+    case 'theme':{const r=document.documentElement;const cur=r.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');const nx=cur==='dark'?'light':'dark';r.dataset.theme=nx;try{localStorage.setItem(KEY+'-theme',nx);}catch(err){}return;}
+    case 'go':goSc(+arg);break;
+    case 'prev':if(S.cur>0)goSc(S.cur-1);window.scrollTo(0,0);break;
+    case 'next':if(S.cur<7)goSc(S.cur+1);window.scrollTo(0,0);break;
+    case 'toTurnIn':goSc(S.cur);S.tab='turnin';window.scrollTo(0,0);break;
+    case 'ans':{const st=S.sc[S.cur];st.ans=arg;if(arg==='no')st.amt=null;break;}
+    case 'amt':S.sc[S.cur].amt=arg;break;
+    case 'hint':hintOpen=!hintOpen;break;
+    case 'check':checkSc();break;
+    case 'pdf':makePdf();return;
+    case 'copy':copyRec();return;
+    case 'ins':{const id=t.dataset.ta,ta=document.getElementById(id);if(!ta||ta.disabled)return;let add=t.dataset.txt;const v=ta.value;
+      const pos=ta.selectionStart!=null&&document.activeElement===ta?ta.selectionStart:v.length;
+      const before=v.slice(0,pos),after=v.slice(pos);
+      if(t.dataset.line&&before.trim())add=(/[.!?]\s*$/.test(before)?' ':'. ')+add;else if(before&&!/\s$/.test(before))add=' '+add;
+      ta.value=before+add+after;syncTa(ta);ta.focus();const np=(before+add).length;ta.setSelectionRange(np,np);return;}
+    default:return;}
+  save();render();});
+function syncTa(t){if(t.dataset.ev!=null)S.sc[+t.dataset.ev].ev=t.value;if(t.dataset.f){S[t.dataset.f]=t.value;const r=document.getElementById('rec');if(r)r.value=recordText();}save();}
+app.addEventListener('change',e=>{const t=e.target;if(t.id==='lang'){S.lang=t.value;save();render();}});
+app.addEventListener('input',e=>{const t=e.target;if(t.tagName==='TEXTAREA'||t.tagName==='INPUT')syncTa(t);});
+app.addEventListener('toggle',e=>{const t=e.target;if(t.tagName==='DETAILS'&&t.id){t.open?openDet.add(t.id):openDet.delete(t.id);}},true);
+
+/* ---------- BOOT ---------- */
+load();
+try{const th=localStorage.getItem(KEY+'-theme');if(th)document.documentElement.dataset.theme=th;}catch(e){}
+try{if(window.claude&&typeof window.claude.use==='function')dlP=window.claude.use('downloads');}catch(e){}
+if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}
+render();
+</script>
+
+</body>
+</html>

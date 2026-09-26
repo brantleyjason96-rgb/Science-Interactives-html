@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Mass & Volume Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+Arabic:wght@400;700&display=swap">
+<style>
+:root{
+  --l2c:#7A4A12;
+  --bg:#E9EFEE; --surface:#FFFFFF; --surface-2:#F4F7F7; --ink:#18252A; --muted:#566A70; --line:#C9D5D4;
+  --accent:#C8641A; --accent-ink:#FFFFFF; --accent-soft:#F7E3D2;
+  --water:#3E8FD1; --water-deep:#1D5F9C; --water-hi:#A8D2F2;
+  --glass:rgba(170,205,215,.22); --glass-edge:#7E9EA8;
+  --bench:#3A454A; --metal:#A7B2B7; --metal-d:#5C6A70; --beam:#DCE3E5; --plate:#FFFFFF;
+  --good:#1D7A4B; --good-soft:#DDF1E5; --bad:#B0301F; --bad-soft:#F8E0DB;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", Verdana, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --l2c:#F0B77A;
+    --bg:#0F1618; --surface:#172124; --surface-2:#1D292D; --ink:#E3ECEC; --muted:#9AAEB2; --line:#2C3A3E;
+    --accent:#E98237; --accent-ink:#1A0E05; --accent-soft:#3A2717;
+    --water:#4FA3E8; --water-deep:#8CC5F2; --water-hi:#27557D;
+    --glass:rgba(140,185,200,.12); --glass-edge:#6F929C;
+    --bench:#44525A; --metal:#7F8D93; --metal-d:#98A7AD; --beam:#2D3A3F; --plate:#1D292D;
+    --good:#5CCB8E; --good-soft:#173527; --bad:#F08A76; --bad-soft:#3D1F1A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --l2c:#F0B77A;
+  --bg:#0F1618; --surface:#172124; --surface-2:#1D292D; --ink:#E3ECEC; --muted:#9AAEB2; --line:#2C3A3E;
+  --accent:#E98237; --accent-ink:#1A0E05; --accent-soft:#3A2717;
+  --water:#4FA3E8; --water-deep:#8CC5F2; --water-hi:#27557D;
+  --glass:rgba(140,185,200,.12); --glass-edge:#6F929C;
+  --bench:#44525A; --metal:#7F8D93; --metal-d:#98A7AD; --beam:#2D3A3F; --plate:#1D292D;
+  --good:#5CCB8E; --good-soft:#173527; --bad:#F08A76; --bad-soft:#3D1F1A;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:24px 56px;display:grid;gap:22px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.7rem,3.2vw,2.4rem);font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.25rem;font-weight:800}
+h3{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:var(--body)}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:end;justify-content:space-between}
+header.top .lede{max-width:60ch;color:var(--muted);margin-top:6px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.langpick{display:grid;gap:4px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;background:transparent;padding:7px 12px;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+button{font:600 .92rem/1.2 var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 13px;cursor:pointer;min-height:38px}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.06)}
+button.warn{border-color:var(--bad);color:var(--bad)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+
+/* tray */
+.tray-head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.tray{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.obj{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center;text-align:start;padding:10px;border-radius:10px;background:var(--surface-2);border:2px solid transparent;min-height:72px}
+.obj[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.obj svg{width:52px;height:52px}
+.obj .nm{display:block;font-weight:700}
+.obj .letter{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.chip{display:inline-block;margin-top:3px;font-size:.74rem;font-weight:700;padding:1px 7px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.chip.pan{border-color:var(--accent);color:var(--accent)}
+.chip.cyl{border-color:var(--water);color:var(--water-deep)}
+
+/* stations */
+.stations{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:960px){.stations{grid-template-columns:1fr}}
+.station{display:grid;gap:14px}
+.st-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:.75rem;padding:2px 8px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.stage{background:var(--surface-2);border-radius:10px;padding:8px}
+.stage svg{display:block;width:100%;height:auto;direction:ltr}
+#balSvg{touch-action:none;user-select:none;-webkit-user-select:none}
+.rider{cursor:grab}
+.beam-hit{cursor:pointer}
+.ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.ctl{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.ctl .lbl{font-size:.84rem;font-weight:700}
+.ctl .btnrow button{min-width:44px;padding:6px 10px}
+.ctl .btnrow button[data-r]{font-family:var(--mono)}
+.msg{min-height:1.5em;font-weight:700;font-size:.93rem;padding:8px 12px;border-radius:8px}
+.msg:empty{padding:0;min-height:0}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg.good{background:var(--good-soft);color:var(--good)}
+.msg.info{background:var(--surface-2);color:var(--ink)}
+
+.cyl-wrap{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:420px){.cyl-wrap{grid-template-columns:1fr 1fr;gap:8px}}
+.zoom-box{display:grid;gap:6px}
+.zoom-box .eyewarn{font-size:.82rem;font-weight:700;color:var(--bad);min-height:1.3em}
+.eye{display:grid;gap:4px}
+.eye input{width:100%;accent-color:var(--water)}
+.eye .ticks{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted)}
+
+details.steps{border-top:1px solid var(--line);padding-top:10px}
+details.steps summary{cursor:pointer;font-weight:700}
+details.steps ol{margin:8px 0 0;padding-inline-start:1.3em;display:grid;gap:4px;font-size:.93rem;max-width:68ch}
+
+/* table */
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:start;vertical-align:middle}
+th{font-size:.82rem;color:var(--muted);font-weight:700}
+td.name{font-weight:700;white-space:nowrap}
+td input{width:100%;min-width:84px;font:500 1rem var(--mono);font-variant-numeric:tabular-nums;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--ink)}
+td input.ok{border-color:var(--good);background:var(--good-soft)}
+td input.bad{border-color:var(--bad);background:var(--bad-soft)}
+tr.fb td{border-bottom:1px solid var(--line);padding-top:0;font-size:.86rem;color:var(--bad)}
+tr.fb td:empty{padding:0;border:0}
+tr.has-fb td{border-bottom:0}
+.sum{font-weight:700}
+.qs{display:grid;gap:14px}
+.qs label{font-weight:700;display:block;margin-bottom:4px}
+.qs textarea{width:100%;min-height:70px;font:1rem/1.45 var(--body);padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink);resize:vertical}
+.vocab{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;font-size:.92rem}
+.vocab b{font-family:var(--display)}
+
+.who{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;max-width:560px}
+.who label{display:block;font-weight:700;font-size:.86rem;margin-bottom:3px}
+.who input{width:100%;font:1rem var(--body);padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);color:var(--ink)}
+.turnin{display:grid;gap:12px;border-color:var(--accent)}
+.turnin textarea{width:100%;min-height:220px;font:.85rem/1.45 var(--mono);padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink)}
+
+.l2{display:block;font-size:.86em;font-weight:500;color:var(--l2c);line-height:1.3;margin-top:2px;letter-spacing:0;text-transform:none}
+.l2[lang="ar"]{font-family:"Noto Sans Arabic",Tahoma,sans-serif;font-size:.92em}
+h1 .l2{font-size:.55em;font-weight:600;margin-top:4px}
+h2 .l2{font-size:.75em}
+button .l2{font-size:.8em;font-weight:500;color:inherit;opacity:.85}
+.chip .l2,.letter .l2,.tag .l2,#gNum .l2{display:inline;margin:0}
+.chip .l2::before,.letter .l2::before,.tag .l2::before,#gNum .l2::before{content:" / "}
+#guide .l2{color:inherit;opacity:.85}
+.msg .l2{color:inherit;opacity:.85}
+.say{display:inline-flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;min-height:30px;padding:0;border-radius:99px;color:var(--water-deep);background:var(--surface);vertical-align:middle}
+.say svg{width:16px;height:16px}
+.say.speaking{background:var(--water);color:#fff;border-color:var(--water)}
+.saytext{display:flex;gap:8px;align-items:flex-start}
+.saytext .say{margin-top:-3px}
+.msgrow{display:flex;gap:8px;align-items:center}
+.msgrow .msg{flex:1}
+.msgrow .say[hidden]{display:none}
+.vocab{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))!important;gap:12px!important}
+.vitem{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:start;padding:10px;border-radius:10px;background:var(--surface-2)}
+.vitem svg.pic{width:56px;height:56px}
+.vitem .vt{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.vitem b{font-size:1.02rem}
+.frames{margin-top:8px;display:grid;gap:8px}
+.frames summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--water-deep)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font-weight:500;font-size:.9rem;min-height:32px;padding:5px 10px;border-radius:99px;background:var(--surface-2)}
+.chips.fr button{border-radius:8px;text-align:start;font-family:var(--body)}
+.wb-label{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.guide-on #guideBtn{background:var(--water);color:#fff;border-color:var(--water)}
+#guide{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);box-shadow:0 -6px 20px rgba(0,0,0,.18)}
+#guide .gin{max-width:1240px;margin:0 auto;display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap}
+#guide .gnum{font:500 .8rem var(--mono);opacity:.75;white-space:nowrap}
+#guide .gtext{flex:1 1 320px;font-weight:700;font-size:1.02rem;line-height:1.35}
+#guide button{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,transparent)}
+#guide .say{color:var(--bg)}
+.guide-on .wrap{padding-bottom:150px}
+.g-target{outline:3px dashed var(--accent)!important;outline-offset:4px;border-radius:10px;animation:gpulse 1.4s ease-in-out infinite}
+@keyframes gpulse{50%{outline-color:transparent}}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:30;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;font-weight:700;max-width:90vw}
+/* svg classes */
+.bal-base{fill:var(--bench)} .bal-md{fill:var(--metal-d)} .pan{fill:var(--metal);stroke:var(--metal-d);stroke-width:1.5}
+.beam{fill:var(--beam);stroke:var(--metal-d);stroke-width:1.2}
+.bt{stroke:var(--ink);stroke-width:1}
+.bl{fill:var(--ink);font:500 11px var(--mono)}
+.bl-s{fill:var(--muted);font:600 10px var(--body);letter-spacing:.06em}
+.rider-body{fill:var(--accent);stroke:var(--ink);stroke-width:1}
+.rider-o{fill:var(--accent);fill-opacity:.35;stroke:var(--accent);stroke-width:1.5}
+.rline{stroke:var(--ink);stroke-width:1.6}
+.plate{fill:var(--plate);stroke:var(--metal-d);stroke-width:1.2}
+.needle{stroke:var(--ink);stroke-width:2.6;stroke-linecap:round}
+.zero{stroke:var(--accent);stroke-width:2.4}
+.glass{fill:var(--glass)} .glass-o{fill:none;stroke:var(--glass-edge);stroke-width:2}
+.water{fill:var(--water);fill-opacity:.5}
+.water-top{fill:none;stroke:var(--water-deep);stroke-width:1.6}
+.surf{fill:var(--water-hi);fill-opacity:.7}
+.ct{stroke:var(--ink);stroke-opacity:.8;stroke-width:1}
+.cl{fill:var(--ink);font:500 10px var(--mono)}
+.zl{fill:var(--ink);font:500 17px var(--mono)}
+.zbg{fill:var(--surface)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gSteel" x1="0" x2="1"><stop offset="0" stop-color="#6d787e"/><stop offset=".45" stop-color="#dfe4e6"/><stop offset="1" stop-color="#77828a"/></linearGradient>
+    <linearGradient id="gBrass" x1="0" x2="1"><stop offset="0" stop-color="#94690f"/><stop offset=".45" stop-color="#f3d67f"/><stop offset="1" stop-color="#9d7417"/></linearGradient>
+    <radialGradient id="gMarble" cx=".35" cy=".35" r=".75"><stop offset="0" stop-color="#bff0f5"/><stop offset=".6" stop-color="#3a9fb4"/><stop offset="1" stop-color="#1c6475"/></radialGradient>
+    <linearGradient id="gRock" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#a9a49c"/><stop offset="1" stop-color="#6f6a64"/></linearGradient>
+    <linearGradient id="gRubber" x1="0" x2="1"><stop offset="0" stop-color="#6e2923"/><stop offset=".5" stop-color="#a5473e"/><stop offset="1" stop-color="#6a2621"/></linearGradient>
+    <clipPath id="insetClip"><rect x="0" y="0" width="300" height="110" rx="6"/></clipPath>
+    <clipPath id="zoomClip"><rect x="0" y="0" width="240" height="300" rx="8"/></clipPath>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 data-i18n="title">Mass &amp; Volume Lab</h1>
+      <p class="lede" data-i18n="lede">Practice the triple beam balance and water displacement. Every object and every reading can be redone as many times as you want.</p>
+    </div>
+    <div class="tools">
+      <div class="langpick"><span class="wb-label">Second language</span>
+      <div class="seg" role="group" aria-label="Second language">
+        <button type="button" data-lang="en" aria-pressed="true">English only</button>
+        <button type="button" data-lang="es" lang="es" aria-pressed="false">Español</button>
+        <button type="button" data-lang="fr" lang="fr" aria-pressed="false">Français</button>
+        <button type="button" data-lang="ht" lang="ht" aria-pressed="false">Kreyòl</button>
+        <button type="button" data-lang="ar" lang="ar" aria-pressed="false">العربية</button>
+      </div></div>
+      <button type="button" id="guideBtn" data-i18n="guideBtn">Guided mode</button>
+      <button type="button" id="newSet" class="warn" data-i18n="newSet">New object set</button>
+    </div>
+  </header>
+
+  <section class="panel" aria-labelledby="trayH">
+    <div class="tray-head">
+      <h2 id="trayH" data-i18n="trayTitle">Objects</h2>
+      <p class="muted" data-i18n="trayHint">Tap an object to pick it up. Then place it on the balance or in the cylinder.</p>
+    </div>
+    <div class="tray" id="tray"></div>
+  </section>
+
+  <div class="stations">
+    <!-- BALANCE -->
+    <section class="panel station" aria-labelledby="balH">
+      <div class="st-head">
+        <h2 id="balH" data-i18n="balTitle">Part A · Triple beam balance</h2>
+        <span class="tag" data-i18n="balTag">capacity 610 g · reads to 0.1 g</span>
+      </div>
+      <div class="stage"><svg id="balSvg" viewBox="0 0 800 318" role="img" aria-label="Triple beam balance"></svg></div>
+      <div class="stage"><svg id="insetSvg" viewBox="0 0 420 112" role="img" aria-label="Magnified 1 gram beam and pointer"></svg></div>
+      <div class="btnrow">
+        <button type="button" class="primary" id="toPan" data-i18n="toPan">Put selected object on pan</button>
+        <button type="button" id="offPan" data-i18n="offPan">Take object off pan</button>
+        <button type="button" id="ridersZero" data-i18n="ridersZero">Slide all riders to 0</button>
+      </div>
+      <div class="ctl-grid">
+        <div class="ctl"><span class="lbl" data-i18n="r100">100 g rider</span>
+          <div class="btnrow"><button type="button" data-r="h" data-d="-1" aria-label="100 g rider left">‹</button><button type="button" data-r="h" data-d="1" aria-label="100 g rider right">›</button></div></div>
+        <div class="ctl"><span class="lbl" data-i18n="r10">10 g rider</span>
+          <div class="btnrow"><button type="button" data-r="t" data-d="-1" aria-label="10 g rider left">‹</button><button type="button" data-r="t" data-d="1" aria-label="10 g rider right">›</button></div></div>
+        <div class="ctl"><span class="lbl" data-i18n="r1">1 g rider (slides smoothly)</span>
+          <div class="btnrow"><button type="button" data-r="o" data-d="-10">−1</button><button type="button" data-r="o" data-d="-1">−0.1</button><button type="button" data-r="o" data-d="1">+0.1</button><button type="button" data-r="o" data-d="10">+1</button></div></div>
+        <div class="ctl"><span class="lbl" data-i18n="knob">Zero knob (use with empty pan)</span>
+          <div class="btnrow"><button type="button" id="knobDown" data-i18n="lower">Lower pointer</button><button type="button" id="knobUp" data-i18n="raise">Raise pointer</button></div></div>
+      </div>
+      <div class="msgrow"><p class="msg" id="balMsg" role="status" aria-live="polite"></p><button type="button" class="say" data-say-from="#balMsg" hidden></button></div>
+      <details class="steps">
+        <summary data-i18n="stepsA">Steps for Part A</summary>
+        <ol>
+          <li data-i18n="a1">Slide all three riders to zero. With the pan empty, turn the zero knob until the pointer rests on the orange zero line.</li>
+          <li data-i18n="a2">Place your object on the pan.</li>
+          <li data-i18n="a3">Move the 100 g rider one notch at a time until the pointer drops below zero. Move it back one notch.</li>
+          <li data-i18n="a4">Do the same with the 10 g rider. Then slide the 1 g rider slowly until the pointer sits exactly on zero.</li>
+          <li data-i18n="a5">Add the three rider readings. Record the mass in grams (g).</li>
+        </ol>
+      </details>
+    </section>
+
+    <!-- CYLINDER -->
+    <section class="panel station" aria-labelledby="cylH">
+      <div class="st-head">
+        <h2 id="cylH" data-i18n="cylTitle">Part B · Graduated cylinder</h2>
+        <span class="tag" data-i18n="cylTag">100 mL · 1 mL marks</span>
+      </div>
+      <div class="cyl-wrap">
+        <div class="stage"><svg id="cylSvg" viewBox="0 0 180 520" role="img" aria-label="100 mL graduated cylinder"></svg></div>
+        <div class="zoom-box">
+          <h3 data-i18n="zoomTitle">Close-up of the water line</h3>
+          <div class="stage"><svg id="zoomSvg" viewBox="0 0 240 300" role="img" aria-label="Close-up of meniscus"></svg></div>
+          <p class="eyewarn" id="eyeWarn"></p>
+          <div class="eye">
+            <label for="eyeRange" class="lbl" style="font-weight:700;font-size:.84rem" data-i18n="eyeLbl">Where is your eye?</label>
+            <input type="range" id="eyeRange" min="-2" max="2" step="1" value="0">
+            <div class="ticks"><span data-i18n="eyeBelow">Below</span><span data-i18n="eyeLevel">Eye level</span><span data-i18n="eyeAbove">Above</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ctl-grid">
+        <div class="ctl"><span class="lbl" data-i18n="waterLbl">Water</span>
+          <div class="btnrow">
+            <button type="button" id="pourBig" data-i18n="pourBig">Pour a lot</button>
+            <button type="button" id="pourSmall" data-i18n="pourSmall">Pour a little</button>
+            <button type="button" id="pourOut" data-i18n="pourOut">Pour some out</button>
+            <button type="button" id="emptyCyl" data-i18n="empty">Empty</button>
+          </div></div>
+        <div class="ctl"><span class="lbl" data-i18n="objLbl">Selected object</span>
+          <div class="btnrow">
+            <button type="button" class="primary" id="slideIn" data-i18n="slideIn">Tilt &amp; slide in</button>
+            <button type="button" id="dropIn" data-i18n="dropIn">Drop it in</button>
+            <button type="button" id="outCyl" data-i18n="outCyl">Take object out</button>
+          </div></div>
+      </div>
+      <div class="msgrow"><p class="msg" id="cylMsg" role="status" aria-live="polite"></p><button type="button" class="say" data-say-from="#cylMsg" hidden></button></div>
+      <details class="steps">
+        <summary data-i18n="stepsB">Steps for Part B</summary>
+        <ol>
+          <li data-i18n="b1">Pour in enough water to cover the object. Read the bottom of the meniscus at eye level. Record the Initial Water Volume.</li>
+          <li data-i18n="b2">Tilt the cylinder and slide the object in. Do not drop it.</li>
+          <li data-i18n="b3">Read the new level at the bottom of the meniscus. Record the Final Water Volume.</li>
+          <li data-i18n="b4">Final Water Volume − Initial Water Volume = Volume of the Object.</li>
+        </ol>
+      </details>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="dataH" style="display:grid;gap:14px">
+    <div class="st-head">
+      <h2 id="dataH" data-i18n="dataTitle">Data table</h2>
+      <p class="muted" data-i18n="dataHint">Type what you read. Then check your data.</p>
+    </div>
+    <div class="who">
+      <div><label for="stuName" data-i18n="stuName">Your name</label><input id="stuName" autocomplete="off"></div>
+      <div><label for="stuHour" data-i18n="stuHour">Class hour</label><input id="stuHour" autocomplete="off" inputmode="numeric"></div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th data-i18n="cObj">Object</th><th data-i18n="cMass">Mass (g)</th><th data-i18n="cInit">Initial water volume (mL)</th><th data-i18n="cFinal">Final water volume (mL)</th><th data-i18n="cVol">Volume of object (mL)</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="primary" id="checkBtn" data-i18n="check">Check my data</button>
+      <button type="button" id="clearBtn" data-i18n="clear">Clear table</button>
+      <span class="sum" id="sum" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="panel qs" aria-labelledby="qH">
+    <h2 id="qH" data-i18n="qTitle">Observations &amp; questions</h2>
+    <div><label for="q1" class="saytext"><button type="button" class="say" data-say-from="#q1lbl"></button><span id="q1lbl" data-i18n="q1"></span></label><textarea id="q1"></textarea>
+      <details class="frames"><summary data-i18n="framesBtn">Sentence starters</summary>
+        <div class="chips fr" data-frames="1"></div>
+        <span class="wb-label" data-i18n="wordBank">Word bank</span>
+        <div class="chips" data-wb="1"></div>
+      </details></div>
+    <div><label for="q2" class="saytext"><button type="button" class="say" data-say-from="#q2lbl"></button><span id="q2lbl" data-i18n="q2"></span></label><textarea id="q2"></textarea>
+      <details class="frames"><summary data-i18n="framesBtn">Sentence starters</summary>
+        <div class="chips fr" data-frames="2"></div>
+        <span class="wb-label" data-i18n="wordBank">Word bank</span>
+        <div class="chips" data-wb="2"></div>
+      </details></div>
+    <div><label for="q3" class="saytext"><button type="button" class="say" data-say-from="#q3lbl"></button><span id="q3lbl" data-i18n="q3"></span></label><textarea id="q3"></textarea>
+      <details class="frames"><summary data-i18n="framesBtn">Sentence starters</summary>
+        <div class="chips fr" data-frames="3"></div>
+        <span class="wb-label" data-i18n="wordBank">Word bank</span>
+        <div class="chips" data-wb="3"></div>
+      </details></div>
+  </section>
+
+
+  <section class="panel turnin" aria-labelledby="tH">
+    <h2 id="tH" data-i18n="turnTitle">Turn in your work</h2>
+    <p class="muted" data-i18n="turnHint">When you finish, download your results as a PDF and upload it to the assignment in Google Classroom.</p>
+    <div class="btnrow">
+      <button type="button" class="primary" id="pdfBtn" data-i18n="pdfBtn">Download my results (PDF)</button>
+      <button type="button" id="copyBtn" data-i18n="copyBtn">Copy results as text</button>
+    </div>
+    <div class="msgrow"><p class="msg" id="turnMsg" role="status" aria-live="polite"></p><button type="button" class="say" data-say-from="#turnMsg" hidden></button></div>
+    <textarea id="turnText" readonly hidden aria-label="Results text"></textarea>
+  </section>
+  <section class="panel" aria-labelledby="vH" style="display:grid;gap:10px">
+    <h2 id="vH" data-i18n="vTitle">Key vocabulary</h2>
+    <div class="vocab" id="vocab"></div>
+  </section>
+</div>
+
+<div id="guide" hidden role="region" aria-label="Guided mode">
+  <div class="gin">
+    <span class="gnum" id="gNum"></span>
+    <button type="button" class="say" data-say-from="#gText"></button>
+    <span class="gtext" id="gText" aria-live="polite"></span>
+    <div class="btnrow">
+      <button type="button" id="gBack" data-i18n="gBack">Back</button>
+      <button type="button" id="gSkip" data-i18n="gSkip">Skip</button>
+      <button type="button" id="gExit" data-i18n="gExit">Exit guide</button>
+    </div>
+  </div>
+</div>
+<div id="toast" hidden role="status"></div>
+<script>
+(function(){
+const I18N = {
+en:{
+ stuName:"Your name", stuHour:"Class hour", turnTitle:"Turn in your work", turnHint:"When you finish, download your results as a PDF and upload it to the assignment in Google Classroom.",
+ pdfBtn:"Download my results (PDF)", copyBtn:"Copy results as text", turnDate:"Date", turnSet:"Object set", turnScore:"Correct answers", turnChecks:"Times checked",
+ turnKey:"OK = correct, X = needs another look. Checked by the simulation when this file was made.",
+ m_name:"Type your name first.", m_saved:"Your PDF is downloading. Upload it to Google Classroom.", m_nosave:"This page could not download the file. Copy the text below and paste it into a Google Doc instead.",
+ m_copied:"Copied. Paste it into a Google Doc and turn it in.", m_copyfail:"Select the text below and copy it (Ctrl+C or Cmd+C).", m_nopdf:"The PDF tool did not load. Copy the text below instead.",
+ title:"Mass & Volume Lab",
+ lede:"Practice the triple beam balance and water displacement. Every object and every reading can be redone as many times as you want.",
+ newSet:"New object set", newSetConfirm:"Click again to confirm (clears table)",
+ trayTitle:"Objects", trayHint:"Tap an object to pick it up. Then place it on the balance or in the cylinder.",
+ o_bolt:"Steel bolt", o_rock:"Granite rock", o_marble:"Glass marble", o_brass:"Brass cylinder", o_stopper:"Rubber stopper",
+ l_tray:"On the tray", l_pan:"On the balance", l_cyl:"In the cylinder", selected:"selected",
+ balTitle:"Part A · Triple beam balance", balTag:"capacity 610 g · reads to 0.1 g",
+ toPan:"Put selected object on pan", offPan:"Take object off pan", ridersZero:"Slide all riders to 0",
+ r100:"100 g rider", r10:"10 g rider", r1:"1 g rider (slides smoothly)", knob:"Zero knob (use with empty pan)", lower:"Lower pointer", raise:"Raise pointer",
+ stepsA:"Steps for Part A",
+ a1:"Slide all three riders to zero. With the pan empty, turn the zero knob until the pointer rests on the orange zero line.",
+ a2:"Place your object on the pan.",
+ a3:"Move the 100 g rider one notch at a time until the pointer drops below zero. Move it back one notch.",
+ a4:"Do the same with the 10 g rider. Then slide the 1 g rider slowly until the pointer sits exactly on zero.",
+ a5:"Add the three rider readings. Record the mass in grams (g).",
+ cylTitle:"Part B · Graduated cylinder", cylTag:"100 mL · 1 mL marks", zoomTitle:"Close-up of the water line",
+ eyeLbl:"Where is your eye?", eyeBelow:"Below", eyeLevel:"Eye level", eyeAbove:"Above",
+ eyeWarnAbove:"Your eye is above the water line. The reading looks too high.", eyeWarnBelow:"Your eye is below the water line. The reading looks too low.",
+ waterLbl:"Water", pourBig:"Pour a lot", pourSmall:"Pour a little", pourOut:"Pour some out", empty:"Empty",
+ objLbl:"Selected object", slideIn:"Tilt & slide in", dropIn:"Drop it in", outCyl:"Take object out",
+ stepsB:"Steps for Part B",
+ b1:"Pour in enough water to cover the object. Read the bottom of the meniscus at eye level. Record the Initial Water Volume.",
+ b2:"Tilt the cylinder and slide the object in. Do not drop it.",
+ b3:"Read the new level at the bottom of the meniscus. Record the Final Water Volume.",
+ b4:"Final Water Volume − Initial Water Volume = Volume of the Object.",
+ dataTitle:"Data table", dataHint:"Type what you read. Then check your data.",
+ cObj:"Object", cMass:"Mass (g)", cInit:"Initial water volume (mL)", cFinal:"Final water volume (mL)", cVol:"Volume of object (mL)",
+ check:"Check my data", clear:"Clear table", clearConfirm:"Click again to clear",
+ qTitle:"Observations & questions",
+ q1:"1. Which object had the largest volume? Which had the smallest? How do you know?",
+ q2:"2. Did the object with the largest mass also have the largest volume? Explain your reasoning.",
+ q3:"3. Why do we read the meniscus at eye level instead of from above? (Try the eye slider.)",
+ vTitle:"Key vocabulary", vMass:"Mass", vMassD:"the amount of matter in an object, measured in grams (g).",
+ vVol:"Volume", vVolD:"the amount of space an object takes up, measured in milliliters (mL).",
+ vDisp:"Displacement", vDispD:"the rise in water level caused by an object pushing water out of the way.",
+ vMen:"Meniscus", vMenD:"the curved surface of water in a graduated cylinder; read at the bottom.",
+ m_pick:"Pick an object from the tray first.",
+ m_panBusy:"Take the other object off the pan first.",
+ m_onPan:"Object is on the pan. Start with the 100 g rider.",
+ m_offPan:"The pan is empty.",
+ m_cylBusy:"Take the other object out of the cylinder first.",
+ m_slid:"The object slid in gently. Read the new water level.",
+ m_splash:"Splash! Some water jumped out. Your volume will be too small. Take the object out and slide it in instead.",
+ m_notCovered:"The object is not all the way underwater. Take it out, add more water, and try again.",
+ m_overflow:"The cylinder overflowed. Pour some water out and start again.",
+ m_changed:"You changed the water after the object went in. Take it out, read the starting level again, then slide it in.",
+ m_out:"Object removed. You can read a new starting level.",
+ m_empty:"The cylinder is empty.",
+ h_zero:"Close! The balance was not zeroed before you measured. Zero it with an empty pan.",
+ h_mass:"Check the riders again. Is the pointer exactly on zero?",
+ h_init:"Read the starting level again, at the bottom of the meniscus.",
+ h_final:"Read the final level again, at the bottom of the meniscus.",
+ h_math:"Final − Initial does not equal your volume. Check your subtraction.",
+ h_splash:"Water splashed out on this trial, so the volume came out too small.",
+ h_cover:"The object was not fully underwater, so it did not push away all its volume.",
+ h_trial:"Put this object in the cylinder first.",
+ h_changedT:"The water changed after the object went in. Redo this trial.",
+ h_vol:"Your volume is off. Redo the displacement steps.",
+ sum:"{a} of {b} answers correct.", sumNone:"Type some readings first.", allGood:"All correct. Nice measuring!",
+ balAria:"Triple beam balance"
+},
+es:{
+ stuName:"Tu nombre", stuHour:"Hora de clase", turnTitle:"Entrega tu trabajo", turnHint:"Cuando termines, descarga tus resultados en PDF y súbelos a la tarea en Google Classroom.",
+ pdfBtn:"Descargar mis resultados (PDF)", copyBtn:"Copiar resultados como texto", turnDate:"Fecha", turnSet:"Juego de objetos", turnScore:"Respuestas correctas", turnChecks:"Veces revisado",
+ turnKey:"OK = correcto, X = revisa otra vez. La simulación lo revisó al crear este archivo.",
+ m_name:"Primero escribe tu nombre.", m_saved:"Tu PDF se está descargando. Súbelo a Google Classroom.", m_nosave:"Esta página no pudo descargar el archivo. Copia el texto de abajo y pégalo en un Google Doc.",
+ m_copied:"Copiado. Pégalo en un Google Doc y entrégalo.", m_copyfail:"Selecciona el texto de abajo y cópialo (Ctrl+C o Cmd+C).", m_nopdf:"La herramienta de PDF no cargó. Copia el texto de abajo.",
+ title:"Laboratorio de masa y volumen",
+ lede:"Practica con la balanza de triple brazo y el desplazamiento de agua. Puedes repetir cada objeto y cada medición todas las veces que quieras.",
+ newSet:"Nuevos objetos", newSetConfirm:"Haz clic otra vez (borra la tabla)",
+ trayTitle:"Objetos", trayHint:"Toca un objeto para tomarlo. Luego colócalo en la balanza o en la probeta.",
+ o_bolt:"Perno de acero", o_rock:"Roca de granito", o_marble:"Canica de vidrio", o_brass:"Cilindro de latón", o_stopper:"Tapón de goma",
+ l_tray:"En la bandeja", l_pan:"En la balanza", l_cyl:"En la probeta", selected:"seleccionado",
+ balTitle:"Parte A · Balanza de triple brazo", balTag:"capacidad 610 g · mide a 0.1 g",
+ toPan:"Poner el objeto en el platillo", offPan:"Quitar el objeto del platillo", ridersZero:"Mover todas las pesas a 0",
+ r100:"Pesa de 100 g", r10:"Pesa de 10 g", r1:"Pesa de 1 g (se desliza)", knob:"Perilla de cero (con el platillo vacío)", lower:"Bajar indicador", raise:"Subir indicador",
+ stepsA:"Pasos de la Parte A",
+ a1:"Mueve las tres pesas a cero. Con el platillo vacío, gira la perilla hasta que el indicador quede en la línea naranja del cero.",
+ a2:"Coloca tu objeto en el platillo.",
+ a3:"Mueve la pesa de 100 g una muesca a la vez hasta que el indicador baje del cero. Regrésala una muesca.",
+ a4:"Haz lo mismo con la pesa de 10 g. Luego desliza despacio la pesa de 1 g hasta que el indicador quede justo en cero.",
+ a5:"Suma las tres pesas. Anota la masa en gramos (g).",
+ cylTitle:"Parte B · Probeta graduada", cylTag:"100 mL · marcas de 1 mL", zoomTitle:"Vista de cerca del nivel del agua",
+ eyeLbl:"¿Dónde está tu ojo?", eyeBelow:"Abajo", eyeLevel:"A nivel", eyeAbove:"Arriba",
+ eyeWarnAbove:"Tu ojo está arriba del nivel del agua. La lectura se ve muy alta.", eyeWarnBelow:"Tu ojo está abajo del nivel del agua. La lectura se ve muy baja.",
+ waterLbl:"Agua", pourBig:"Echar mucha", pourSmall:"Echar un poco", pourOut:"Sacar un poco", empty:"Vaciar",
+ objLbl:"Objeto seleccionado", slideIn:"Inclinar y deslizar", dropIn:"Dejarlo caer", outCyl:"Sacar el objeto",
+ stepsB:"Pasos de la Parte B",
+ b1:"Echa suficiente agua para cubrir el objeto. Lee la parte de abajo del menisco a la altura de los ojos. Anota el Volumen Inicial.",
+ b2:"Inclina la probeta y desliza el objeto. No lo dejes caer.",
+ b3:"Lee el nuevo nivel en la parte de abajo del menisco. Anota el Volumen Final.",
+ b4:"Volumen Final − Volumen Inicial = Volumen del objeto.",
+ dataTitle:"Tabla de datos", dataHint:"Escribe lo que leíste. Luego revisa tus datos.",
+ cObj:"Objeto", cMass:"Masa (g)", cInit:"Volumen inicial de agua (mL)", cFinal:"Volumen final de agua (mL)", cVol:"Volumen del objeto (mL)",
+ check:"Revisar mis datos", clear:"Borrar tabla", clearConfirm:"Haz clic otra vez para borrar",
+ qTitle:"Observaciones y preguntas",
+ q1:"1. ¿Qué objeto tuvo el volumen más grande? ¿Cuál tuvo el más pequeño? ¿Cómo lo sabes?",
+ q2:"2. ¿El objeto con más masa también tuvo el volumen más grande? Explica tu razonamiento.",
+ q3:"3. ¿Por qué leemos el menisco a la altura de los ojos y no desde arriba? (Prueba el control del ojo.)",
+ vTitle:"Vocabulario clave", vMass:"Masa", vMassD:"la cantidad de materia en un objeto, medida en gramos (g).",
+ vVol:"Volumen", vVolD:"el espacio que ocupa un objeto, medido en mililitros (mL).",
+ vDisp:"Desplazamiento", vDispD:"la subida del nivel del agua cuando un objeto empuja el agua.",
+ vMen:"Menisco", vMenD:"la superficie curva del agua en una probeta; se lee en la parte de abajo.",
+ m_pick:"Primero elige un objeto de la bandeja.",
+ m_panBusy:"Primero quita el otro objeto del platillo.",
+ m_onPan:"El objeto está en el platillo. Empieza con la pesa de 100 g.",
+ m_offPan:"El platillo está vacío.",
+ m_cylBusy:"Primero saca el otro objeto de la probeta.",
+ m_slid:"El objeto entró con cuidado. Lee el nuevo nivel del agua.",
+ m_splash:"¡Salpicó! Se salió un poco de agua. Tu volumen saldrá muy pequeño. Saca el objeto y deslízalo.",
+ m_notCovered:"El objeto no está completamente bajo el agua. Sácalo, echa más agua y vuelve a intentar.",
+ m_overflow:"La probeta se desbordó. Saca un poco de agua y empieza otra vez.",
+ m_changed:"Cambiaste el agua después de meter el objeto. Sácalo, lee el nivel inicial otra vez y deslízalo.",
+ m_out:"Objeto fuera. Puedes leer un nuevo nivel inicial.",
+ m_empty:"La probeta está vacía.",
+ h_zero:"¡Casi! La balanza no estaba en cero antes de medir. Ajústala con el platillo vacío.",
+ h_mass:"Revisa las pesas otra vez. ¿El indicador está justo en cero?",
+ h_init:"Lee otra vez el nivel inicial, en la parte de abajo del menisco.",
+ h_final:"Lee otra vez el nivel final, en la parte de abajo del menisco.",
+ h_math:"Final − Inicial no es igual a tu volumen. Revisa tu resta.",
+ h_splash:"El agua salpicó en esta prueba, por eso el volumen salió muy pequeño.",
+ h_cover:"El objeto no estaba completamente bajo el agua, así que no desplazó todo su volumen.",
+ h_trial:"Primero mete este objeto en la probeta.",
+ h_changedT:"El agua cambió después de meter el objeto. Repite esta prueba.",
+ h_vol:"Tu volumen no es correcto. Repite los pasos de desplazamiento.",
+ sum:"{a} de {b} respuestas correctas.", sumNone:"Primero escribe algunas lecturas.", allGood:"¡Todo correcto! Muy buenas mediciones.",
+ balAria:"Balanza de triple brazo"
+}};
+
+const OBJ_DEF = [
+ {id:'A', key:'bolt',    vmin:4,   vmax:8,   dmin:7.8, dmax:7.9, top:30},
+ {id:'B', key:'rock',    vmin:12,  vmax:20,  dmin:2.6, dmax:2.8, top:26},
+ {id:'C', key:'marble',  vmin:3.5, vmax:5.5, dmin:2.5, dmax:2.6, top:10},
+ {id:'D', key:'brass',   vmin:8,   vmax:13,  dmin:8.4, dmax:8.7, top:24},
+ {id:'E', key:'stopper', vmin:6,   vmax:10,  dmin:1.3, dmax:1.5, top:16},
+];
+
+const SHAPES = {
+ bolt:{w:26,h:100,svg(){let s='<rect x="-6" y="-86" width="12" height="86" fill="url(#gSteel)" stroke="#4d565b"/>';
+   for(let y=-80;y<=-4;y+=5) s+=`<line x1="-6" y1="${y+2}" x2="6" y2="${y}" stroke="#4d565b" stroke-width="1"/>`;
+   return s+'<rect x="-13" y="-100" width="26" height="15" rx="2" fill="url(#gSteel)" stroke="#4d565b"/>';}},
+ rock:{w:40,h:100,svg(){return '<path d="M-15,0 L-20,-26 L-14,-62 L-5,-100 L10,-93 L20,-58 L17,-20 L9,0 Z" fill="url(#gRock)" stroke="#4f4b46" stroke-linejoin="round"/>'+
+   '<circle cx="-6" cy="-30" r="2.5" fill="#3b3833"/><circle cx="6" cy="-55" r="3" fill="#d9b9a8"/><circle cx="-9" cy="-70" r="2" fill="#3b3833"/><circle cx="8" cy="-18" r="2.2" fill="#efe6dc"/><circle cx="2" cy="-82" r="2" fill="#d9b9a8"/><circle cx="-2" cy="-44" r="1.8" fill="#efe6dc"/>';}},
+ marble:{w:40,h:40,svg(){return '<circle cx="0" cy="-20" r="19.5" fill="url(#gMarble)" stroke="#1d5d6e"/><path d="M-13,-25 C-4,-35 5,-9 14,-18" stroke="#f0a640" stroke-width="3.5" fill="none" opacity=".9"/><ellipse cx="-7" cy="-29" rx="5" ry="3" fill="#fff" opacity=".75"/>';}},
+ brass:{w:40,h:100,svg(){return '<rect x="-20" y="-80" width="40" height="80" rx="3" fill="url(#gBrass)" stroke="#6f5210"/><rect x="-6" y="-91" width="12" height="12" fill="url(#gBrass)" stroke="#6f5210"/><ellipse cx="0" cy="-94" rx="11" ry="6" fill="url(#gBrass)" stroke="#6f5210"/>';}},
+ stopper:{w:44,h:64,svg(){return '<path d="M-16,0 L16,0 L22,-60 L-22,-60 Z" fill="url(#gRubber)" stroke="#4e1c18"/><ellipse cx="0" cy="-60" rx="22" ry="4" fill="#b0544a" stroke="#4e1c18"/>';}},
+};
+
+const $ = s => document.querySelector(s);
+const rnd = (a,b) => a + Math.random()*(b-a);
+const step = (x,s) => Math.round(x/s)*s;
+const r1 = x => Math.round(x*10)/10;
+const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let lang = 'en';
+const t = k => (I18N.en[k] ?? k);
+const L2 = k => (lang!=='en' && I18N[lang] && I18N[lang][k]) ? I18N[lang][k] : null;
+function setBiRaw(el, en, l2){
+  el.textContent = '';
+  if(!en){ return; }
+  const a = document.createElement('span'); a.className='en'; a.textContent = en; el.appendChild(a);
+  if(l2 && l2!==en){ const b = document.createElement('span'); b.className='l2'; b.lang = lang; if(lang==='ar') b.dir='rtl'; b.textContent = l2; el.appendChild(b); }
+}
+function setBi(el, key, f){ f = f || (x=>x); if(!key){ el.textContent=''; return; } const l = L2(key); setBiRaw(el, f(t(key)), l ? f(l) : null); }
+const esc = x => String(x).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function biHTML(key, f){ f = f || (x=>x); const l = L2(key); return `<span class="en">${esc(f(t(key)))}</span>` + (l && l!==t(key) ? `<span class="l2" lang="${lang}"${lang==='ar'?' dir="rtl"':''}>${esc(f(l))}</span>` : ''); }
+
+let S;
+function newState(keepLang){
+  const objs = OBJ_DEF.map(d=>{
+    const vol = r1(step(rnd(d.vmin,d.vmax),0.5));
+    const mass = r1(vol*rnd(d.dmin,d.dmax));
+    return {id:d.id, key:d.key, top:d.top, vol, mass};
+  });
+  let off = 0; while(Math.abs(off) < 0.4) off = r1(rnd(-1.6,1.6));
+  return {objs, sel:'A', pan:null, cyl:null, water:r1(rnd(38,52)), rh:0, rt:0, ro:0, offset:off, eye:0,
+          trials:{}, panOff:{}, table:{}, q:{}};
+}
+function load(){
+  try{ const raw = localStorage.getItem('mvlab-v1'); if(raw){ const d = JSON.parse(raw); if(d && d.S && d.S.objs){ S = d.S; lang = ['en','es','fr','ht','ar'].includes(d.lang)?d.lang:'en'; return; } } }catch(e){}
+  S = newState();
+}
+function save(){ try{ localStorage.setItem('mvlab-v1', JSON.stringify({S, lang})); }catch(e){} }
+const obj = id => S.objs.find(o=>o.id===id);
+
+/* ---------- geometry ---------- */
+const X0 = 260, LEN = 400;
+const BEAMS = [
+  {k:'h', range:500, n:5,   y:110, h:16},
+  {k:'t', range:100, n:10,  y:160, h:16},
+  {k:'o', range:10,  n:100, y:214, h:22},
+];
+const riderVal = k => k==='h'? S.rh*100 : k==='t'? S.rt*10 : S.ro/10;
+const riderIdx = k => k==='h'? S.rh : k==='t'? S.rt : S.ro;
+function setRider(k, idx){
+  const b = BEAMS.find(b=>b.k===k); idx = clamp(Math.round(idx),0,b.n);
+  if(k==='h') S.rh=idx; else if(k==='t') S.rt=idx; else S.ro=idx;
+  renderRiders(); save();
+}
+
+function shapeMarkup(key, s){
+  return `<g transform="scale(${s})">${SHAPES[key].svg()}</g>`;
+}
+const pxScale = o => (o.top*4)/SHAPES[o.key].h;
+
+/* ---------- build balance ---------- */
+function buildBalance(){
+  let s = '';
+  s += '<rect class="bal-base" x="40" y="280" width="720" height="26" rx="8"/>';
+  s += '<rect class="bal-md" x="143" y="204" width="14" height="77"/>';
+  s += '<rect class="bal-md" x="212" y="92" width="32" height="190" rx="5"/>';
+  s += '<rect class="bal-md" x="668" y="100" width="12" height="146" rx="3"/>';
+  s += '<rect class="plate" x="724" y="120" width="38" height="110" rx="4"/>';
+  for(let k=-5;k<=5;k++){ if(k===0) continue; const y=175+k*10; s+=`<line class="bt" x1="746" x2="762" y1="${y}" y2="${y}"/>`; }
+  s += '<line class="zero" x1="724" x2="762" y1="175" y2="175"/>';
+  s += '<text class="bl-s" x="743" y="113" text-anchor="middle">0</text>';
+  s += '<line id="needle" class="needle" x1="680" y1="175" x2="756" y2="175"/>';
+  s += '<circle class="bal-md" cx="680" cy="175" r="5"/>';
+  BEAMS.forEach(b=>{
+    s += `<g data-beam="${b.k}">`;
+    s += `<rect class="beam-hit" x="244" y="${b.y-22}" width="426" height="${b.h+36}" fill="transparent"/>`;
+    s += `<rect class="beam" x="244" y="${b.y}" width="426" height="${b.h}" rx="3" pointer-events="none"/>`;
+    if(b.k==='o'){
+      for(let i=0;i<=100;i++){ const x=X0+i*4, L = i%10===0?11 : i%5===0?7:4;
+        s += `<line class="bt" x1="${x}" x2="${x}" y1="${b.y}" y2="${b.y+L}" pointer-events="none"/>`;
+        if(i%10===0) s += `<text class="bl" x="${x}" y="${b.y+b.h+14}" text-anchor="middle" pointer-events="none">${i/10}</text>`; }
+    } else {
+      const inc = b.range/b.n;
+      for(let i=0;i<=b.n;i++){ const x=X0+i*LEN/b.n;
+        s += `<line class="bt" x1="${x}" x2="${x}" y1="${b.y}" y2="${b.y+6}" pointer-events="none"/>`;
+        s += `<text class="bl" x="${x}" y="${b.y-9}" text-anchor="middle" pointer-events="none">${i*inc}</text>`; }
+    }
+    const label = b.k==='h'?'100 g':b.k==='t'?'10 g':'1 g';
+    if(b.k==='o'){
+      s += `<g class="rider" id="rider_o" tabindex="0" role="slider" aria-label="${label} rider" aria-valuemin="0" aria-valuemax="10">
+              <rect class="rider-o" x="-8" y="${b.y-5}" width="16" height="${b.h+10}" rx="3"/>
+              <line class="rline" x1="0" x2="0" y1="${b.y-5}" y2="${b.y+b.h+5}"/></g>`;
+    } else {
+      s += `<g class="rider" id="rider_${b.k}" tabindex="0" role="slider" aria-label="${label} rider" aria-valuemin="0" aria-valuemax="${b.range}">
+              <rect class="rider-body" x="-10" y="${b.y-5}" width="20" height="${b.h+10}" rx="4"/>
+              <path d="M-4,${b.y-5} L4,${b.y-5} L0,${b.y+2} Z" fill="currentColor" style="fill:var(--ink)"/></g>`;
+    }
+    s += '</g>';
+  });
+  s += '<g id="panG"><rect class="bal-md" x="145" y="196" width="10" height="12"/><ellipse class="pan" cx="150" cy="196" rx="92" ry="12"/><g id="panObj"></g></g>';
+  s += '<circle cx="150" cy="264" r="10" class="pan"/><line x1="150" y1="256" x2="150" y2="272" class="bt"/>';
+  $('#balSvg').innerHTML = s;
+
+  const svg = $('#balSvg');
+  let drag = null;
+  const toIdx = (k, clientX) => {
+    const pt = svg.createSVGPoint(); pt.x = clientX; pt.y = 0;
+    const x = pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+    const b = BEAMS.find(b=>b.k===k);
+    return (x - X0)/LEN*b.n;
+  };
+  svg.addEventListener('pointerdown', e=>{
+    const g = e.target.closest('[data-beam]'); if(!g) return;
+    drag = g.dataset.beam; svg.setPointerCapture(e.pointerId);
+    setRider(drag, toIdx(drag, e.clientX)); e.preventDefault();
+  });
+  svg.addEventListener('pointermove', e=>{ if(drag) setRider(drag, toIdx(drag, e.clientX)); });
+  const end = e=>{ drag=null; };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  BEAMS.forEach(b=>{
+    $('#rider_'+b.k).addEventListener('keydown', e=>{
+      let d = 0; if(e.key==='ArrowRight'||e.key==='ArrowUp') d=1; else if(e.key==='ArrowLeft'||e.key==='ArrowDown') d=-1; else return;
+      if(e.shiftKey && b.k==='o') d*=10;
+      e.preventDefault(); setRider(b.k, riderIdx(b.k)+d);
+    });
+  });
+}
+
+function renderRiders(){
+  BEAMS.forEach(b=>{
+    const el = $('#rider_'+b.k); const x = X0 + riderIdx(b.k)/b.n*LEN;
+    el.setAttribute('transform', `translate(${x},0)`);
+    el.setAttribute('aria-valuenow', riderIdx(b.k)*(b.range/b.n));
+  });
+  renderInset(needleP);
+}
+
+function renderPan(){
+  const g = $('#panObj');
+  if(S.pan){ const o = obj(S.pan); g.innerHTML = `<g transform="translate(150,194)">${shapeMarkup(o.key, pxScale(o))}</g>`; }
+  else g.innerHTML = '';
+}
+
+/* ---------- inset magnifier ---------- */
+function renderInset(p){
+  const c = S.ro/10, k = 68, xo = v => 150 + (v-c)*k;
+  let s = '<g clip-path="url(#insetClip)"><rect class="zbg" x="0" y="0" width="300" height="110"/>';
+  s += '<rect class="beam" x="-2" y="28" width="304" height="40"/>';
+  for(let i=0;i<=100;i++){ const v=i/10, x=xo(v); if(x<-5||x>305) continue;
+    const L = i%10===0?20 : i%5===0?13:7;
+    s += `<line class="bt" x1="${x}" x2="${x}" y1="28" y2="${28+L}" stroke-width="${i%10===0?1.6:1}"/>`;
+    if(i%10===0) s += `<text class="zl" x="${x}" y="92" text-anchor="middle">${v}</text>`; }
+  s += '<rect class="rider-o" x="-12" y="20" width="24" height="56" rx="4" transform="translate(150,0)"/>';
+  s += '<line class="rline" x1="150" x2="150" y1="20" y2="76"/>';
+  s += `<text class="bl-s" x="8" y="16">${t('magLbl')}</text></g>`;
+  // pointer zoom
+  s += '<rect class="plate" x="330" y="6" width="84" height="100" rx="6"/>';
+  for(let i=-4;i<=4;i++){ if(!i) continue; s += `<line class="bt" x1="392" x2="414" y1="${56+i*11}" y2="${56+i*11}"/>`; }
+  s += '<line class="zero" x1="330" x2="414" y1="56" y2="56"/>';
+  const dy = clamp(p*2.6, -46, 46);
+  s += `<line class="needle" x1="318" y1="56" x2="408" y2="${56+dy}"/>`;
+  s += `<text class="bl-s" x="336" y="20">${t('ptrLbl')}</text>`;
+  $('#insetSvg').innerHTML = s;
+}
+
+/* ---------- pointer physics ---------- */
+let needleP = 0, needleV = 0;
+function balanceDiff(){
+  const m = S.pan ? obj(S.pan).mass : 0;
+  return m + S.offset - (S.rh*100 + S.rt*10 + S.ro/10);
+}
+function needleTarget(){ return -30*Math.tanh(balanceDiff()/0.7); }
+
+/* ---------- cylinder ---------- */
+const CY = v => 480 - v*4, CXL = 66, CXR = 114;
+function level(){
+  if(!S.cyl) return S.water;
+  const o = obj(S.cyl);
+  if(S.water + o.vol >= o.top) return S.water + o.vol;
+  return S.water/(1 - o.vol/o.top);
+}
+let dispLevel = null;
+function buildCylinder(){
+  let s = '';
+  s += '<polygon points="40,486 140,486 152,506 28,506" class="bal-md"/>';
+  s += `<rect class="glass" x="62" y="40" width="56" height="446" rx="3"/>`;
+  s += '<g id="cylObj"></g>';
+  s += '<path id="cylWater" class="water"/><path id="cylTop" class="water-top"/>';
+  for(let v=1; v<=105; v++){ const L = v%10===0?16 : v%5===0?10:6, y=CY(v);
+    s += `<line class="ct" x1="${CXL}" x2="${CXL+L}" y1="${y}" y2="${y}"/>`;
+    if(v%10===0 && v<=100) s += `<text class="cl" x="${CXL+19}" y="${y+3.5}">${v}</text>`; }
+  s += '<text class="cl" x="90" y="62" text-anchor="middle">mL</text>';
+  s += '<rect class="glass-o" x="62" y="40" width="56" height="446" rx="3"/>';
+  s += '<rect class="glass-o" x="57" y="34" width="66" height="7" rx="3"/>';
+  $('#cylSvg').innerHTML = s;
+}
+function renderCylObj(){
+  const g = $('#cylObj');
+  if(S.cyl){ const o = obj(S.cyl); g.innerHTML = `<g transform="translate(90,479)">${shapeMarkup(o.key, pxScale(o))}</g>`; }
+  else g.innerHTML = '';
+}
+function drawCylWater(L){
+  if(L <= 0.05){ $('#cylWater').setAttribute('d',''); $('#cylTop').setAttribute('d',''); return; }
+  const yc = CY(L), ye = CY(L+0.7), yq = 2*yc - ye;
+  $('#cylWater').setAttribute('d', `M${CXL},${ye} Q90,${yq} ${CXR},${ye} L${CXR},480 L${CXL},480 Z`);
+  $('#cylTop').setAttribute('d', `M${CXL},${ye} Q90,${yq} ${CXR},${ye}`);
+}
+function drawZoom(L){
+  const k = 25, par = S.eye*1.3, c = L;
+  const Y = v => 150 - (v - c)*k;
+  let s = '<g clip-path="url(#zoomClip)"><rect class="zbg" x="0" y="0" width="240" height="300"/><rect class="glass" x="0" y="0" width="240" height="300"/>';
+  if(L > 0.05){
+    const yc = Y(L+par), ye = Y(L+par+0.75), yq = 2*yc - ye;
+    s += `<path class="water" d="M0,${ye} Q120,${yq} 240,${ye} L240,310 L0,310 Z"/>`;
+    if(S.eye !== 0) s += `<ellipse class="surf" cx="120" cy="${(ye+yc)/2}" rx="118" ry="${Math.abs(S.eye)*9}"/>`;
+    s += `<path class="water-top" d="M0,${ye} Q120,${yq} 240,${ye}" stroke-width="2.4"/>`;
+  }
+  const lo = Math.floor(c-7), hi = Math.ceil(c+7);
+  for(let v=Math.max(0,lo); v<=hi; v++){ if(v>108) break; const y = Y(v), L2 = v%10===0?78 : v%5===0?54:30;
+    s += `<line class="ct" x1="0" x2="${L2}" y1="${y}" y2="${y}" stroke-width="${v%5===0?2:1.4}"/>`;
+    if(v%5===0 && v>0) s += `<text class="zl" x="${L2+8}" y="${y+6}">${v}</text>`; }
+  s += '</g><rect class="glass-o" x="1" y="1" width="238" height="298" rx="8"/>';
+  $('#zoomSvg').innerHTML = s;
+  setBi($('#eyeWarn'), S.eye>0 ? 'eyeWarnAbove' : S.eye<0 ? 'eyeWarnBelow' : '');
+}
+
+/* ---------- messages ---------- */
+function msg(id, key, tone){ const el=$(id); setBi(el, key); el.className = 'msg ' + (key? (tone||'info') : ''); el.dataset.key = key||''; el.dataset.tone = tone||''; }
+
+/* ---------- tray ---------- */
+function renderTray(){
+  const tray = $('#tray'); tray.innerHTML = '';
+  S.objs.forEach(o=>{
+    const sh = SHAPES[o.key], pad=5;
+    const where = S.pan===o.id?'pan': S.cyl===o.id?'cyl':'tray';
+    const b = document.createElement('button');
+    b.type='button'; b.className='obj'; b.id='obj_'+o.id; b.setAttribute('aria-pressed', S.sel===o.id);
+    b.innerHTML = `<svg viewBox="${-sh.w/2-pad} ${-sh.h-pad} ${sh.w+pad*2} ${sh.h+pad*2}" aria-hidden="true" style="overflow:visible">${sh.svg()}</svg>
+      <span><span class="letter">${biHTML('objWord', x=>x+' '+o.id)}</span><span class="nm">${biHTML('o_'+o.key)}</span><span class="chip ${where}">${biHTML('l_'+where)}</span></span>`;
+    b.addEventListener('click', ()=>{ S.sel=o.id; save(); renderTray(); });
+    tray.appendChild(b);
+  });
+}
+
+/* ---------- actions ---------- */
+function removeFromCyl(){ if(!S.cyl) return; S.cyl=null; renderCylObj(); }
+function removeFromPan(){ if(!S.pan) return; S.pan=null; renderPan(); }
+
+$('#toPan').addEventListener('click', ()=>{
+  if(!S.sel) return msg('#balMsg','m_pick','bad');
+  if(S.pan && S.pan!==S.sel) return msg('#balMsg','m_panBusy','bad');
+  if(S.cyl===S.sel){ removeFromCyl(); msg('#cylMsg','m_out'); }
+  S.pan = S.sel; S.panOff[S.sel] = S.offset; renderPan(); renderTray(); msg('#balMsg','m_onPan'); save();
+});
+$('#offPan').addEventListener('click', ()=>{ removeFromPan(); renderTray(); msg('#balMsg','m_offPan'); save(); });
+$('#ridersZero').addEventListener('click', ()=>{ S.rh=0;S.rt=0;S.ro=0; renderRiders(); save(); });
+document.querySelectorAll('[data-r]').forEach(b=> b.addEventListener('click', ()=>{
+  const k=b.dataset.r; setRider(k, riderIdx(k)+Number(b.dataset.d));
+}));
+function knob(d){ S.offset = r1(S.offset + d); if(S.pan) S.panOff[S.pan]=S.offset; save(); }
+$('#knobUp').addEventListener('click', ()=>knob(0.1));
+$('#knobDown').addEventListener('click', ()=>knob(-0.1));
+
+function afterWaterChange(){
+  if(S.cyl && S.trials[S.cyl]){ S.trials[S.cyl].changed = true; msg('#cylMsg','m_changed','bad'); }
+  checkOverflow(); save();
+}
+function checkOverflow(){
+  if(level() > 106){
+    // reduce water until level is 106
+    if(S.cyl){ const o=obj(S.cyl); S.water = Math.max(0, 106 - o.vol); } else S.water = 106;
+    S.water = r1(S.water);
+    if(S.cyl && S.trials[S.cyl]) S.trials[S.cyl].changed = true;
+    msg('#cylMsg','m_overflow','bad'); return true;
+  }
+  return false;
+}
+$('#pourBig').addEventListener('click', ()=>{ S.water = r1(S.water + rnd(8,12)); if(!S.cyl) msg('#cylMsg',''); afterWaterChange(); });
+$('#pourSmall').addEventListener('click', ()=>{ S.water = r1(S.water + rnd(0.6,1.4)); if(!S.cyl) msg('#cylMsg',''); afterWaterChange(); });
+$('#pourOut').addEventListener('click', ()=>{ S.water = Math.max(0, r1(S.water - rnd(0.6,1.4))); if(!S.cyl) msg('#cylMsg',''); afterWaterChange(); });
+$('#emptyCyl').addEventListener('click', ()=>{ S.water = 0; afterWaterChange(); if(!S.cyl) msg('#cylMsg','m_empty'); });
+
+function insert(drop){
+  if(!S.sel) return msg('#cylMsg','m_pick','bad');
+  if(S.cyl && S.cyl!==S.sel) return msg('#cylMsg','m_cylBusy','bad');
+  if(S.cyl===S.sel) return;
+  if(S.pan===S.sel){ removeFromPan(); msg('#balMsg','m_offPan'); }
+  const v0 = S.water; let splash = 0;
+  if(drop){ splash = r1(rnd(1.2,3.2)); S.water = Math.max(0, r1(S.water - splash)); }
+  S.cyl = S.sel;
+  const o = obj(S.cyl);
+  const covered = S.water + o.vol >= o.top;
+  const over = level() > 106;
+  if(over) checkOverflow();
+  S.trials[S.cyl] = {v0, vf: r1(level()), splash, covered, changed: over};
+  renderCylObj(); renderTray();
+  if(over) {}
+  else if(drop) msg('#cylMsg','m_splash','bad');
+  else if(!covered) msg('#cylMsg','m_notCovered','bad');
+  else msg('#cylMsg','m_slid','good');
+  save();
+}
+$('#slideIn').addEventListener('click', ()=>insert(false));
+$('#dropIn').addEventListener('click', ()=>insert(true));
+$('#outCyl').addEventListener('click', ()=>{ if(!S.cyl) return; removeFromCyl(); renderTray(); msg('#cylMsg','m_out'); save(); });
+$('#eyeRange').addEventListener('input', e=>{ S.eye = Number(e.target.value); save(); drawZoom(dispLevel); });
+
+/* ---------- data table ---------- */
+const COLS = ['m','i','f','v'];
+function buildTable(){
+  const tb = $('#tbody'); tb.innerHTML='';
+  S.objs.forEach(o=>{
+    const tr = document.createElement('tr'); tr.id='row_'+o.id;
+    tr.innerHTML = `<td class="name">${o.id} · <span data-obj="${o.key}">${biHTML('o_'+o.key)}</span></td>` +
+      COLS.map(c=>`<td><input id="in_${c}_${o.id}" inputmode="decimal" autocomplete="off" aria-label="${o.id} ${c}" value="${(S.table[o.id]||{})[c]??''}"></td>`).join('');
+    const fb = document.createElement('tr'); fb.className='fb'; fb.innerHTML = `<td colspan="5" id="fb_${o.id}"></td>`;
+    tb.appendChild(tr); tb.appendChild(fb);
+  });
+  tb.querySelectorAll('input').forEach(inp=> inp.addEventListener('input', ()=>{
+    const [, c, id] = inp.id.split('_'); (S.table[id] ||= {})[c] = inp.value; inp.classList.remove('ok','bad'); save();
+  }));
+}
+const num = v => { if(v==null) return NaN; v = String(v).trim().replace(',', '.'); return v===''?NaN:Number(v); };
+function setFb(el, keys){ setBiRaw(el, keys.map(t).join(' '), lang!=='en' ? keys.map(k=>L2(k)||t(k)).join(' ') : null); }
+function computeResults(){
+  let good=0, total=0; const rows={};
+  S.objs.forEach(o=>{
+    const row = S.table[o.id]||{}, hints = [], cells = {m:null,i:null,f:null,v:null};
+    const m = num(row.m), i = num(row.i), f = num(row.f), v = num(row.v);
+    const mark = (c, ok) => { cells[c]=ok; total++; if(ok) good++; };
+    if(!isNaN(m)){
+      const ok = Math.abs(m - o.mass) <= 0.15; mark('m', ok);
+      if(!ok){ const off = S.panOff[o.id]; hints.push(off!=null && Math.abs(off)>=0.1 && Math.abs(m-(o.mass+off))<=0.15 ? 'h_zero':'h_mass'); }
+    }
+    const tr = S.trials[o.id];
+    if(!isNaN(i)||!isNaN(f)||!isNaN(v)){
+      if(!tr){ ['i','f','v'].forEach(c=>{ if(!isNaN(num(row[c]))) mark(c,false); }); hints.push('h_trial'); }
+      else {
+        if(tr.changed) hints.push('h_changedT');
+        if(!isNaN(i)){ const ok = !tr.changed && Math.abs(i - tr.v0) <= 0.5; mark('i', ok); if(!ok && !tr.changed) hints.push('h_init'); }
+        if(!isNaN(f)){ const ok = !tr.changed && Math.abs(f - tr.vf) <= 0.5; mark('f', ok); if(!ok && !tr.changed) hints.push('h_final'); }
+        if(!isNaN(v)){
+          let ok = Math.abs(v - o.vol) <= 1.0;
+          if(!isNaN(i) && !isNaN(f) && Math.abs((f - i) - v) > 0.15){ ok = false; hints.push('h_math'); }
+          mark('v', ok);
+          if(!ok){ if(tr.splash>0) hints.push('h_splash'); else if(!tr.covered) hints.push('h_cover'); else if(!hints.includes('h_math')) hints.push('h_vol'); }
+        }
+      }
+    }
+    rows[o.id] = {cells, hints:[...new Set(hints)], row};
+  });
+  return {good, total, rows};
+}
+function checkTable(){
+  const R = computeResults();
+  S.checks = (S.checks||0) + 1;
+  S.objs.forEach(o=>{
+    const r = R.rows[o.id];
+    COLS.forEach(c=>{ const el=$(`#in_${c}_${o.id}`); el.classList.remove('ok','bad'); if(r.cells[c]!==null) el.classList.add(r.cells[c]?'ok':'bad'); });
+    setFb($('#fb_'+o.id), r.hints);
+    $('#row_'+o.id).classList.toggle('has-fb', r.hints.length>0);
+    S.fb = S.fb || {}; S.fb[o.id] = r.hints;
+  });
+  const sum = $('#sum'), good=R.good, total=R.total;
+  const fm = x => x.replace('{a}',good).replace('{b}',total);
+  if(!total){ setBi(sum,'sumNone'); sum.style.color='var(--muted)'; }
+  else if(good===total){ setBi(sum,'allGood', x=>x+' ('+good+'/'+total+')'); sum.style.color='var(--good)'; }
+  else { setBi(sum,'sum',fm); sum.style.color='var(--ink)'; }
+  save();
+}
+$('#checkBtn').addEventListener('click', checkTable);
+
+/* ---------- turn in ---------- */
+const stamp = () => { const d=new Date(); return d.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); };
+function studentName(){ return ($('#stuName').value||'').trim(); }
+function mark(ok){ return ok===null ? '' : ok ? ' (OK)' : ' (X)'; }
+function resultsText(){
+  const R = computeResults();
+  const L = [];
+  L.push(t('title'));
+  L.push(t('stuName')+': '+(studentName()||'—')+'    '+t('stuHour')+': '+(($('#stuHour').value||'').trim()||'—'));
+  L.push(t('turnDate')+': '+stamp()+'    '+t('turnSet')+': '+setCode());
+  L.push(t('turnScore')+': '+R.good+' / '+R.total+'    '+t('turnChecks')+': '+(S.checks||0));
+  L.push('');
+  L.push([t('cObj'),t('cMass'),t('cInit'),t('cFinal'),t('cVol')].join(' | '));
+  S.objs.forEach(o=>{ const r=R.rows[o.id];
+    L.push([o.id+' '+t('o_'+o.key)].concat(COLS.map(c=>((r.row[c]||'').trim()||'—')+mark(r.cells[c]))).join(' | ')); });
+  L.push('');
+  ['q1','q2','q3'].forEach(q=>{ L.push(t(q)); L.push(($('#'+q).value||'').trim()||'—'); L.push(''); });
+  return L.join('\n');
+}
+function setCode(){ return S.objs.map(o=>Math.round(o.vol*2).toString(36)).join('').toUpperCase(); }
+
+function buildPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'letter'});
+  const R = computeResults(), W = 612, M = 48; let y = 56;
+  const E = k => I18N.en[k]; const nonLatin = x => /[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF\u2212\u2014]/.test(String(x));
+  const clean = s => nonLatin(s) ? String(s).replace(/\u2212/g,'-').replace(/\u2014/g,'-').replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]+/g,' ').replace(/\s+/g,' ').trim() + ' ' + E('pdfOther') : String(s).replace(/\u2212/g,'-').replace(/\u2014/g,'-');
+  doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.text(clean(E('title')), M, y); y+=24;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text(clean(E('stuName')+': '+(studentName()||'-')), M, y); doc.text(clean(E('stuHour')+': '+((($('#stuHour').value||'').trim())||'-')), 360, y); y+=16;
+  doc.text(clean(E('turnDate')+': '+stamp()), M, y); doc.text(clean(E('turnSet')+': '+setCode()), 360, y); y+=16;
+  doc.setFont('helvetica','bold');
+  doc.text(clean(E('turnScore')+': '+R.good+' / '+R.total), M, y); doc.setFont('helvetica','normal');
+  doc.text(clean(E('turnChecks')+': '+(S.checks||0)), 360, y); y+=26;
+  const cols = [{k:'n',w:136,h:E('cObj')},{k:'m',w:84,h:E('cMass')},{k:'i',w:98,h:E('cInit')},{k:'f',w:98,h:E('cFinal')},{k:'v',w:100,h:E('cVol')}];
+  let x = M; doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.setFillColor(232,238,238); doc.rect(M, y-12, W-2*M, 30, 'F');
+  cols.forEach(c=>{ doc.text(doc.splitTextToSize(clean(c.h), c.w-8), x+4, y); x+=c.w; }); y+=30;
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  S.objs.forEach(o=>{ const r=R.rows[o.id]; x=M;
+    doc.text(clean(o.id+'  '+E('o_'+o.key)), x+4, y); x+=cols[0].w;
+    COLS.forEach((c,ci)=>{ const val=(r.row[c]||'').trim()||'-'; const ok=r.cells[c];
+      if(ok===true) doc.setTextColor(29,122,75); else if(ok===false) doc.setTextColor(176,48,31); else doc.setTextColor(30,30,30);
+      doc.text(clean(val+(ok===null?'':ok?'  OK':'  X')), x+4, y); doc.setTextColor(30,30,30); x+=cols[ci+1].w; });
+    doc.setDrawColor(200,210,210); doc.line(M, y+8, W-M, y+8); y+=24; });
+  doc.setFontSize(9); doc.setTextColor(90,106,112); doc.text(clean(E('turnKey')), M, y); doc.setTextColor(30,30,30); y+=26;
+  doc.setFontSize(11);
+  ['q1','q2','q3'].forEach(q=>{
+    doc.setFont('helvetica','bold'); const ql = doc.splitTextToSize(clean(E(q)), W-2*M);
+    if(y + ql.length*14 > 740){ doc.addPage(); y=56; }
+    doc.text(ql, M, y); y+=ql.length*14+2;
+    doc.setFont('helvetica','normal'); const al = doc.splitTextToSize(clean(($('#'+q).value||'').trim()||'-'), W-2*M);
+    al.forEach(line=>{ if(y>750){ doc.addPage(); y=56; } doc.text(line, M, y); y+=14; }); y+=12; });
+  return doc.output('blob');
+}
+async function saveFile(filename, blob){
+  try{
+    if(window.claude && window.claude.use){ const d = await window.claude.use('downloads');
+      if(d){ try{ await d.save({filename, data: blob}); return 'ok'; }catch(e){ return e && e.code==='declined' ? 'declined' : 'fail'; } } }
+  }catch(e){}
+  try{ const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 4000); return 'ok'; }catch(e){ return 'fail'; }
+}
+function turnMsg(key, tone){ const el=$('#turnMsg'); setBi(el, key); el.className='msg '+(key?(tone||'info'):''); }
+function needName(){ if(studentName()) return false; turnMsg('m_name','bad'); $('#stuName').focus(); return true; }
+$('#pdfBtn').addEventListener('click', async ()=>{
+  if(needName()) return;
+  if(!window.jspdf){ turnMsg('m_nopdf','bad'); showText(); return; }
+  const fn = 'Mass-Volume-Lab_' + studentName().replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'') + '.pdf';
+  const r = await saveFile(fn, buildPdf());
+  if(r==='ok') turnMsg('m_saved','good'); else if(r==='declined') turnMsg(''); else { turnMsg('m_nosave','bad'); showText(); }
+});
+function showText(){ const ta=$('#turnText'); ta.value = resultsText(); ta.hidden=false; ta.focus(); ta.select(); }
+$('#copyBtn').addEventListener('click', async ()=>{
+  if(needName()) return;
+  const txt = resultsText();
+  try{ await navigator.clipboard.writeText(txt); turnMsg('m_copied','good'); }
+  catch(e){ turnMsg('m_copyfail','bad'); }
+  showText();
+});
+['stuName','stuHour'].forEach(id=>{ const el=$('#'+id); el.addEventListener('input', ()=>{ S[id]=el.value; save(); }); });
+
+function twoClick(btn, key, confirmKey, fn){
+  let armed = false, timer;
+  btn.addEventListener('click', ()=>{
+    if(!armed){ armed=true; setBi(btn, confirmKey); timer = setTimeout(()=>{ armed=false; setBi(btn, key); }, 3500); return; }
+    clearTimeout(timer); armed=false; setBi(btn, key); fn();
+  });
+}
+twoClick($('#clearBtn'), 'clear', 'clearConfirm', ()=>{ S.table={}; S.fb={}; buildTable(); $('#sum').textContent=''; save(); });
+twoClick($('#newSet'), 'newSet', 'newSetConfirm', ()=>{ const q=S.q, nm=S.stuName, hr=S.stuHour; S = newState(); S.q=q; S.stuName=nm; S.stuHour=hr; needleP=0; needleV=0; dispLevel=S.water; renderAll(); msg('#balMsg',''); msg('#cylMsg',''); $('#sum').textContent=''; save(); });
+
+['q1','q2','q3'].forEach(id=>{ const el=$('#'+id); el.addEventListener('input', ()=>{ S.q[id]=el.value; save(); }); });
+
+/* ---------- language ---------- */
+function applyLang(){
+  document.documentElement.lang = 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ setBi(el, el.dataset.i18n); });
+  document.title = t('title');
+  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.lang===lang));
+  ['#balMsg','#cylMsg'].forEach(id=>{ const el=$(id); if(el.dataset.key) setBi(el, el.dataset.key); });
+  document.querySelectorAll('[data-obj]').forEach(el=> el.innerHTML = biHTML('o_'+el.dataset.obj));
+  if(S.fb) S.objs.forEach(o=>{ const f=$('#fb_'+o.id); if(f && S.fb[o.id]) setFb(f, S.fb[o.id]); });
+  $('#sum').textContent='';
+  renderTray(); renderInset(needleP); drawZoom(dispLevel ?? level());
+  applyLangExtra();
+}
+document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click', ()=>setLang(b.dataset.lang)));
+
+/* ---------- main loop ---------- */
+function renderAll(){
+  renderTray(); renderRiders(); renderPan(); renderCylObj(); buildTable();
+  ['q1','q2','q3'].forEach(id=> $('#'+id).value = S.q[id]||'');
+  $('#eyeRange').value = S.eye;
+  $('#stuName').value = S.stuName||''; $('#stuHour').value = S.stuHour||'';
+  drawCylWater(level()); drawZoom(level());
+}
+let lastZoom = null, lastInset = null;
+function tick(){
+  const tgt = needleTarget();
+  if(reduced){ needleP = tgt; needleV = 0; }
+  else { needleV += (tgt - needleP)*0.07; needleV *= 0.86; needleP += needleV; }
+  $('#needle').setAttribute('y2', 175 + needleP);
+  $('#panG').setAttribute('transform', `translate(0,${(-needleP*0.18).toFixed(2)})`);
+  if(lastInset===null || Math.abs(needleP-lastInset)>0.05){ renderInset(needleP); lastInset = needleP; }
+  const L = level();
+  if(dispLevel===null) dispLevel = L;
+  dispLevel = reduced ? L : dispLevel + (L - dispLevel)*0.12;
+  if(Math.abs(L-dispLevel)<0.01) dispLevel = L;
+  if(lastZoom===null || Math.abs(dispLevel-lastZoom)>0.005){ drawCylWater(dispLevel); drawZoom(dispLevel); lastZoom = dispLevel; }
+  requestAnimationFrame(tick);
+}
+
+/* ---------- ML supports: extra strings ---------- */
+Object.assign(I18N.en, {
+ objWord:"Object", magLbl:"MAGNIFIER · 1 g BEAM", ptrLbl:"POINTER",
+ vTbb:"Triple beam balance", vTbbD:"a tool used to measure the mass of an object.",
+ vGc:"Graduated cylinder", vGcD:"a tool used to measure the volume of a liquid.",
+ vRider:"Rider", vRiderD:"a sliding weight on one beam of the balance.",
+ vPointer:"Pointer", vPointerD:"the needle at the end of the balance. It points at zero when the balance is balanced.",
+ vPan:"Pan", vPanD:"the flat plate where you put the object.",
+ framesBtn:"Sentence starters and word bank", wordBank:"Word bank",
+ fr1:"The ___ had the largest volume.|The ___ had the smallest volume.|I know because the water rose ___ mL.|I know because Final − Initial was ___ mL.",
+ fr2:"The object with the largest mass was the ___.|It had a mass of ___ g.|It did / did not have the largest volume because ___.|This shows that mass and volume ___.",
+ fr3:"If you look from above, the water level looks ___ than it really is.|We read at eye level so that ___.|The bottom of the meniscus shows ___.",
+ wb:"mass|volume|grams (g)|milliliters (mL)|displacement|meniscus|eye level|higher|lower|larger|smaller|because",
+ noVoice:"This device has no read-aloud voice for this language.",
+ guideBtn:"Guided mode", gStep:"Step {a} of {b}", gBack:"Back", gSkip:"Skip", gExit:"Exit guide",
+ g1:"Slide all three riders to 0. Press the button with the dashed outline.",
+ g2:"The pan is empty. Use the zero knob until the pointer is on the orange zero line.",
+ g3:"Tap an object on the tray to pick it up.",
+ g4:"Put your object on the pan.",
+ g5:"Move the 100 g rider one notch at a time. If the pointer drops below zero, move it back one notch.",
+ g6:"Now move the 10 g rider the same way. If the pointer drops below zero, move it back one notch.",
+ g7:"Slide the 1 g rider slowly until the pointer is exactly on zero. Use the magnifier.",
+ g8:"Add the three riders. Type the mass (g) in the data table.",
+ g9:"Pour water into the cylinder. Make sure there is enough to cover the object.",
+ g10:"Look at the close-up at eye level. Read the bottom of the meniscus. Type the Initial Water Volume.",
+ g11:"Tilt and slide the object into the cylinder. Do not drop it.",
+ g12:"Read the new water level at the bottom of the meniscus. Type the Final Water Volume.",
+ g13:"Subtract: Final − Initial. Type the Volume of the object.",
+ g14:"Press Check my data to see if your readings are correct.",
+ g15:"Take the object out of the cylinder.",
+ g16:"Pick the next object on the tray. You will repeat the steps.",
+ pdfOther:"(written in another language, see the text copy)"
+});
+Object.assign(I18N.es, {
+ objWord:"Objeto", magLbl:"LUPA · PESA DE 1 g", ptrLbl:"INDICADOR",
+ vTbb:"Balanza de triple brazo", vTbbD:"un instrumento para medir la masa de un objeto.",
+ vGc:"Probeta graduada", vGcD:"un instrumento para medir el volumen de un líquido.",
+ vRider:"Pesa corrediza", vRiderD:"una pesa que se desliza sobre un brazo de la balanza.",
+ vPointer:"Indicador", vPointerD:"la aguja al final de la balanza. Apunta a cero cuando la balanza está equilibrada.",
+ vPan:"Platillo", vPanD:"el plato plano donde pones el objeto.",
+ framesBtn:"Inicios de oración y banco de palabras", wordBank:"Banco de palabras",
+ fr1:"El/La ___ tuvo el volumen más grande.|El/La ___ tuvo el volumen más pequeño.|Lo sé porque el agua subió ___ mL.|Lo sé porque Final − Inicial fue ___ mL.",
+ fr2:"El objeto con más masa fue el/la ___.|Tuvo una masa de ___ g.|Sí / No tuvo el volumen más grande porque ___.|Esto muestra que la masa y el volumen ___.",
+ fr3:"Si miras desde arriba, el nivel del agua se ve más ___ de lo que es.|Leemos a la altura de los ojos para que ___.|La parte de abajo del menisco muestra ___.",
+ wb:"masa|volumen|gramos (g)|mililitros (mL)|desplazamiento|menisco|altura de los ojos|más alto|más bajo|más grande|más pequeño|porque",
+ noVoice:"Este dispositivo no tiene voz de lectura para este idioma.",
+ guideBtn:"Modo guiado", gStep:"Paso {a} de {b}", gBack:"Atrás", gSkip:"Saltar", gExit:"Salir de la guía",
+ g1:"Mueve las tres pesas a 0. Presiona el botón con el borde punteado.",
+ g2:"El platillo está vacío. Usa la perilla hasta que el indicador quede en la línea naranja del cero.",
+ g3:"Toca un objeto de la bandeja para tomarlo.",
+ g4:"Pon tu objeto en el platillo.",
+ g5:"Mueve la pesa de 100 g una muesca a la vez. Si el indicador baja del cero, regrésala una muesca.",
+ g6:"Ahora mueve la pesa de 10 g de la misma manera. Si el indicador baja del cero, regrésala una muesca.",
+ g7:"Desliza despacio la pesa de 1 g hasta que el indicador quede justo en cero. Usa la lupa.",
+ g8:"Suma las tres pesas. Escribe la masa (g) en la tabla de datos.",
+ g9:"Echa agua en la probeta. Asegúrate de que haya suficiente para cubrir el objeto.",
+ g10:"Mira la vista de cerca a la altura de los ojos. Lee la parte de abajo del menisco. Escribe el Volumen Inicial.",
+ g11:"Inclina y desliza el objeto dentro de la probeta. No lo dejes caer.",
+ g12:"Lee el nuevo nivel en la parte de abajo del menisco. Escribe el Volumen Final.",
+ g13:"Resta: Final − Inicial. Escribe el Volumen del objeto.",
+ g14:"Presiona Revisar mis datos para ver si tus lecturas son correctas.",
+ g15:"Saca el objeto de la probeta.",
+ g16:"Elige el siguiente objeto de la bandeja. Vas a repetir los pasos."
+});
+I18N.ar = {
+ title:"مختبر الكتلة والحجم",
+ lede:"تدرّب على الميزان ثلاثي الأذرع وطريقة إزاحة الماء. يمكنك إعادة كل جسم وكل قراءة عدة مرات كما تريد.",
+ newSet:"مجموعة أجسام جديدة", newSetConfirm:"اضغط مرة أخرى للتأكيد (يمسح الجدول)",
+ trayTitle:"الأجسام", trayHint:"اضغط على جسم لتأخذه. ثم ضعه على الميزان أو في المخبار.",
+ o_bolt:"مسمار فولاذي", o_rock:"صخرة غرانيت", o_marble:"كرة زجاجية", o_brass:"أسطوانة نحاسية", o_stopper:"سدادة مطاطية",
+ l_tray:"على الصينية", l_pan:"على الميزان", l_cyl:"في المخبار", selected:"مختار",
+ balTitle:"الجزء أ · الميزان ثلاثي الأذرع", balTag:"السعة 610 g · الدقة 0.1 g",
+ toPan:"ضع الجسم المختار على الكفّة", offPan:"أزل الجسم عن الكفّة", ridersZero:"أرجع كل الأثقال إلى 0",
+ r100:"ثقل 100 g", r10:"ثقل 10 g", r1:"ثقل 1 g (ينزلق بسلاسة)", knob:"مقبض الصفر (والكفّة فارغة)", lower:"أنزل المؤشر", raise:"ارفع المؤشر",
+ stepsA:"خطوات الجزء أ",
+ a1:"أرجع الأثقال الثلاثة إلى الصفر. والكفّة فارغة، أدر مقبض الصفر حتى يقف المؤشر على خط الصفر البرتقالي.",
+ a2:"ضع الجسم على الكفّة.",
+ a3:"حرّك ثقل 100 g شقًّا واحدًا في كل مرة حتى ينزل المؤشر تحت الصفر. ثم أرجعه شقًّا واحدًا.",
+ a4:"افعل الشيء نفسه مع ثقل 10 g. ثم حرّك ثقل 1 g ببطء حتى يقف المؤشر على الصفر تمامًا.",
+ a5:"اجمع قراءات الأثقال الثلاثة. سجّل الكتلة بالغرام (g).",
+ cylTitle:"الجزء ب · المخبار المدرّج", cylTag:"100 mL · علامات كل 1 mL", zoomTitle:"صورة مكبّرة لسطح الماء",
+ eyeLbl:"أين عينك؟", eyeBelow:"تحت", eyeLevel:"بمستوى العين", eyeAbove:"فوق",
+ eyeWarnAbove:"عينك فوق مستوى الماء. تبدو القراءة أعلى من الحقيقة.", eyeWarnBelow:"عينك تحت مستوى الماء. تبدو القراءة أقل من الحقيقة.",
+ waterLbl:"الماء", pourBig:"اسكب كثيرًا", pourSmall:"اسكب قليلًا", pourOut:"أفرغ قليلًا", empty:"أفرغ الكل",
+ objLbl:"الجسم المختار", slideIn:"أمِل المخبار وأدخله بلطف", dropIn:"أسقطه", outCyl:"أخرج الجسم",
+ stepsB:"خطوات الجزء ب",
+ b1:"اسكب ماءً يكفي لتغطية الجسم. اقرأ أسفل السطح الهلالي بمستوى العين. سجّل حجم الماء الابتدائي.",
+ b2:"أمِل المخبار وأدخل الجسم بلطف. لا تُسقطه.",
+ b3:"اقرأ مستوى الماء الجديد عند أسفل السطح الهلالي. سجّل حجم الماء النهائي.",
+ b4:"حجم الماء النهائي − حجم الماء الابتدائي = حجم الجسم.",
+ dataTitle:"جدول البيانات", dataHint:"اكتب ما قرأته. ثم راجع بياناتك.",
+ cObj:"الجسم", cMass:"الكتلة (g)", cInit:"حجم الماء الابتدائي (mL)", cFinal:"حجم الماء النهائي (mL)", cVol:"حجم الجسم (mL)",
+ check:"راجع بياناتي", clear:"امسح الجدول", clearConfirm:"اضغط مرة أخرى للمسح",
+ qTitle:"ملاحظات وأسئلة",
+ q1:"1. أيّ جسم كان حجمه الأكبر؟ وأيّها كان الأصغر؟ كيف عرفت؟",
+ q2:"2. هل كان الجسم ذو الكتلة الأكبر هو أيضًا ذا الحجم الأكبر؟ اشرح سببك.",
+ q3:"3. لماذا نقرأ السطح الهلالي بمستوى العين وليس من فوق؟ (جرّب شريط العين.)",
+ vTitle:"مفردات مهمة", vMass:"الكتلة", vMassD:"كمية المادة في الجسم، وتُقاس بالغرام (g).",
+ vVol:"الحجم", vVolD:"المساحة التي يشغلها الجسم، ويُقاس بالمليلتر (mL).",
+ vDisp:"الإزاحة", vDispD:"ارتفاع مستوى الماء عندما يدفع الجسم الماء من مكانه.",
+ vMen:"السطح الهلالي", vMenD:"سطح الماء المنحني في المخبار المدرّج؛ نقرأ عند أسفله.",
+ vTbb:"الميزان ثلاثي الأذرع", vTbbD:"أداة لقياس كتلة الجسم.",
+ vGc:"المخبار المدرّج", vGcD:"أداة لقياس حجم السائل.",
+ vRider:"الثقل المنزلق", vRiderD:"ثقل ينزلق على أحد أذرع الميزان.",
+ vPointer:"المؤشر", vPointerD:"الإبرة في طرف الميزان. تشير إلى الصفر عندما يتوازن الميزان.",
+ vPan:"الكفّة", vPanD:"الصحن المسطّح الذي تضع عليه الجسم.",
+ m_pick:"اختر جسمًا من الصينية أولًا.", m_panBusy:"أزل الجسم الآخر عن الكفّة أولًا.",
+ m_onPan:"الجسم على الكفّة. ابدأ بثقل 100 g.", m_offPan:"الكفّة فارغة.",
+ m_cylBusy:"أخرج الجسم الآخر من المخبار أولًا.", m_slid:"دخل الجسم بلطف. اقرأ مستوى الماء الجديد.",
+ m_splash:"تناثر الماء! خرج بعض الماء من المخبار. سيكون الحجم أصغر من الحقيقة. أخرج الجسم وأدخله بلطف.",
+ m_notCovered:"الجسم ليس تحت الماء بالكامل. أخرجه، أضف ماءً، وحاول مرة أخرى.",
+ m_overflow:"فاض الماء من المخبار. أفرغ بعض الماء وابدأ من جديد.",
+ m_changed:"غيّرت الماء بعد إدخال الجسم. أخرجه، واقرأ المستوى الابتدائي مرة أخرى، ثم أدخله.",
+ m_out:"أُخرج الجسم. يمكنك قراءة مستوى ابتدائي جديد.", m_empty:"المخبار فارغ.",
+ h_zero:"قريب! لم يكن الميزان على الصفر قبل القياس. اضبطه والكفّة فارغة.",
+ h_mass:"راجع الأثقال مرة أخرى. هل المؤشر على الصفر تمامًا؟",
+ h_init:"اقرأ المستوى الابتدائي مرة أخرى عند أسفل السطح الهلالي.",
+ h_final:"اقرأ المستوى النهائي مرة أخرى عند أسفل السطح الهلالي.",
+ h_math:"النهائي − الابتدائي لا يساوي الحجم الذي كتبته. راجع عملية الطرح.",
+ h_splash:"تناثر الماء في هذه المحاولة، لذلك خرج الحجم أصغر من الحقيقة.",
+ h_cover:"لم يكن الجسم تحت الماء بالكامل، لذلك لم يُزِح كل حجمه.",
+ h_trial:"أدخل هذا الجسم في المخبار أولًا.",
+ h_changedT:"تغيّر الماء بعد إدخال الجسم. أعد هذه المحاولة.",
+ h_vol:"الحجم غير صحيح. أعد خطوات الإزاحة.",
+ sum:"{a} من {b} إجابات صحيحة.", sumNone:"اكتب بعض القراءات أولًا.", allGood:"كلها صحيحة. قياس ممتاز!",
+ balAria:"الميزان ثلاثي الأذرع",
+ stuName:"اسمك", stuHour:"حصة الصف", turnTitle:"سلّم عملك", turnHint:"عندما تنتهي، نزّل نتائجك بصيغة PDF وارفعها إلى الواجب في Google Classroom.",
+ pdfBtn:"نزّل نتائجي (PDF)", copyBtn:"انسخ النتائج كنص", turnDate:"التاريخ", turnSet:"مجموعة الأجسام", turnScore:"الإجابات الصحيحة", turnChecks:"مرات المراجعة",
+ turnKey:"OK = صحيح، X = راجعها مرة أخرى.",
+ m_name:"اكتب اسمك أولًا.", m_saved:"يتم تنزيل ملف PDF. ارفعه إلى Google Classroom.", m_nosave:"لم تستطع الصفحة تنزيل الملف. انسخ النص أدناه والصقه في Google Doc.",
+ m_copied:"تم النسخ. الصقه في Google Doc وسلّمه.", m_copyfail:"حدّد النص أدناه وانسخه (Ctrl+C أو Cmd+C).", m_nopdf:"لم تُحمَّل أداة PDF. انسخ النص أدناه.",
+ objWord:"الجسم", magLbl:"مكبّر · ذراع 1 g", ptrLbl:"المؤشر",
+ framesBtn:"بدايات جمل وبنك كلمات", wordBank:"بنك الكلمات",
+ fr1:"كان لـ ___ الحجم الأكبر.|كان لـ ___ الحجم الأصغر.|أعرف ذلك لأن الماء ارتفع ___ mL.|أعرف ذلك لأن النهائي − الابتدائي كان ___ mL.",
+ fr2:"الجسم ذو الكتلة الأكبر كان ___.|كانت كتلته ___ g.|كان / لم يكن حجمه الأكبر لأن ___.|هذا يبيّن أن الكتلة والحجم ___.",
+ fr3:"إذا نظرت من فوق، يبدو مستوى الماء ___ من الحقيقة.|نقرأ بمستوى العين حتى ___.|أسفل السطح الهلالي يبيّن ___.",
+ wb:"الكتلة|الحجم|غرام (g)|مليلتر (mL)|الإزاحة|السطح الهلالي|مستوى العين|أعلى|أقل|أكبر|أصغر|لأن",
+ noVoice:"لا يوجد صوت قراءة لهذه اللغة على هذا الجهاز.",
+ guideBtn:"الوضع الموجَّه", gStep:"الخطوة {a} من {b}", gBack:"رجوع", gSkip:"تخطَّ", gExit:"أغلق الدليل",
+ g1:"أرجع الأثقال الثلاثة إلى 0. اضغط الزر المحاط بخط متقطع.",
+ g2:"الكفّة فارغة. استخدم مقبض الصفر حتى يقف المؤشر على خط الصفر البرتقالي.",
+ g3:"اضغط على جسم في الصينية لتأخذه.",
+ g4:"ضع الجسم على الكفّة.",
+ g5:"حرّك ثقل 100 g شقًّا في كل مرة. إذا نزل المؤشر تحت الصفر، أرجعه شقًّا واحدًا.",
+ g6:"الآن حرّك ثقل 10 g بالطريقة نفسها. إذا نزل المؤشر تحت الصفر، أرجعه شقًّا واحدًا.",
+ g7:"حرّك ثقل 1 g ببطء حتى يقف المؤشر على الصفر تمامًا. استخدم المكبّر.",
+ g8:"اجمع الأثقال الثلاثة. اكتب الكتلة (g) في جدول البيانات.",
+ g9:"اسكب ماءً في المخبار. تأكد أنه يكفي لتغطية الجسم.",
+ g10:"انظر إلى الصورة المكبّرة بمستوى العين. اقرأ أسفل السطح الهلالي. اكتب حجم الماء الابتدائي.",
+ g11:"أمِل المخبار وأدخل الجسم بلطف. لا تُسقطه.",
+ g12:"اقرأ مستوى الماء الجديد عند أسفل السطح الهلالي. اكتب حجم الماء النهائي.",
+ g13:"اطرح: النهائي − الابتدائي. اكتب حجم الجسم.",
+ g14:"اضغط راجع بياناتي لترى إن كانت قراءاتك صحيحة.",
+ g15:"أخرج الجسم من المخبار.",
+ g16:"اختر الجسم التالي من الصينية. ستكرر الخطوات."
+};
+
+I18N.fr = {
+ title:"Laboratoire de masse et de volume",
+ lede:"Entraîne-toi avec la balance à triple fléau et le déplacement d'eau. Tu peux refaire chaque objet et chaque mesure autant de fois que tu veux.",
+ newSet:"Nouveaux objets", newSetConfirm:"Clique encore pour confirmer (efface le tableau)",
+ trayTitle:"Objets", trayHint:"Touche un objet pour le prendre. Ensuite, place-le sur la balance ou dans l'éprouvette.",
+ o_bolt:"Boulon en acier", o_rock:"Roche de granite", o_marble:"Bille en verre", o_brass:"Cylindre en laiton", o_stopper:"Bouchon en caoutchouc",
+ l_tray:"Sur la table", l_pan:"Sur la balance", l_cyl:"Dans l'éprouvette", selected:"choisi",
+ balTitle:"Partie A · Balance à triple fléau", balTag:"capacité 610 g · précision 0,1 g",
+ toPan:"Mettre l'objet sur le plateau", offPan:"Enlever l'objet du plateau", ridersZero:"Mettre tous les curseurs à 0",
+ r100:"Curseur de 100 g", r10:"Curseur de 10 g", r1:"Curseur de 1 g (glisse doucement)", knob:"Bouton du zéro (plateau vide)", lower:"Baisser l'aiguille", raise:"Monter l'aiguille",
+ stepsA:"Étapes de la partie A",
+ a1:"Mets les trois curseurs à zéro. Avec le plateau vide, tourne le bouton du zéro jusqu'à ce que l'aiguille soit sur la ligne orange du zéro.",
+ a2:"Pose ton objet sur le plateau.",
+ a3:"Déplace le curseur de 100 g d'un cran à la fois jusqu'à ce que l'aiguille passe sous zéro. Recule-le d'un cran.",
+ a4:"Fais la même chose avec le curseur de 10 g. Ensuite, glisse lentement le curseur de 1 g jusqu'à ce que l'aiguille soit exactement sur zéro.",
+ a5:"Additionne les trois curseurs. Note la masse en grammes (g).",
+ cylTitle:"Partie B · Éprouvette graduée", cylTag:"100 mL · graduations de 1 mL", zoomTitle:"Vue rapprochée de la surface de l'eau",
+ eyeLbl:"Où est ton œil ?", eyeBelow:"En bas", eyeLevel:"Au niveau des yeux", eyeAbove:"En haut",
+ eyeWarnAbove:"Ton œil est au-dessus de l'eau. La lecture paraît trop haute.", eyeWarnBelow:"Ton œil est sous le niveau de l'eau. La lecture paraît trop basse.",
+ waterLbl:"Eau", pourBig:"Verser beaucoup", pourSmall:"Verser un peu", pourOut:"Enlever un peu", empty:"Vider",
+ objLbl:"Objet choisi", slideIn:"Pencher et glisser", dropIn:"Le laisser tomber", outCyl:"Sortir l'objet",
+ stepsB:"Étapes de la partie B",
+ b1:"Verse assez d'eau pour couvrir l'objet. Lis le bas du ménisque au niveau des yeux. Note le volume initial d'eau.",
+ b2:"Penche l'éprouvette et fais glisser l'objet dedans. Ne le laisse pas tomber.",
+ b3:"Lis le nouveau niveau au bas du ménisque. Note le volume final d'eau.",
+ b4:"Volume final − volume initial = volume de l'objet.",
+ dataTitle:"Tableau de données", dataHint:"Écris ce que tu lis. Ensuite, vérifie tes données.",
+ cObj:"Objet", cMass:"Masse (g)", cInit:"Volume initial d'eau (mL)", cFinal:"Volume final d'eau (mL)", cVol:"Volume de l'objet (mL)",
+ check:"Vérifier mes données", clear:"Effacer le tableau", clearConfirm:"Clique encore pour effacer",
+ qTitle:"Observations et questions",
+ q1:"1. Quel objet avait le plus grand volume ? Lequel avait le plus petit ? Comment le sais-tu ?",
+ q2:"2. L'objet avec la plus grande masse avait-il aussi le plus grand volume ? Explique ton raisonnement.",
+ q3:"3. Pourquoi lit-on le ménisque au niveau des yeux et pas d'en haut ? (Essaie le curseur de l'œil.)",
+ vTitle:"Vocabulaire clé", vMass:"Masse", vMassD:"la quantité de matière dans un objet, mesurée en grammes (g).",
+ vVol:"Volume", vVolD:"l'espace qu'un objet occupe, mesuré en millilitres (mL).",
+ vDisp:"Déplacement", vDispD:"la montée du niveau de l'eau quand un objet pousse l'eau.",
+ vMen:"Ménisque", vMenD:"la surface courbée de l'eau dans une éprouvette ; on lit en bas.",
+ vTbb:"Balance à triple fléau", vTbbD:"un instrument pour mesurer la masse d'un objet.",
+ vGc:"Éprouvette graduée", vGcD:"un instrument pour mesurer le volume d'un liquide.",
+ vRider:"Curseur", vRiderD:"un poids qui glisse sur un fléau de la balance.",
+ vPointer:"Aiguille", vPointerD:"l'aiguille au bout de la balance. Elle montre zéro quand la balance est équilibrée.",
+ vPan:"Plateau", vPanD:"l'assiette plate où on pose l'objet.",
+ m_pick:"Choisis d'abord un objet sur la table.", m_panBusy:"Enlève d'abord l'autre objet du plateau.",
+ m_onPan:"L'objet est sur le plateau. Commence avec le curseur de 100 g.", m_offPan:"Le plateau est vide.",
+ m_cylBusy:"Sors d'abord l'autre objet de l'éprouvette.", m_slid:"L'objet a glissé doucement. Lis le nouveau niveau d'eau.",
+ m_splash:"Éclaboussure ! Un peu d'eau est sortie. Ton volume sera trop petit. Sors l'objet et fais-le glisser.",
+ m_notCovered:"L'objet n'est pas complètement sous l'eau. Sors-le, ajoute de l'eau et recommence.",
+ m_overflow:"L'éprouvette a débordé. Enlève un peu d'eau et recommence.",
+ m_changed:"Tu as changé l'eau après avoir mis l'objet. Sors-le, relis le niveau initial, puis fais-le glisser.",
+ m_out:"Objet sorti. Tu peux lire un nouveau niveau initial.", m_empty:"L'éprouvette est vide.",
+ h_zero:"Presque ! La balance n'était pas à zéro avant la mesure. Règle-la avec le plateau vide.",
+ h_mass:"Vérifie encore les curseurs. L'aiguille est-elle exactement sur zéro ?",
+ h_init:"Relis le niveau initial, au bas du ménisque.", h_final:"Relis le niveau final, au bas du ménisque.",
+ h_math:"Final − initial n'est pas égal à ton volume. Vérifie ta soustraction.",
+ h_splash:"De l'eau a éclaboussé pendant cet essai, donc le volume est trop petit.",
+ h_cover:"L'objet n'était pas complètement sous l'eau, donc il n'a pas déplacé tout son volume.",
+ h_trial:"Mets d'abord cet objet dans l'éprouvette.", h_changedT:"L'eau a changé après avoir mis l'objet. Refais cet essai.",
+ h_vol:"Ton volume n'est pas correct. Refais les étapes du déplacement.",
+ sum:"{a} sur {b} réponses correctes.", sumNone:"Écris d'abord quelques mesures.", allGood:"Tout est correct. Très bonnes mesures !",
+ balAria:"Balance à triple fléau",
+ stuName:"Ton nom", stuHour:"Période de classe", turnTitle:"Rends ton travail", turnHint:"Quand tu as fini, télécharge tes résultats en PDF et dépose-les dans le devoir sur Google Classroom.",
+ pdfBtn:"Télécharger mes résultats (PDF)", copyBtn:"Copier les résultats en texte", turnDate:"Date", turnSet:"Série d'objets", turnScore:"Réponses correctes", turnChecks:"Nombre de vérifications",
+ turnKey:"OK = correct, X = à revoir.",
+ m_name:"Écris d'abord ton nom.", m_saved:"Ton PDF se télécharge. Dépose-le sur Google Classroom.", m_nosave:"La page n'a pas pu télécharger le fichier. Copie le texte ci-dessous dans un Google Doc.",
+ m_copied:"Copié. Colle-le dans un Google Doc et rends-le.", m_copyfail:"Sélectionne le texte ci-dessous et copie-le (Ctrl+C ou Cmd+C).", m_nopdf:"L'outil PDF n'a pas chargé. Copie le texte ci-dessous.",
+ objWord:"Objet", magLbl:"LOUPE · FLÉAU DE 1 g", ptrLbl:"AIGUILLE",
+ framesBtn:"Débuts de phrases et banque de mots", wordBank:"Banque de mots",
+ fr1:"Le/La ___ avait le plus grand volume.|Le/La ___ avait le plus petit volume.|Je le sais parce que l'eau est montée de ___ mL.|Je le sais parce que final − initial = ___ mL.",
+ fr2:"L'objet avec la plus grande masse était le/la ___.|Sa masse était de ___ g.|Il avait / n'avait pas le plus grand volume parce que ___.|Cela montre que la masse et le volume ___.",
+ fr3:"Si on regarde d'en haut, le niveau de l'eau paraît plus ___ qu'en réalité.|On lit au niveau des yeux pour que ___.|Le bas du ménisque montre ___.",
+ wb:"masse|volume|grammes (g)|millilitres (mL)|déplacement|ménisque|niveau des yeux|plus haut|plus bas|plus grand|plus petit|parce que",
+ noVoice:"Cet appareil n'a pas de voix pour cette langue.",
+ guideBtn:"Mode guidé", gStep:"Étape {a} sur {b}", gBack:"Retour", gSkip:"Passer", gExit:"Quitter le guide",
+ g1:"Mets les trois curseurs à 0. Appuie sur le bouton avec le contour en pointillés.",
+ g2:"Le plateau est vide. Utilise le bouton du zéro jusqu'à ce que l'aiguille soit sur la ligne orange du zéro.",
+ g3:"Touche un objet sur la table pour le prendre.", g4:"Pose ton objet sur le plateau de la balance.",
+ g5:"Déplace le curseur de 100 g d'un cran à la fois. Si l'aiguille passe sous zéro, recule-le d'un cran.",
+ g6:"Maintenant, déplace le curseur de 10 g de la même façon. Si l'aiguille passe sous zéro, recule-le d'un cran.",
+ g7:"Glisse lentement le curseur de 1 g jusqu'à ce que l'aiguille soit exactement sur zéro. Utilise la loupe.",
+ g8:"Additionne les trois curseurs. Écris la masse (g) dans le tableau.",
+ g9:"Verse de l'eau dans l'éprouvette. Il faut assez d'eau pour couvrir l'objet.",
+ g10:"Regarde la vue rapprochée au niveau des yeux. Lis le bas du ménisque. Écris le volume initial.",
+ g11:"Penche l'éprouvette et fais glisser l'objet dedans. Ne le laisse pas tomber.",
+ g12:"Lis le nouveau niveau au bas du ménisque. Écris le volume final.",
+ g13:"Soustrais : final − initial. Écris le volume de l'objet.",
+ g14:"Appuie sur Vérifier mes données pour voir si tes mesures sont correctes.",
+ g15:"Sors l'objet de l'éprouvette.", g16:"Choisis l'objet suivant sur la table. Tu vas refaire les étapes."
+};
+I18N.ht = {
+ title:"Laboratwa mas ak volim",
+ lede:"Pratike ak balans twa bra a ak metòd deplasman dlo a. Ou ka refè chak objè ak chak mezi otan fwa ou vle.",
+ newSet:"Nouvo objè", newSetConfirm:"Klike ankò pou konfime (sa efase tablo a)",
+ trayTitle:"Objè yo", trayHint:"Touche yon objè pou pran l. Apre sa, mete l sou balans lan oswa nan tib gradye a.",
+ o_bolt:"Boulon an asye", o_rock:"Wòch granit", o_marble:"Mab an vè", o_brass:"Silend an kwiv jòn", o_stopper:"Bouchon an kawotchou",
+ l_tray:"Sou kabare a", l_pan:"Sou balans lan", l_cyl:"Nan tib la", selected:"chwazi",
+ balTitle:"Pati A · Balans twa bra", balTag:"kapasite 610 g · li jiska 0.1 g",
+ toPan:"Mete objè a sou plato balans lan", offPan:"Retire objè a sou plato a", ridersZero:"Mete tout pwa yo sou 0",
+ r100:"Pwa 100 g", r10:"Pwa 10 g", r1:"Pwa 1 g (li glise dousman)", knob:"Bouton zewo (lè plato a vid)", lower:"Bese zegwi a", raise:"Leve zegwi a",
+ stepsA:"Etap pou Pati A",
+ a1:"Mete twa pwa yo sou zewo. Lè plato a vid, vire bouton zewo a jiskaske zegwi a kanpe sou liy zewo oranj lan.",
+ a2:"Mete objè ou a sou plato a.",
+ a3:"Deplase pwa 100 g la yon kran chak fwa jiskaske zegwi a desann anba zewo. Retounen l yon kran.",
+ a4:"Fè menm bagay la ak pwa 10 g la. Apre sa, glise pwa 1 g la dousman jiskaske zegwi a egzakteman sou zewo.",
+ a5:"Adisyone twa pwa yo. Ekri mas la an gram (g).",
+ cylTitle:"Pati B · Tib gradye", cylTag:"100 mL · mak chak 1 mL", zoomTitle:"Gade dlo a de pre",
+ eyeLbl:"Ki kote je ou ye?", eyeBelow:"Anba", eyeLevel:"Nivo je", eyeAbove:"Anlè",
+ eyeWarnAbove:"Je ou pi wo pase dlo a. Mezi a parèt twò wo.", eyeWarnBelow:"Je ou pi ba pase dlo a. Mezi a parèt twò ba.",
+ waterLbl:"Dlo", pourBig:"Vide anpil", pourSmall:"Vide yon ti kras", pourOut:"Retire yon ti kras", empty:"Vide tout",
+ objLbl:"Objè ou chwazi a", slideIn:"Panche epi glise l antre", dropIn:"Lage l tonbe", outCyl:"Retire objè a",
+ stepsB:"Etap pou Pati B",
+ b1:"Vide ase dlo pou kouvri objè a. Li anba menisk la nan nivo je ou. Ekri Volim dlo okòmansman an.",
+ b2:"Panche tib la epi glise objè a antre. Pa lage l tonbe.",
+ b3:"Li nouvo nivo dlo a anba menisk la. Ekri Volim dlo alafen an.",
+ b4:"Volim alafen − Volim okòmansman = Volim objè a.",
+ dataTitle:"Tablo done", dataHint:"Ekri sa ou li. Apre sa, verifye done ou yo.",
+ cObj:"Objè", cMass:"Mas (g)", cInit:"Volim dlo okòmansman (mL)", cFinal:"Volim dlo alafen (mL)", cVol:"Volim objè a (mL)",
+ check:"Verifye done mwen", clear:"Efase tablo a", clearConfirm:"Klike ankò pou efase",
+ qTitle:"Obsèvasyon ak kesyon",
+ q1:"1. Ki objè ki te gen pi gwo volim nan? Kiyès ki te gen pi piti a? Kijan ou konnen?",
+ q2:"2. Èske objè ki te gen pi gwo mas la te gen pi gwo volim tou? Esplike rezonman ou.",
+ q3:"3. Poukisa nou li menisk la nan nivo je nou olye nou li l anwo? (Eseye bouton je a.)",
+ vTitle:"Vokabilè enpòtan", vMass:"Mas", vMassD:"kantite matyè ki nan yon objè, yo mezire l an gram (g).",
+ vVol:"Volim", vVolD:"espas yon objè pran, yo mezire l an mililit (mL).",
+ vDisp:"Deplasman", vDispD:"lè nivo dlo a monte paske yon objè pouse dlo a.",
+ vMen:"Menisk", vMenD:"sifas dlo a ki koube nan tib gradye a; nou li anba l.",
+ vTbb:"Balans twa bra", vTbbD:"yon zouti pou mezire mas yon objè.",
+ vGc:"Tib gradye", vGcD:"yon zouti pou mezire volim yon likid.",
+ vRider:"Pwa glisan", vRiderD:"yon pwa ki glise sou youn nan bra balans lan.",
+ vPointer:"Zegwi", vPointerD:"zegwi ki nan bout balans lan. Li montre zewo lè balans lan ekilibre.",
+ vPan:"Plato", vPanD:"plak plat kote ou mete objè a.",
+ m_pick:"Chwazi yon objè sou kabare a anvan.", m_panBusy:"Retire lòt objè a sou plato a anvan.",
+ m_onPan:"Objè a sou plato a. Kòmanse ak pwa 100 g la.", m_offPan:"Plato a vid.",
+ m_cylBusy:"Retire lòt objè a nan tib la anvan.", m_slid:"Objè a glise antre dousman. Li nouvo nivo dlo a.",
+ m_splash:"Dlo a fè klabous! Yon ti dlo soti. Volim ou ap twò piti. Retire objè a epi glise l antre pito.",
+ m_notCovered:"Objè a pa nèt anba dlo. Retire l, mete plis dlo, epi eseye ankò.",
+ m_overflow:"Tib la debòde. Retire yon ti dlo epi rekòmanse.",
+ m_changed:"Ou chanje dlo a apre objè a te antre. Retire l, li nivo okòmansman an ankò, epi glise l antre.",
+ m_out:"Ou retire objè a. Ou ka li yon nouvo nivo okòmansman.", m_empty:"Tib la vid.",
+ h_zero:"Prèske! Balans lan pa t sou zewo anvan ou mezire. Ajiste l lè plato a vid.",
+ h_mass:"Tcheke pwa yo ankò. Èske zegwi a egzakteman sou zewo?",
+ h_init:"Li nivo okòmansman an ankò, anba menisk la.", h_final:"Li nivo alafen an ankò, anba menisk la.",
+ h_math:"Alafen − okòmansman pa egal volim ou ekri a. Tcheke soustraksyon ou.",
+ h_splash:"Dlo te fè klabous nan esè sa a, se poutèt sa volim nan twò piti.",
+ h_cover:"Objè a pa t nèt anba dlo, kidonk li pa t deplase tout volim li.",
+ h_trial:"Mete objè sa a nan tib la anvan.", h_changedT:"Dlo a chanje apre objè a te antre. Refè esè sa a.",
+ h_vol:"Volim ou pa kòrèk. Refè etap deplasman yo.",
+ sum:"{a} sou {b} repons kòrèk.", sumNone:"Ekri kèk mezi anvan.", allGood:"Tout kòrèk. Bèl mezi!",
+ balAria:"Balans twa bra",
+ stuName:"Non ou", stuHour:"Lè klas la", turnTitle:"Remèt travay ou", turnHint:"Lè ou fini, telechaje rezilta ou an PDF epi mete l nan devwa a sou Google Classroom.",
+ pdfBtn:"Telechaje rezilta mwen (PDF)", copyBtn:"Kopye rezilta yo an tèks", turnDate:"Dat", turnSet:"Seri objè", turnScore:"Repons kòrèk", turnChecks:"Konbyen fwa ou verifye",
+ turnKey:"OK = kòrèk, X = gade l ankò.",
+ m_name:"Ekri non ou anvan.", m_saved:"PDF ou a ap telechaje. Mete l sou Google Classroom.", m_nosave:"Paj la pa t ka telechaje fichye a. Kopye tèks ki anba a epi kole l nan yon Google Doc.",
+ m_copied:"Kopye. Kole l nan yon Google Doc epi remèt li.", m_copyfail:"Chwazi tèks ki anba a epi kopye l (Ctrl+C oswa Cmd+C).", m_nopdf:"Zouti PDF la pa t chaje. Kopye tèks ki anba a pito.",
+ objWord:"Objè", magLbl:"LOUP · BRA 1 g", ptrLbl:"ZEGWI",
+ framesBtn:"Kòmansman fraz ak bank mo", wordBank:"Bank mo",
+ fr1:"___ te gen pi gwo volim nan.|___ te gen pi piti volim nan.|Mwen konnen paske dlo a monte ___ mL.|Mwen konnen paske alafen − okòmansman te ___ mL.",
+ fr2:"Objè ki te gen pi gwo mas la se te ___.|Li te gen yon mas ___ g.|Li te gen / pa t gen pi gwo volim nan paske ___.|Sa montre ke mas ak volim ___.",
+ fr3:"Si ou gade anwo, nivo dlo a parèt pi ___ pase jan li ye vre.|Nou li nan nivo je pou ___.|Anba menisk la montre ___.",
+ wb:"mas|volim|gram (g)|mililit (mL)|deplasman|menisk|nivo je|pi wo|pi ba|pi gwo|pi piti|paske",
+ noVoice:"Aparèy sa a pa gen vwa pou lang sa a.",
+ guideBtn:"Mòd gide", gStep:"Etap {a} sou {b}", gBack:"Retounen", gSkip:"Sote", gExit:"Fèmen gid la",
+ g1:"Mete twa pwa yo sou 0. Peze bouton ki gen liy pwentiye a.",
+ g2:"Plato a vid. Sèvi ak bouton zewo a jiskaske zegwi a sou liy zewo oranj lan.",
+ g3:"Touche yon objè sou kabare a pou pran l.", g4:"Mete objè ou a sou plato balans lan.",
+ g5:"Deplase pwa 100 g la yon kran chak fwa. Si zegwi a desann anba zewo, retounen l yon kran.",
+ g6:"Kounye a, deplase pwa 10 g la menm jan an. Si zegwi a desann anba zewo, retounen l yon kran.",
+ g7:"Glise pwa 1 g la dousman jiskaske zegwi a egzakteman sou zewo. Sèvi ak loup la.",
+ g8:"Adisyone twa pwa yo. Ekri mas la (g) nan tablo done a.",
+ g9:"Vide dlo nan tib la. Asire w gen ase dlo pou kouvri objè a.",
+ g10:"Gade dlo a de pre nan nivo je ou. Li anba menisk la. Ekri Volim okòmansman an.",
+ g11:"Panche tib la epi glise objè a antre. Pa lage l tonbe.",
+ g12:"Li nouvo nivo dlo a anba menisk la. Ekri Volim alafen an.",
+ g13:"Fè soustraksyon: alafen − okòmansman. Ekri Volim objè a.",
+ g14:"Peze Verifye done mwen pou wè si mezi ou yo kòrèk.",
+ g15:"Retire objè a nan tib la.", g16:"Chwazi pwochen objè a sou kabare a. W ap refè etap yo."
+};
+
+/* ---------- read aloud ---------- */
+const SPEAK_ICON = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-3v10l-4-3H3z" fill="currentColor"/><path d="M13 7.2a3.6 3.6 0 0 1 0 5.6M15.3 5a6.8 6.8 0 0 1 0 10" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round"/></svg>';
+const VOICE_LANG = {en:'en-US', es:'es-US', fr:'fr-FR', ht:'ht-HT', ar:'ar-SA'};
+const LISTEN = {en:'Listen', es:'Escuchar', ar:'استمع'};
+let toastTimer;
+function toast(msgText){ const el=$('#toast'); el.textContent=msgText; el.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.hidden=true, 3500); }
+function pickVoice(){
+  if(!('speechSynthesis' in window)) return null;
+  const want = VOICE_LANG[lang], pre = want.slice(0,2);
+  const vs = speechSynthesis.getVoices();
+  return vs.find(v=>v.lang===want) || vs.find(v=>v.lang && v.lang.toLowerCase().startsWith(pre)) || null;
+}
+let speakingBtn = null;
+function voiceFor(code){
+  const want = VOICE_LANG[code], pre = want.slice(0,2);
+  const vs = speechSynthesis.getVoices();
+  return vs.find(v=>v.lang===want) || vs.find(v=>v.lang && v.lang.toLowerCase().replace('_','-').startsWith(pre)) || null;
+}
+const SAYWORD = {en:['blank',' minus '], es:['espacio',' menos '], fr:['blanc',' moins '], ht:['espas',' mwens '], ar:['فراغ',' ناقص ']};
+function utter(text, code){
+  const v = voiceFor(code);
+  const u = new SpeechSynthesisUtterance(text.replace(/___/g, SAYWORD[code][0]).replace(/−/g, SAYWORD[code][1]));
+  u.lang = VOICE_LANG[code]; if(v) u.voice = v; u.rate = 0.9; return {u, ok: !!v || !speechSynthesis.getVoices().length};
+}
+function speakEl(el, btn){
+  if(!('speechSynthesis' in window)){ toast(t('noVoice')); return; }
+  speechSynthesis.cancel();
+  if(speakingBtn){ speakingBtn.classList.remove('speaking'); if(speakingBtn===btn){ speakingBtn=null; return; } }
+  const ens = [...el.querySelectorAll('.en')].map(x=>x.textContent.trim()).filter(Boolean);
+  const l2s = [...el.querySelectorAll('.l2')].map(x=>x.textContent.trim()).filter(Boolean);
+  const enText = ens.length ? ens.join('. ') : el.textContent.trim();
+  const q = [utter(enText, 'en')];
+  if(lang!=='en' && l2s.length){ const x = utter(l2s.join('. '), lang); if(x.ok) q.push(x); else toast((L2('noVoice')||t('noVoice'))); }
+  speakingBtn = btn||null; if(btn) btn.classList.add('speaking');
+  const last = q[q.length-1].u;
+  last.onend = last.onerror = ()=>{ if(btn) btn.classList.remove('speaking'); if(speakingBtn===btn) speakingBtn=null; };
+  q.forEach(x=>speechSynthesis.speak(x.u));
+}
+try{ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = ()=>{}; }catch(e){}
+function initSay(){
+  document.querySelectorAll('.steps li[data-i18n]').forEach(li=>{
+    const sp=document.createElement('span'); sp.dataset.i18n=li.dataset.i18n; li.removeAttribute('data-i18n');
+    const b=document.createElement('button'); b.type='button'; b.className='say';
+    li.textContent=''; li.classList.add('saytext'); li.append(b, sp);
+    b.dataset.sayFrom = ''; b._target = sp;
+  });
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('.say'); if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    const el = b._target || (b.dataset.sayFrom ? $(b.dataset.sayFrom) : null);
+    if(el && el.textContent.trim()) speakEl(el, b);
+  }, true);
+}
+function paintSay(){
+  document.querySelectorAll('.say').forEach(b=>{ if(!b.innerHTML) b.innerHTML = SPEAK_ICON; b.setAttribute('aria-label', 'Listen'); b.title = 'Listen'; });
+  ['#balMsg','#cylMsg','#turnMsg'].forEach(id=>{ const m=$(id), b=m.parentElement.querySelector('.say'); if(b) b.hidden = !m.textContent.trim(); });
+}
+new MutationObserver(()=>paintSay()).observe(document.querySelector('.wrap'), {subtree:true, childList:true, characterData:true});
+
+/* ---------- picture vocabulary ---------- */
+const VPIC = {
+ vMass:'<rect x="6" y="40" width="44" height="6" rx="2" fill="var(--metal-d)"/><path d="M28 12v28" stroke="var(--metal-d)" stroke-width="3"/><path d="M10 18h36" stroke="var(--metal-d)" stroke-width="3"/><path d="M10 18l-6 12h12z M46 18l-6 12h12z" fill="none" stroke="var(--metal-d)" stroke-width="2"/><rect x="5" y="22" width="10" height="8" rx="1" fill="url(#gBrass)"/><text x="38" y="30" class="bl" style="font-size:10px">g</text>',
+ vVol:'<path d="M14 22l14-8 14 8v16l-14 8-14-8z" fill="var(--water-hi)" stroke="var(--water-deep)" stroke-width="2"/><path d="M14 22l14 8 14-8M28 30v16" fill="none" stroke="var(--water-deep)" stroke-width="2"/><text x="44" y="52" class="bl" style="font-size:9px">mL</text>',
+ vDisp:'<rect x="18" y="6" width="20" height="44" rx="2" class="glass"/><rect x="18" y="6" width="20" height="44" rx="2" class="glass-o"/><rect x="20" y="22" width="16" height="27" fill="var(--water)" fill-opacity=".55"/><circle cx="28" cy="42" r="5" fill="url(#gMarble)"/><path d="M46 34v-14M42 24l4-5 4 5" stroke="var(--accent)" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+ vMen:'<rect x="4" y="8" width="48" height="42" rx="3" class="glass"/><path d="M4 22Q28 38 52 22V50H4z" fill="var(--water)" fill-opacity=".55"/><path d="M4 22Q28 38 52 22" stroke="var(--water-deep)" stroke-width="2" fill="none"/><path d="M2 30h52" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/>',
+ vTbb:'<rect x="4" y="44" width="48" height="6" rx="2" fill="var(--bench)"/><ellipse cx="13" cy="28" rx="10" ry="3" class="pan"/><rect x="11" y="30" width="4" height="14" fill="var(--metal-d)"/><rect x="20" y="16" width="30" height="4" fill="var(--beam)" stroke="var(--metal-d)"/><rect x="20" y="24" width="30" height="4" fill="var(--beam)" stroke="var(--metal-d)"/><rect x="20" y="32" width="30" height="4" fill="var(--beam)" stroke="var(--metal-d)"/><rect x="28" y="14" width="4" height="8" fill="var(--accent)"/><rect x="36" y="22" width="4" height="8" fill="var(--accent)"/>',
+ vGc:'<rect x="20" y="4" width="16" height="44" rx="2" class="glass"/><rect x="20" y="4" width="16" height="44" rx="2" class="glass-o"/><rect x="22" y="24" width="12" height="23" fill="var(--water)" fill-opacity=".55"/><path d="M22 12h5M22 18h5M22 24h5M22 30h5M22 36h5M22 42h5" stroke="var(--ink)" stroke-width="1"/><path d="M12 48h32l3 5H9z" fill="var(--metal-d)"/>',
+ vRider:'<rect x="4" y="24" width="48" height="10" rx="2" fill="var(--beam)" stroke="var(--metal-d)"/><path d="M8 24v4M16 24v4M24 24v4M32 24v4M40 24v4M48 24v4" stroke="var(--ink)"/><rect x="21" y="19" width="14" height="20" rx="3" class="rider-body"/><path d="M14 12h28M38 8l4 4-4 4" stroke="var(--accent)" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+ vPointer:'<rect x="34" y="8" width="16" height="40" rx="3" class="plate"/><path d="M34 28h16" class="zero"/><path d="M40 18h10M40 38h10" stroke="var(--ink)"/><path d="M6 28h40" class="needle"/><circle cx="6" cy="28" r="4" fill="var(--metal-d)"/>',
+ vPan:'<ellipse cx="28" cy="30" rx="24" ry="6" class="pan"/><rect x="25" y="34" width="6" height="16" fill="var(--metal-d)"/><path d="M20 26l4-12h8l4 12z" fill="url(#gRubber)"/>'
+};
+function buildVocab(){
+  $('#vocab').innerHTML = Object.keys(VPIC).map(k=>`<div class="vitem"><svg class="pic" viewBox="0 0 56 56" aria-hidden="true">${VPIC[k]}</svg><div id="vd_${k}"><div class="vt"><b data-i18n="${k}"></b><button type="button" class="say" data-say-from="#vd_${k}"></button></div><span data-i18n="${k}D"></span></div></div>`).join('');
+}
+
+/* ---------- sentence frames ---------- */
+function insertAt(ta, text, asLine){
+  const v = ta.value, st = ta.selectionStart ?? v.length, en = ta.selectionEnd ?? v.length;
+  let ins = text;
+  if(asLine){ ins = (v && !v.endsWith('\n') ? (v.endsWith(' ')?'':' ') : '') + text + ' '; ta.value = v + ins; ta.selectionStart = ta.selectionEnd = ta.value.length; }
+  else { const pre = st>0 && !/\s$/.test(v.slice(0,st)) ? ' ' : ''; ta.value = v.slice(0,st) + pre + ins + ' ' + v.slice(en); const p = st + pre.length + ins.length + 1; ta.selectionStart = ta.selectionEnd = p; }
+  ta.focus(); ta.dispatchEvent(new Event('input'));
+}
+function renderFrames(){
+  document.querySelectorAll('[data-frames]').forEach(box=>{
+    const n = box.dataset.frames, ta = $('#q'+n);
+    box.innerHTML=''; const ls = (L2('fr'+n)||'').split('|'); t('fr'+n).split('|').forEach((f,i)=>{ const b=document.createElement('button'); b.type='button'; setBiRaw(b, f, ls[i]||null); b.addEventListener('click', ()=>insertAt(ta, f, true)); box.appendChild(b); });
+  });
+  document.querySelectorAll('[data-wb]').forEach(box=>{
+    const ta = $('#q'+box.dataset.wb);
+    box.innerHTML=''; const ls = (L2('wb')||'').split('|'); t('wb').split('|').forEach((w,i)=>{ const b=document.createElement('button'); b.type='button'; setBiRaw(b, w, ls[i]||null); b.addEventListener('click', ()=>insertAt(ta, w, false)); box.appendChild(b); });
+  });
+}
+
+/* ---------- guided mode ---------- */
+const G = {on:false, i:0, picked:false, checked:false, pickedNext:false, lastTarget:null, lastI:-1};
+const expected = () => { const o = obj(S.sel); const m = o.mass; const H=Math.floor(m/100+1e-9), T=Math.floor((m-H*100)/10+1e-9); return {H,T}; };
+const filled = c => ((S.table[S.sel]||{})[c]||'').trim()!=='';
+const GSTEPS = [
+ {k:'g1', tgt:()=>$('#ridersZero'), done:()=>S.rh+S.rt+S.ro===0},
+ {k:'g2', tgt:()=>$('#knobUp').closest('.ctl'), done:()=>!S.pan && Math.abs(S.offset)<0.05},
+ {k:'g3', tgt:()=>$('#tray'), done:()=>G.picked},
+ {k:'g4', tgt:()=>$('#toPan'), done:()=>S.pan===S.sel},
+ {k:'g5', tgt:()=>$('[data-r="h"]').closest('.ctl'), done:()=>S.pan===S.sel && S.rh===expected().H},
+ {k:'g6', tgt:()=>$('[data-r="t"]').closest('.ctl'), done:()=>S.pan===S.sel && S.rh===expected().H && S.rt===expected().T},
+ {k:'g7', tgt:()=>$('[data-r="o"]').closest('.ctl'), done:()=>S.pan===S.sel && Math.abs(balanceDiff())<0.05},
+ {k:'g8', tgt:()=>$('#in_m_'+S.sel), done:()=>filled('m')},
+ {k:'g9', tgt:()=>$('#pourBig').closest('.ctl'), done:()=>{ const o=obj(S.sel); return S.cyl===S.sel || (!S.cyl && S.water + o.vol >= o.top + 1); }},
+ {k:'g10', tgt:()=>$('#in_i_'+S.sel), done:()=>filled('i')},
+ {k:'g11', tgt:()=>$('#slideIn'), done:()=>S.cyl===S.sel},
+ {k:'g12', tgt:()=>$('#in_f_'+S.sel), done:()=>filled('f')},
+ {k:'g13', tgt:()=>$('#in_v_'+S.sel), done:()=>filled('v')},
+ {k:'g14', tgt:()=>$('#checkBtn'), done:()=>G.checked},
+ {k:'g15', tgt:()=>$('#outCyl'), done:()=>!S.cyl},
+ {k:'g16', tgt:()=>$('#tray'), done:()=>G.pickedNext},
+];
+function guideRender(){
+  if(!G.on) return;
+  setBi($('#gNum'), 'gStep', x=>x.replace('{a}', G.i+1).replace('{b}', GSTEPS.length));
+  setBi($('#gText'), GSTEPS[G.i].k);
+  const tg = GSTEPS[G.i].tgt();
+  if(G.lastTarget && G.lastTarget!==tg) G.lastTarget.classList.remove('g-target');
+  if(tg){ tg.classList.add('g-target'); if(G.lastI!==G.i){ try{ tg.scrollIntoView({block:'center', behavior: reduced?'auto':'smooth'}); }catch(e){} } }
+  G.lastTarget = tg; G.lastI = G.i;
+}
+function guideTick(){
+  if(!G.on) return;
+  let moved = false;
+  while(G.i < GSTEPS.length && GSTEPS[G.i].done()){
+    G.i++; moved = true;
+    if(G.i >= GSTEPS.length){ G.i = 0; G.picked = true; G.checked = false; G.pickedNext = false; }
+    if(G.i===2) {} // continue loop naturally
+    if(moved && G.i===0) break;
+  }
+  if(G.i===3 && !G.picked) G.i = 2;
+  if(moved) guideRender();
+}
+function guideStart(){
+  G.on = true; G.i = 0; G.picked = false; G.checked = false; G.pickedNext = false; G.lastI = -1;
+  $('#guide').hidden = false; document.body.classList.add('guide-on');
+  guideTick(); guideRender();
+}
+function guideStop(){
+  G.on = false; $('#guide').hidden = true; document.body.classList.remove('guide-on');
+  if(G.lastTarget) G.lastTarget.classList.remove('g-target'); G.lastTarget = null;
+  try{ speechSynthesis.cancel(); }catch(e){}
+}
+$('#guideBtn').addEventListener('click', ()=> G.on ? guideStop() : guideStart());
+$('#gExit').addEventListener('click', guideStop);
+$('#gSkip').addEventListener('click', ()=>{ G.i = (G.i+1) % GSTEPS.length; if(G.i===3) G.picked = true; guideRender(); });
+$('#gBack').addEventListener('click', ()=>{ G.i = Math.max(0, G.i-1); guideRender(); });
+$('#tray').addEventListener('click', e=>{ if(!G.on || !e.target.closest('.obj')) return; if(G.i<=2) G.picked = true; if(G.i===15) G.pickedNext = true; }, true);
+$('#checkBtn').addEventListener('click', ()=>{ if(G.on) G.checked = true; });
+setInterval(guideTick, 300);
+
+/* ---------- language switching ---------- */
+function setLang(l){ lang = l; save(); applyLang(); }
+function applyLangExtra(){
+  renderFrames(); paintSay(); guideRender();
+}
+
+load();
+buildBalance(); buildCylinder(); buildVocab(); initSay();
+renderAll(); applyLang();
+requestAnimationFrame(tick);
+})();
+</script>
+
+</body>
+</html>
